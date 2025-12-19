@@ -10,27 +10,33 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Client } from "./schema"
-
+import { Product } from "./schema"
 import { ResourceActions } from "@/components/resource/resource-page"
 
-export const getColumns = ({ onEdit, onDelete }: ResourceActions<Client>): ColumnDef<Client>[] => [
+export const getColumns = ({ onEdit, onDelete }: ResourceActions<Product>): ColumnDef<Product>[] => [
   {
     accessorKey: "name",
-    header: "Tên khách hàng",
+    header: "Tên sản phẩm",
   },
   {
-    accessorKey: "phone",
-    header: "Số điện thoại",
+    accessorKey: "stock",
+    header: "Tồn kho",
   },
   {
-    accessorKey: "email",
-    header: "Email",
+    accessorKey: "price",
+    header: "Giá",
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue("price"))
+      return new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(amount)
+    },
   },
   {
     id: "actions",
     cell: ({ row }) => {
-      const client = row.original
+      const product = row.original
 
       return (
         <DropdownMenu>
@@ -42,11 +48,11 @@ export const getColumns = ({ onEdit, onDelete }: ResourceActions<Client>): Colum
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => onEdit(client)}>
-                <Pencil className="mr-2 h-4 w-4" /> Sửa
+            <DropdownMenuItem onClick={() => onEdit(product)}>
+              <Pencil className="mr-2 h-4 w-4" /> Sửa
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDelete(client)} className="text-red-600">
-                <Trash className="mr-2 h-4 w-4" /> Xóa
+            <DropdownMenuItem onClick={() => onDelete(product)} className="text-red-600">
+              <Trash className="mr-2 h-4 w-4" /> Xóa
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

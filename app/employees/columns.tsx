@@ -13,12 +13,9 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Employee } from "./schema"
 
-interface EmployeeColumnsProps {
-    onEdit: (employee: Employee) => void
-    onDelete: (employee: Employee) => void
-}
+import { ResourceActions } from "@/components/resource/resource-page"
 
-export const getColumns = ({ onEdit, onDelete }: EmployeeColumnsProps): ColumnDef<Employee>[] => [
+export const getColumns = ({ onEdit, onDelete }: ResourceActions<Employee>): ColumnDef<Employee>[] => [
   {
     accessorKey: "name",
     header: "Tên nhân viên",

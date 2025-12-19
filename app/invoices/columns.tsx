@@ -14,12 +14,9 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Invoice } from "./schema"
 
-interface InvoiceColumnsProps {
-    onEdit: (invoice: Invoice) => void
-    onDelete: (invoice: Invoice) => void
-}
+import { ResourceActions } from "@/components/resource/resource-page"
 
-export const getColumns = ({ onEdit, onDelete }: InvoiceColumnsProps): ColumnDef<Invoice>[] => [
+export const getColumns = ({ onEdit, onDelete }: ResourceActions<Invoice>): ColumnDef<Invoice>[] => [
   {
     accessorKey: "date",
     header: "Ngày",
@@ -47,9 +44,15 @@ export const getColumns = ({ onEdit, onDelete }: InvoiceColumnsProps): ColumnDef
     header: "Trạng thái",
     cell: ({ row }) => {
         const status = row.original.status
+        let variant: "default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "info" = "default"
+        
+        if (status === "Paid") variant = "success"
+        else if (status === "Unpaid") variant = "warning"
+        else variant = "destructive"
+
         return (
-            <Badge variant={status === "Paid" ? "default" : status === "Unpaid" ? "outline" : "destructive"}>
-                {status === "Paid" ? "Đã thanh toán" : status === "Unpaid" ? "Chưa thanh toán" : "Đã hủy"}
+            <Badge variant={variant} className="rounded-md px-3 font-normal">
+                {status === "Paid" ? "Completed" : status === "Unpaid" ? "Pending" : "Cancelled"}
             </Badge>
         )
     }

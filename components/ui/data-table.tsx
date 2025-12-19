@@ -57,19 +57,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      {searchKey && (
-        <div className="flex items-center py-4">
-          <Input
-            placeholder="Tìm kiếm..."
-            value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn(searchKey)?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-        </div>
-      )}
-      <div className="rounded-md border bg-white dark:bg-zinc-950">
+      <div className="bg-white dark:bg-zinc-950">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -112,7 +100,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  Không có dữ liệu.
+                  KhA'ng cA3 d ¯_ li ¯Øu.
                 </TableCell>
               </TableRow>
             )}
@@ -126,7 +114,7 @@ export function DataTable<TData, TValue>({
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          Trước
+          Previous
         </Button>
         <Button
           variant="outline"
@@ -134,7 +122,7 @@ export function DataTable<TData, TValue>({
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          Sau
+          Next
         </Button>
       </div>
     </div>

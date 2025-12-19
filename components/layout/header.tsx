@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, PanelLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,17 +13,41 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export function Header() {
+interface HeaderProps {
+  onMobileMenuOpen: () => void;
+}
+
+export function Header({ onMobileMenuOpen }: HeaderProps) {
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-white px-6 dark:bg-zinc-950">
-      <div className="flex w-full max-w-sm items-center gap-2">
-        <div className="relative w-full">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Tìm kiếm khách hàng, lịch hẹn..."
-            className="pl-9 w-full bg-zinc-50 dark:bg-zinc-900"
-          />
+    <header className="flex h-16 items-center justify-between border-b bg-white px-4 md:px-6 dark:bg-zinc-950">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" className="md:hidden" onClick={onMobileMenuOpen}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-6 w-6"
+          >
+            <line x1="3" x2="21" y1="6" y2="6" />
+            <line x1="3" x2="21" y1="12" y2="12" />
+            <line x1="3" x2="21" y1="18" y2="18" />
+          </svg>
+        </Button>
+        <div className="flex w-full max-w-sm items-center gap-2">
+          <div className="relative w-full hidden md:block">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Tìm kiếm khách hàng, lịch hẹn..."
+              className="pl-9 w-64 lg:w-80 bg-zinc-50 dark:bg-zinc-900"
+            />
+          </div>
         </div>
       </div>
       <div className="flex items-center gap-4">

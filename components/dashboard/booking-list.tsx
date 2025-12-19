@@ -12,48 +12,48 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const recentBookings = [
   {
     id: "BK001",
-    customer: "Nguyễn Văn A",
-    service: "Cắt tóc nam",
-    staff: "Trần B",
+    customer: "Nguyen Van A",
+    service: "Mens haircut",
+    staff: "Tran B",
     time: "09:00 AM",
     status: "Confirmed",
-    amount: "150.000đ",
+    amount: "150.000Ž`",
   },
   {
     id: "BK002",
-    customer: "Trần Thị C",
-    service: "Gội đầu & Massage",
-    staff: "Lê D",
+    customer: "Tran Thi C",
+    service: "Wash & Massage",
+    staff: "Le D",
     time: "10:30 AM",
     status: "Pending",
-    amount: "200.000đ",
+    amount: "200.000Ž`",
   },
   {
     id: "BK003",
-    customer: "Phạm Văn E",
-    service: "Nhuộm tóc",
-    staff: "Nguyễn F",
+    customer: "Pham Van E",
+    service: "Hair coloring",
+    staff: "Nguyen F",
     time: "01:00 PM",
     status: "Completed",
-    amount: "500.000đ",
+    amount: "500.000Ž`",
   },
   {
     id: "BK004",
-    customer: "Hoàng Thị G",
-    service: "Làm móng",
-    staff: "Phạm H",
+    customer: "Hoang Thi G",
+    service: "Manicure",
+    staff: "Pham H",
     time: "02:30 PM",
     status: "Cancelled",
-    amount: "100.000đ",
+    amount: "100.000Ž`",
   },
   {
     id: "BK005",
-    customer: "Vũ Văn I",
-    service: "Cạo mặt",
-    staff: "Trần B",
+    customer: "Voc Van I",
+    service: "Beard trim",
+    staff: "Tran B",
     time: "04:00 PM",
     status: "Confirmed",
-    amount: "50.000đ",
+    amount: "50.000Ž`",
   },
 ];
 
@@ -63,12 +63,12 @@ export function BookingList() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Khách hàng</TableHead>
-            <TableHead>Dịch vụ</TableHead>
-            <TableHead>Nhân viên</TableHead>
-            <TableHead>Thời gian</TableHead>
-            <TableHead>Trạng thái</TableHead>
-            <TableHead className="text-right">Tổng tiền</TableHead>
+            <TableHead>Customer</TableHead>
+            <TableHead>Service</TableHead>
+            <TableHead>Staff</TableHead>
+            <TableHead>Time</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Total</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -103,9 +103,7 @@ export function BookingList() {
                       ""
                   }
                 >
-                  {booking.status === "Confirmed" ? "Đã xác nhận" :
-                   booking.status === "Completed" ? "Hoàn thành" :
-                   booking.status === "Pending" ? "Chờ duyệt" : "Đã hủy"}
+                  {booking.status}
                 </Badge>
               </TableCell>
               <TableCell className="text-right">{booking.amount}</TableCell>

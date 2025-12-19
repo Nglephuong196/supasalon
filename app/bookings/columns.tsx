@@ -14,12 +14,9 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Booking } from "./schema"
 
-interface BookingColumnsProps {
-    onEdit: (booking: Booking) => void
-    onDelete: (booking: Booking) => void
-}
+import { ResourceActions } from "@/components/resource/resource-page"
 
-export const getColumns = ({ onEdit, onDelete }: BookingColumnsProps): ColumnDef<Booking>[] => [
+export const getColumns = ({ onEdit, onDelete }: ResourceActions<Booking>): ColumnDef<Booking>[] => [
   {
     accessorKey: "date",
     header: "Ngày",
