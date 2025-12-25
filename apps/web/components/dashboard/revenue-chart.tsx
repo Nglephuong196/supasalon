@@ -76,11 +76,11 @@ export function RevenueChart() {
                   borderRadius: "8px",
                   boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
                 }}
-                formatter={(value: number) => [
+                formatter={(value) => [
                   new Intl.NumberFormat("vi-VN", {
                     style: "currency",
                     currency: "VND",
-                  }).format(value),
+                  }).format(value as number),
                   "Doanh thu",
                 ]}
               />
