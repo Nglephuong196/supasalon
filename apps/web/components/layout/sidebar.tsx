@@ -42,7 +42,7 @@ const sidebarItems = [
   },
   {
     title: "Khách hàng",
-    href: "/clients",
+    href: "/customers",
     icon: Users,
   },
   {

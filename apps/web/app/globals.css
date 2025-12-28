@@ -83,14 +83,14 @@
   --popover: #ffffff;
   --popover-foreground: #111827;
 
-  /* Sidebar */
-  --sidebar: #ffffff;
-  --sidebar-foreground: #6b7280;
+  /* Sidebar - Slightly dark like Discord */
+  --sidebar: #f2f3f5;
+  --sidebar-foreground: #4f5660;
   --sidebar-primary: #7c3aed;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f5f3ff;
-  --sidebar-accent-foreground: #7c3aed;
-  --sidebar-border: #e5e7eb;
+  --sidebar-accent: #e3e5e8;
+  --sidebar-accent-foreground: #060607;
+  --sidebar-border: #e3e5e8;
   --sidebar-ring: #7c3aed;
 
   /* Charts */

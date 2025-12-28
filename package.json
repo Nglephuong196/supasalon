@@ -21,7 +21,10 @@
     "db:stop": "npx supabase stop",
     "db:types": "npx supabase gen types typescript local > packages/database/src/database.types.ts",
     "db:push": "npx supabase db push",
-    "db:reset": "npx supabase db reset"
+    "db:reset": "npx supabase db reset",
+    "db:migration:new": "npx supabase migration new",
+    "db:diff": "npx supabase db diff -f",
+    "db:function:new": "npx supabase functions new"
   },
   "devDependencies": {
     "turbo": "latest"

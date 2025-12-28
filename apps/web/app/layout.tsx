@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 import { MainLayout } from "@/components/layout/main-layout";
+import { QueryProvider } from "@/lib/providers/query-provider";
 import "./globals.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -24,8 +25,11 @@ export default function RootLayout({
       <body
         className={`${beVietnamPro.variable} font-sans antialiased`}
       >
-        <MainLayout>{children}</MainLayout>
+        <QueryProvider>
+          <MainLayout>{children}</MainLayout>
+        </QueryProvider>
       </body>
     </html>
   );
 }
+
