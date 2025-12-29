@@ -92,7 +92,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
     }, 1000);
   }
 
-  const getInitials = (name: string | null) => {
+  const getInitials = (name: string) => {
     if (!name) return "U";
     return name
       .split(" ")
@@ -116,7 +116,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
           <Avatar className="h-16 w-16">
             <AvatarImage src={profile?.avatar_url || undefined} />
             <AvatarFallback className="text-lg">
-              {getInitials(profile?.full_name)}
+              {getInitials(profile?.full_name || "")}
             </AvatarFallback>
           </Avatar>
           <div>

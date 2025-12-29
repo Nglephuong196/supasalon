@@ -27,7 +27,7 @@
     "db:function:new": "npx supabase functions new"
   },
   "devDependencies": {
-    "turbo": "latest"
+    "turbo": "^2.7.2"
   },
   "workspaces": [
     "apps/*",
