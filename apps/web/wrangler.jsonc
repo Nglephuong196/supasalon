@@ -1,11 +1,15 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "salon-pro",
-  "main": ".open-next/worker.js",
-  "compatibility_date": "2025-01-05",
-  "compatibility_flags": ["nodejs_compat"],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  }
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "web",
+	"compatibility_date": "2026-01-05",
+	"compatibility_flags": [
+		"nodejs_als"
+	],
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"workers_dev": true,
+	"preview_urls": true
 }
