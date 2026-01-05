@@ -24,7 +24,7 @@ INSERT INTO auth.users (
   'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
   '00000000-0000-0000-0000-000000000000',
   'phuong@gmail.com',
-  crypt('Nhi@200696', gen_salt('bf')), -- Generate proper bcrypt hash
+  '$2a$10$hsAonssl0GDmC9BZaojC7.XNsfDUlpIW.j4kc2/WK8GA0eTr.pmr.', -- Generate proper bcrypt hash
   NOW(),
   '{"full_name": "Nguyễn Văn Phương", "salon_name": "Beauty Salon Phương"}',
   NOW(),
@@ -37,7 +37,7 @@ INSERT INTO auth.users (
   'b2c3d4e5-f6a7-8901-bcde-f12345678901',
   '00000000-0000-0000-0000-000000000000',
   'phuong2@gmail.com',
-  crypt('Nhi@200696', gen_salt('bf')), -- Generate proper bcrypt hash
+  '$2a$10$hsAonssl0GDmC9BZaojC7.XNsfDUlpIW.j4kc2/WK8GA0eTr.pmr.', -- Generate proper bcrypt hash
   NOW(),
   '{"full_name": "Trần Thị Phương", "salon_name": "Nail & Spa Phương"}',
   NOW(),

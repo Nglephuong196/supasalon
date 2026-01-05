@@ -1,36 +1,118 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Salon Pro
+
+A monorepo for salon management with web and mobile apps.
+
+## Tech Stack
+
+- **Web**: Next.js 16 + React 19 + Tailwind CSS
+- **Mobile**: Expo + React Native
+- **Database**: Supabase (PostgreSQL)
+- **Monorepo**: Bun workspaces
+- **Hosting**: Cloudflare Workers (via OpenNext)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- [Bun](https://bun.sh/) (package manager & runtime)
+- [Docker](https://www.docker.com/) (for Supabase local dev)
+- [Supabase CLI](https://supabase.com/docs/guides/cli) (`npm install -g supabase`)
+
+### Install Dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Start web app
+bun dev:web
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Start mobile app
+bun dev:mobile
 
-## Learn More
+# Start mobile on specific platform
+bun dev:mobile:ios
+bun dev:mobile:android
+bun dev:mobile:web
+```
 
-To learn more about Next.js, take a look at the following resources:
+### Supabase Commands
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Run these directly (not through bun scripts):
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+# Start local Supabase
+npx supabase start
 
-## Deploy on Vercel
+# Stop local Supabase
+npx supabase stop
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Reset database
+npx supabase db reset
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Generate TypeScript types
+npx supabase gen types typescript local > packages/database/src/database.types.ts
+
+# Push migrations
+npx supabase db push
+
+# Create new migration
+npx supabase migration new <name>
+
+# Diff database changes
+npx supabase db diff -f <name>
+```
+
+### Build
+
+```bash
+# Build web
+bun build:web
+
+# Build mobile
+bun build:mobile:web
+bun build:mobile:ios
+bun build:mobile:android
+```
+
+## Project Structure
+
+```
+salon-pro/
+├── apps/
+│   ├── web/          # Next.js web app
+│   └── mobile/       # Expo mobile app
+├── packages/
+│   ├── database/     # Supabase types
+│   └── constants/    # Shared constants
+└── supabase/         # Supabase config & migrations
+```
+
+## Deployment
+
+### Cloudflare Workers (Web App)
+
+**Local commands:**
+
+```bash
+cd apps/web
+
+# Build for Cloudflare
+bun run cf:build
+
+# Deploy to Cloudflare
+bun run cf:deploy
+
+# Local dev with Cloudflare runtime
+bun run cf:dev
+```
+
+**CI/CD:** Push to `master` triggers auto-deploy via GitHub Actions.
+
+**Required GitHub Secrets:**
+
+- `CLOUDFLARE_API_TOKEN` - [Create here](https://dash.cloudflare.com/profile/api-tokens)
+- `CLOUDFLARE_ACCOUNT_ID` - Found in Cloudflare Dashboard → Overview
