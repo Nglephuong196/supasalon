@@ -13,9 +13,14 @@ node_modules/
 # testing
 /coverage
 
-# apps/web (next.js)
+# apps/web (nuxt)
 .next/
 /out/
+.output
+.data
+.nuxt
+.nitro
+.cache
 
 # apps/mobile (expo)
 .expo/
