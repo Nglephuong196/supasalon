@@ -26,6 +26,12 @@
     "apps/web": {
       "name": "web",
       "version": "0.0.1",
+      "dependencies": {
+        "@repo/constants": "*",
+        "@repo/database": "*",
+        "@supabase/ssr": "^0.8.0",
+        "@supabase/supabase-js": "^2.89.0",
+      },
       "devDependencies": {
         "@sveltejs/adapter-cloudflare": "^7.2.4",
         "@sveltejs/kit": "^2.49.1",
