@@ -65,3 +65,12 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Bun
+**/*.bun
+
+# Archives
+**/*.zip
+**/*.tar.gz
+**/*.tgz
+**/*.trace

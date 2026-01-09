@@ -1,9 +1,13 @@
 {
   "name": "salon-pro",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev:web": "bun run --filter web dev",
+    "dev:api": "bun run --filter api dev",
     "dev:mobile": "bun run --filter mobile dev",
     "dev:mobile:web": "bun run --filter mobile dev:web",
     "dev:mobile:ios": "bun run --filter mobile dev:ios",

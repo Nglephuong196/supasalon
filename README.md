@@ -5,6 +5,7 @@ A monorepo for salon management with web and mobile apps.
 ## Tech Stack
 
 - **Web**: Next.js 16 + React 19 + Tailwind CSS
+- **API**: Elysia (Bun-native HTTP framework)
 - **Mobile**: Expo + React Native
 - **Database**: PostgreSQL (backend TBD)
 - **Monorepo**: Bun workspaces
@@ -27,6 +28,9 @@ bun install
 ```bash
 # Start web app
 bun dev:web
+
+# Start API server
+bun dev:api
 
 # Start mobile app
 bun dev:mobile
@@ -55,6 +59,7 @@ bun build:mobile:android
 salon-pro/
 ├── apps/
 │   ├── web/          # Next.js web app
+│   ├── api/          # Elysia API server
 │   └── mobile/       # Expo mobile app
 └── packages/
     ├── database/     # Database types
