@@ -1,9 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase/client'
 import type { ServiceCategory, ServiceCategoryInsert, ServiceCategoryUpdate } from '@/lib/types/service-category'
 import { toast } from 'sonner'
 
-const supabase = createClient()
+// TODO: Replace with new backend API calls
 
 // Query keys
 export const serviceCategoryKeys = {
@@ -17,15 +16,11 @@ export function useServiceCategories() {
   return useQuery({
     queryKey: serviceCategoryKeys.list(),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('service_categories')
-        .select('*')
-        .order('name', { ascending: true })
-
-      if (error) throw error
-      return data as ServiceCategory[]
+      // TODO: Implement with new backend
+      console.warn('useServiceCategories: Not implemented - awaiting new backend')
+      return [] as ServiceCategory[]
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   })
 }
 
@@ -34,43 +29,28 @@ export function useServiceCategory(id: string) {
   return useQuery({
     queryKey: serviceCategoryKeys.detail(id),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('service_categories')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-      if (error) throw error
-      return data as ServiceCategory
+      // TODO: Implement with new backend
+      console.warn('useServiceCategory: Not implemented - awaiting new backend')
+      return null as ServiceCategory | null
     },
     enabled: !!id,
     staleTime: 1000 * 60 * 5,
   })
 }
 
-// Create service category with optimistic updates
+// Create service category
 export function useCreateServiceCategory() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (category: ServiceCategoryInsert) => {
-      const { data, error } = await supabase
-        .from('service_categories')
-        .insert(category)
-        .select()
-        .single()
-
-      if (error) throw error
-      return data as ServiceCategory
+      // TODO: Implement with new backend
+      throw new Error('Not implemented - awaiting new backend')
     },
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: serviceCategoryKeys.all })
       toast.loading('Đang thêm danh mục...', { id: 'create-category' })
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData<ServiceCategory[]>(serviceCategoryKeys.list(), (old) => 
-        old ? [...old, data].sort((a, b) => a.name.localeCompare(b.name)) : [data]
-      )
+    onSuccess: (data: ServiceCategory) => {
       queryClient.invalidateQueries({ queryKey: serviceCategoryKeys.all })
       toast.success(`Đã thêm danh mục "${data.name}"`, { id: 'create-category' })
     },
@@ -80,51 +60,23 @@ export function useCreateServiceCategory() {
   })
 }
 
-// Update service category with optimistic updates
+// Update service category
 export function useUpdateServiceCategory() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: ServiceCategoryUpdate & { id: string }) => {
-      const { data, error } = await supabase
-        .from('service_categories')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single()
-
-      if (error) throw error
-      return data as ServiceCategory
+      // TODO: Implement with new backend
+      throw new Error('Not implemented - awaiting new backend')
     },
-    onMutate: async (variables) => {
-      await queryClient.cancelQueries({ queryKey: serviceCategoryKeys.detail(variables.id) })
-      
-      const previousCategory = queryClient.getQueryData<ServiceCategory>(
-        serviceCategoryKeys.detail(variables.id)
-      )
-      
-      if (previousCategory) {
-        queryClient.setQueryData<ServiceCategory>(serviceCategoryKeys.detail(variables.id), {
-          ...previousCategory,
-          ...variables,
-        })
-      }
-      
+    onMutate: async () => {
       toast.loading('Đang cập nhật...', { id: 'update-category' })
-      return { previousCategory }
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData<ServiceCategory>(serviceCategoryKeys.detail(data.id), data)
+    onSuccess: (data: ServiceCategory) => {
       queryClient.invalidateQueries({ queryKey: serviceCategoryKeys.all })
       toast.success(`Đã cập nhật danh mục "${data.name}"`, { id: 'update-category' })
     },
-    onError: (error: Error, variables, context) => {
-      if (context?.previousCategory) {
-        queryClient.setQueryData<ServiceCategory>(
-          serviceCategoryKeys.detail(variables.id),
-          context.previousCategory
-        )
-      }
+    onError: (error: Error) => {
       toast.error(`Lỗi: ${error.message}`, { id: 'update-category' })
     },
   })
@@ -136,34 +88,17 @@ export function useDeleteServiceCategory() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('service_categories')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
-      return id
+      // TODO: Implement with new backend
+      throw new Error('Not implemented - awaiting new backend')
     },
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: serviceCategoryKeys.all })
-      
-      const previousCategories = queryClient.getQueryData<ServiceCategory[]>(serviceCategoryKeys.list())
-      
-      queryClient.setQueryData<ServiceCategory[]>(serviceCategoryKeys.list(), (old) => 
-        old?.filter(c => c.id !== id) ?? []
-      )
-      
+    onMutate: async () => {
       toast.loading('Đang xóa...', { id: 'delete-category' })
-      return { previousCategories }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: serviceCategoryKeys.all })
       toast.success('Đã xóa danh mục', { id: 'delete-category' })
     },
-    onError: (error: Error, _id, context) => {
-      if (context?.previousCategories) {
-        queryClient.setQueryData<ServiceCategory[]>(serviceCategoryKeys.list(), context.previousCategories)
-      }
+    onError: (error: Error) => {
       toast.error(`Lỗi: ${error.message}`, { id: 'delete-category' })
     },
   })

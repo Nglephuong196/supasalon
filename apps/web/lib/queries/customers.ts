@@ -1,9 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase/client'
 import type { Customer, CustomerInsert, CustomerUpdate } from '@/lib/types/customer'
 import { toast } from 'sonner'
 
-const supabase = createClient()
+// TODO: Replace with new backend API calls
 
 // Query keys
 export const customerKeys = {
@@ -27,52 +26,22 @@ export function useCustomersPaginated(page: number = 1, pageSize: number = 10, s
   return useQuery({
     queryKey: customerKeys.list(page, pageSize, search),
     queryFn: async (): Promise<PaginatedResponse<Customer>> => {
-      const from = (page - 1) * pageSize
-      const to = from + pageSize - 1
-
-      let query = supabase
-        .from('customer')
-        .select('*', { count: 'exact' })
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .range(from, to)
-
-      if (search && search.trim()) {
-        query = query.ilike('name', `%${search.trim()}%`)
-      }
-
-      const { data, error, count } = await query
-
-      if (error) throw error
-
-      const total = count || 0
-      const totalPages = Math.ceil(total / pageSize)
-
-      return {
-        data: data as Customer[],
-        total,
-        page,
-        pageSize,
-        totalPages,
-      }
+      // TODO: Implement with new backend
+      console.warn('useCustomersPaginated: Not implemented - awaiting new backend')
+      return { data: [], total: 0, page, pageSize, totalPages: 0 }
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 2,
   })
 }
 
-// Fetch all customers (for backward compatibility)
+// Fetch all customers
 export function useCustomers() {
   return useQuery({
     queryKey: customerKeys.all,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('customer')
-        .select('*')
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      return data as Customer[]
+      // TODO: Implement with new backend
+      console.warn('useCustomers: Not implemented - awaiting new backend')
+      return [] as Customer[]
     },
     staleTime: 1000 * 60 * 2,
   })
@@ -83,53 +52,29 @@ export function useCustomer(id: number) {
   return useQuery({
     queryKey: customerKeys.detail(id),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('customer')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-      if (error) throw error
-      return data as Customer
+      // TODO: Implement with new backend
+      console.warn('useCustomer: Not implemented - awaiting new backend')
+      return null as Customer | null
     },
     enabled: !!id,
-    staleTime: 1000 * 60 * 5, // 5 minutes for individual customer
+    staleTime: 1000 * 60 * 5,
   })
 }
 
-// Create customer with optimistic updates
+// Create customer
 export function useCreateCustomer() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (customer: CustomerInsert) => {
-      const { data, error } = await supabase
-        .from('customer')
-        .insert(customer)
-        .select()
-        .single()
-
-      if (error) throw error
-      return data as Customer
+      // TODO: Implement with new backend
+      throw new Error('Not implemented - awaiting new backend')
     },
-    onMutate: async (newCustomer) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: customerKeys.all })
-      
-      // Show loading toast
+    onMutate: async () => {
       toast.loading('Đang thêm khách hàng...', { id: 'create-customer' })
-
-      return { newCustomer }
     },
-    onSuccess: (data) => {
-      // Update cache with the new customer
-      queryClient.setQueryData<Customer[]>(customerKeys.all, (old) => 
-        old ? [data, ...old] : [data]
-      )
-      
-      // Invalidate paginated queries to refetch with correct counts
+    onSuccess: (data: Customer) => {
       queryClient.invalidateQueries({ queryKey: customerKeys.all })
-      
       toast.success(`Đã thêm khách hàng "${data.name}"`, { id: 'create-customer' })
     },
     onError: (error: Error) => {
@@ -138,106 +83,45 @@ export function useCreateCustomer() {
   })
 }
 
-// Update customer with optimistic updates
+// Update customer
 export function useUpdateCustomer() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: CustomerUpdate & { id: number }) => {
-      const { data, error } = await supabase
-        .from('customer')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single()
-
-      if (error) throw error
-      return data as Customer
+      // TODO: Implement with new backend
+      throw new Error('Not implemented - awaiting new backend')
     },
-    onMutate: async (variables) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: customerKeys.detail(variables.id) })
-      
-      // Snapshot the previous value
-      const previousCustomer = queryClient.getQueryData<Customer>(customerKeys.detail(variables.id))
-      
-      // Optimistically update the cache
-      if (previousCustomer) {
-        queryClient.setQueryData<Customer>(customerKeys.detail(variables.id), {
-          ...previousCustomer,
-          ...variables,
-        })
-      }
-      
+    onMutate: async () => {
       toast.loading('Đang cập nhật...', { id: 'update-customer' })
-
-      return { previousCustomer }
     },
-    onSuccess: (data) => {
-      // Update cache with server response
-      queryClient.setQueryData<Customer>(customerKeys.detail(data.id), data)
-      
-      // Invalidate list queries to update the table
+    onSuccess: (data: Customer) => {
       queryClient.invalidateQueries({ queryKey: customerKeys.all })
-      
       toast.success(`Đã cập nhật khách hàng "${data.name}"`, { id: 'update-customer' })
     },
-    onError: (error: Error, variables, context) => {
-      // Rollback to previous value on error
-      if (context?.previousCustomer) {
-        queryClient.setQueryData<Customer>(
-          customerKeys.detail(variables.id), 
-          context.previousCustomer
-        )
-      }
-      
+    onError: (error: Error) => {
       toast.error(`Lỗi: ${error.message}`, { id: 'update-customer' })
     },
   })
 }
 
-// Delete customer with optimistic updates
+// Delete customer
 export function useDeleteCustomer() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (id: number) => {
-      const { error } = await supabase
-        .from('customer')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id)
-
-      if (error) throw error
-      return id
+      // TODO: Implement with new backend
+      throw new Error('Not implemented - awaiting new backend')
     },
-    onMutate: async (id) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: customerKeys.all })
-      
-      // Snapshot the previous value
-      const previousCustomers = queryClient.getQueryData<Customer[]>(customerKeys.all)
-      
-      // Optimistically remove from cache
-      queryClient.setQueryData<Customer[]>(customerKeys.all, (old) => 
-        old?.filter(c => c.id !== id) ?? []
-      )
-      
+    onMutate: async () => {
       toast.loading('Đang xóa...', { id: 'delete-customer' })
-
-      return { previousCustomers }
     },
     onSuccess: () => {
-      // Invalidate all customer queries
       queryClient.invalidateQueries({ queryKey: customerKeys.all })
-      
       toast.success('Đã xóa khách hàng', { id: 'delete-customer' })
     },
-    onError: (error: Error, _id, context) => {
-      // Rollback to previous value on error
-      if (context?.previousCustomers) {
-        queryClient.setQueryData<Customer[]>(customerKeys.all, context.previousCustomers)
-      }
-      
+    onError: (error: Error) => {
       toast.error(`Lỗi: ${error.message}`, { id: 'delete-customer' })
     },
   })

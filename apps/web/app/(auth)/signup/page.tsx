@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { createClient } from "@/lib/supabase/client";
 import { VIETNAM_PROVINCES, VIETNAM_PHONE_REGEX } from "@repo/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +42,7 @@ const signupSchema = z.object({
   confirmPassword: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
   // Salon info
   salonName: z.string().min(2, "Tên salon phải có ít nhất 2 ký tự"),
-  province: z.enum([...VIETNAM_PROVINCES], { 
+  province: z.enum([...VIETNAM_PROVINCES], {
     message: "Vui lòng chọn tỉnh/thành phố"
   }),
   address: z.string().min(5, "Vui lòng nhập địa chỉ đầy đủ"),
@@ -78,33 +77,9 @@ export default function SignupPage() {
     setIsLoading(true);
     setError(null);
 
-    const supabase = createClient();
-    
-    // Sign up the user with salon info in metadata
-    // Database trigger will create profile, salon, and salon_member
-    const { error: authError } = await supabase.auth.signUp({
-      email: values.email,
-      password: values.password,
-      options: {
-        data: {
-          full_name: values.ownerName,
-          salon_name: values.salonName,
-          salon_province: values.province,
-          salon_address: values.address,
-          salon_phone: values.phone,
-        }
-      }
-    });
-
-    if (authError) {
-      setError(authError.message === "User already registered" 
-        ? "Email này đã được đăng ký" 
-        : authError.message);
-      setIsLoading(false);
-      return;
-    }
-
-    router.push("/login?message=Đăng ký thành công! Vui lòng đăng nhập.");
+    // TODO: Implement with new backend
+    setError("Chức năng đăng ký đang được cập nhật. Vui lòng thử lại sau.");
+    setIsLoading(false);
   }
 
   return (
@@ -239,8 +214,8 @@ export default function SignupPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tỉnh/Thành phố</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
+                      <Select
+                        onValueChange={field.onChange}
                         defaultValue={field.value}
                         disabled={isLoading}
                       >

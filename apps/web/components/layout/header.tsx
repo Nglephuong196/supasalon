@@ -16,7 +16,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUser } from "@/lib/hooks/use-user";
 import { ProfileDialog } from "@/components/profile-dialog";
-import { createClient } from "@/lib/supabase/client";
 
 interface HeaderProps {
   onMobileMenuOpen: () => void;
@@ -30,8 +29,7 @@ export function Header({ onMobileMenuOpen }: HeaderProps) {
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    // TODO: Implement logout with new backend
     router.push("/login");
     router.refresh();
   };
@@ -114,7 +112,7 @@ export function Header({ onMobileMenuOpen }: HeaderProps) {
                 Cài đặt
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={handleLogout}
                 disabled={isLoggingOut}
                 className="text-destructive focus:text-destructive"
@@ -126,7 +124,7 @@ export function Header({ onMobileMenuOpen }: HeaderProps) {
           </DropdownMenu>
         </div>
       </header>
-      
+
       <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
     </>
   );

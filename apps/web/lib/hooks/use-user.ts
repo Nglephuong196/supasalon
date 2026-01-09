@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
+
+// TODO: Replace with new backend auth
 
 interface Profile {
   id: string;
@@ -10,6 +10,11 @@ interface Profile {
   phone: string | "";
   avatar_url: string | "";
   is_admin: boolean;
+}
+
+interface User {
+  id: string;
+  email?: string;
 }
 
 interface UseUserReturn {
@@ -25,21 +30,8 @@ export function useUser(): UseUserReturn {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchUser = async () => {
-    const supabase = createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
-
-    if (user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      
-      setProfile(profile);
-    }
-
+    // TODO: Implement with new backend
+    console.warn('useUser: Not implemented - awaiting new backend');
     setIsLoading(false);
   };
 

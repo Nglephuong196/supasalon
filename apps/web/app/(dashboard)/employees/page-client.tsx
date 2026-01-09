@@ -7,10 +7,10 @@ import { ResourcePage } from "@/components/resource/resource-page"
 import { getColumns } from "./columns"
 import { EmployeeForm } from "./employee-form"
 import { EmployeeFormValues } from "./schema"
-import { 
-  useEmployees, 
-  useCreateEmployee, 
-  useUpdateEmployee, 
+import {
+  useEmployees,
+  useCreateEmployee,
+  useUpdateEmployee,
   useDeleteEmployee,
   useEmployeeGroups,
   useCreateEmployeeGroup,
@@ -26,16 +26,16 @@ interface EmployeesPageClientProps {
 
 export function EmployeesPageClient({ initialEmployees, initialGroups }: EmployeesPageClientProps) {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
-  
+
   // TanStack Query hooks - use initial data from server
   const { data: groups = initialGroups, isLoading: groupsLoading } = useEmployeeGroups()
   const { data: employees = initialEmployees, isLoading: employeesLoading } = useEmployees(selectedGroupId || undefined)
-  
+
   // Mutations
   const createEmployee = useCreateEmployee()
   const updateEmployee = useUpdateEmployee()
   const deleteEmployee = useDeleteEmployee()
-  
+
   const createGroup = useCreateEmployeeGroup()
   const updateGroup = useUpdateEmployeeGroup()
   const deleteGroup = useDeleteEmployeeGroup()
@@ -104,7 +104,7 @@ export function EmployeesPageClient({ initialEmployees, initialGroups }: Employe
     name: e.name,
     email: e.email || "",
     group_id: e.group_id || "",
-    status: e.status,
+    status: e.status || "active",
     avatar_url: e.avatar_url,
     allow_booking: e.allow_booking,
     allow_overlap: e.allow_overlap,
@@ -132,7 +132,7 @@ export function EmployeesPageClient({ initialEmployees, initialGroups }: Employe
         onEdit={handleEditGroup}
         onDelete={handleDeleteGroup}
       />
-      
+
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* Mobile Group Selector */}
         <div className="p-4 md:hidden">
@@ -146,14 +146,18 @@ export function EmployeesPageClient({ initialEmployees, initialGroups }: Employe
             onDelete={handleDeleteGroup}
           />
         </div>
-        
+
         <ResourcePage<EmployeeFormValues>
-          key={selectedGroupId || "all"} 
+          key={selectedGroupId || "all"}
           title={selectedGroupId ? groups.find(g => g.id === selectedGroupId)?.name || "Nhân viên" : "Tất cả nhân viên"}
           initialData={formattedEmployees}
           searchKey="name"
           addButtonLabel="Thêm nhân viên"
-          getColumns={(actions) => getColumns({ ...actions, groups }) as any}
+          getColumns={(actions) => getColumns({
+            onEdit: actions.onEdit as unknown as (item: Employee) => void,
+            onDelete: actions.onDelete as unknown as (item: Employee) => void,
+            groups
+          }) as any}
           FormComponent={(props) => <EmployeeForm {...props} groups={groups} />}
           onAdd={handleCreateEmployee}
           onEdit={handleUpdateEmployee}

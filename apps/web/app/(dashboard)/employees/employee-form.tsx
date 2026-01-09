@@ -36,7 +36,10 @@ interface EmployeeFormProps {
 export function EmployeeForm({ defaultValues, onSubmit, groups }: EmployeeFormProps) {
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
-    defaultValues: defaultValues || {
+    defaultValues: defaultValues ? {
+      ...defaultValues,
+      status: defaultValues.status || "active",
+    } : {
       name: "",
       email: "",
       group_id: "",
@@ -57,7 +60,7 @@ export function EmployeeForm({ defaultValues, onSubmit, groups }: EmployeeFormPr
             <TabsTrigger value="info">Cài đặt thông tin</TabsTrigger>
             <TabsTrigger value="permissions">Phân Quyền</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="info" className="space-y-4 mt-4">
             {/* Name */}
             <FormField
@@ -88,10 +91,10 @@ export function EmployeeForm({ defaultValues, onSubmit, groups }: EmployeeFormPr
                     Email đăng nhập
                   </FormLabel>
                   <FormControl>
-                    <Input 
-                      type="email" 
-                      placeholder="Nhập email để nhân viên đăng nhập" 
-                      {...field} 
+                    <Input
+                      type="email"
+                      placeholder="Nhập email để nhân viên đăng nhập"
+                      {...field}
                     />
                   </FormControl>
                   <FormDescription>
@@ -114,10 +117,10 @@ export function EmployeeForm({ defaultValues, onSubmit, groups }: EmployeeFormPr
                       Mật khẩu
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        type="password" 
-                        placeholder="Nhập mật khẩu cho nhân viên" 
-                        {...field} 
+                      <Input
+                        type="password"
+                        placeholder="Nhập mật khẩu cho nhân viên"
+                        {...field}
                         value={field.value || ""}
                       />
                     </FormControl>
@@ -267,10 +270,10 @@ export function EmployeeForm({ defaultValues, onSubmit, groups }: EmployeeFormPr
                 <FormItem>
                   <FormLabel>Ngày sinh</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="date" 
-                      placeholder="Nhập ngày sinh" 
-                      {...field} 
+                    <Input
+                      type="date"
+                      placeholder="Nhập ngày sinh"
+                      {...field}
                       value={field.value || ""}
                     />
                   </FormControl>
@@ -287,9 +290,9 @@ export function EmployeeForm({ defaultValues, onSubmit, groups }: EmployeeFormPr
                 <FormItem>
                   <FormLabel>Số điện thoại</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Nhập số điện thoại" 
-                      {...field} 
+                    <Input
+                      placeholder="Nhập số điện thoại"
+                      {...field}
                       value={field.value || ""}
                     />
                   </FormControl>
@@ -298,7 +301,7 @@ export function EmployeeForm({ defaultValues, onSubmit, groups }: EmployeeFormPr
               )}
             />
           </TabsContent>
-          
+
           <TabsContent value="permissions" className="space-y-4 mt-4">
             <div className="text-muted-foreground text-sm">
               Phân quyền sẽ được thiết lập sau khi tạo nhân viên.

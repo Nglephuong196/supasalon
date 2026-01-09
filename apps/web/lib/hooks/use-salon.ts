@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+
+// TODO: Replace with new backend
 
 interface Salon {
   id: string;
@@ -10,12 +11,6 @@ interface Salon {
   address: string;
   phone: string;
   logo_url: string | null;
-}
-
-interface SalonMember {
-  salon_id: string;
-  role: 'owner' | 'manager' | 'employee';
-  salon: Salon;
 }
 
 interface UseSalonReturn {
@@ -32,34 +27,8 @@ export function useSalon(): UseSalonReturn {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchSalon = async () => {
-    const supabase = createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
-
-    // Get user's salon membership
-    const { data: membership } = await supabase
-      .from("salon_members")
-      .select(`
-        salon_id,
-        role,
-        salon:salons(*)
-      `)
-      .eq("user_id", user.id)
-      .single();
-
-    if (membership) {
-      const salonData = Array.isArray(membership.salon) 
-        ? membership.salon[0] 
-        : membership.salon;
-      setSalon(salonData as Salon);
-      setRole(membership.role);
-    }
-
+    // TODO: Implement with new backend
+    console.warn('useSalon: Not implemented - awaiting new backend');
     setIsLoading(false);
   };
 

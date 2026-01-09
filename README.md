@@ -6,7 +6,7 @@ A monorepo for salon management with web and mobile apps.
 
 - **Web**: Next.js 16 + React 19 + Tailwind CSS
 - **Mobile**: Expo + React Native
-- **Database**: Supabase (PostgreSQL)
+- **Database**: PostgreSQL (backend TBD)
 - **Monorepo**: Bun workspaces
 - **Hosting**: Cloudflare Workers (via OpenNext)
 
@@ -15,8 +15,6 @@ A monorepo for salon management with web and mobile apps.
 ### Prerequisites
 
 - [Bun](https://bun.sh/) (package manager & runtime)
-- [Docker](https://www.docker.com/) (for Supabase local dev)
-- [Supabase CLI](https://supabase.com/docs/guides/cli) (`npm install -g supabase`)
 
 ### Install Dependencies
 
@@ -39,33 +37,6 @@ bun dev:mobile:android
 bun dev:mobile:web
 ```
 
-### Supabase Commands
-
-Run these directly (not through bun scripts):
-
-```bash
-# Start local Supabase
-npx supabase start
-
-# Stop local Supabase
-npx supabase stop
-
-# Reset database
-npx supabase db reset
-
-# Generate TypeScript types
-npx supabase gen types typescript local > packages/database/src/database.types.ts
-
-# Push migrations
-npx supabase db push
-
-# Create new migration
-npx supabase migration new <name>
-
-# Diff database changes
-npx supabase db diff -f <name>
-```
-
 ### Build
 
 ```bash
@@ -85,10 +56,9 @@ salon-pro/
 ├── apps/
 │   ├── web/          # Next.js web app
 │   └── mobile/       # Expo mobile app
-├── packages/
-│   ├── database/     # Supabase types
-│   └── constants/    # Shared constants
-└── supabase/         # Supabase config & migrations
+└── packages/
+    ├── database/     # Database types
+    └── constants/    # Shared constants
 ```
 
 ## Deployment

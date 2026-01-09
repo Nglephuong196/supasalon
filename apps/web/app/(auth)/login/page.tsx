@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -53,22 +52,9 @@ function LoginForm() {
     setIsLoading(true);
     setError(null);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    });
-
-    if (error) {
-      setError(error.message === "Invalid login credentials" 
-        ? "Email hoặc mật khẩu không đúng" 
-        : error.message);
-      setIsLoading(false);
-      return;
-    }
-
-    router.push("/");
-    router.refresh();
+    // TODO: Implement with new backend
+    setError("Chức năng đăng nhập đang được cập nhật. Vui lòng thử lại sau.");
+    setIsLoading(false);
   }
 
   return (
@@ -171,4 +157,3 @@ export default function LoginPage() {
     </Suspense>
   );
 }
-

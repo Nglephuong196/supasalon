@@ -1,9 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase/client'
 import type { Service, ServiceInsert, ServiceUpdate } from '@/lib/types/service'
 import { toast } from 'sonner'
 
-const supabase = createClient()
+// TODO: Replace with new backend API calls
 
 // Query keys
 export const serviceKeys = {
@@ -33,60 +32,22 @@ export function useServicesPaginated(
   return useQuery({
     queryKey: serviceKeys.paginated(page, pageSize, categoryId, search),
     queryFn: async (): Promise<PaginatedResponse<Service>> => {
-      const from = (page - 1) * pageSize
-      const to = from + pageSize - 1
-
-      let query = supabase
-        .from('services')
-        .select('*', { count: 'exact' })
-        .order('name', { ascending: true })
-        .range(from, to)
-
-      if (categoryId) {
-        query = query.eq('category_id', categoryId)
-      }
-
-      if (search && search.trim()) {
-        query = query.ilike('name', `%${search.trim()}%`)
-      }
-
-      const { data, error, count } = await query
-
-      if (error) throw error
-
-      const total = count || 0
-      const totalPages = Math.ceil(total / pageSize)
-
-      return {
-        data: data as Service[],
-        total,
-        page,
-        pageSize,
-        totalPages,
-      }
+      // TODO: Implement with new backend
+      console.warn('useServicesPaginated: Not implemented - awaiting new backend')
+      return { data: [], total: 0, page, pageSize, totalPages: 0 }
     },
     staleTime: 1000 * 60 * 2,
   })
 }
 
-// Fetch all services (optionally filtered by category)
+// Fetch all services
 export function useServices(categoryId?: string) {
   return useQuery({
     queryKey: serviceKeys.list(categoryId),
     queryFn: async () => {
-      let query = supabase
-        .from('services')
-        .select('*')
-        .order('name', { ascending: true })
-
-      if (categoryId) {
-        query = query.eq('category_id', categoryId)
-      }
-
-      const { data, error } = await query
-
-      if (error) throw error
-      return data as Service[]
+      // TODO: Implement with new backend
+      console.warn('useServices: Not implemented - awaiting new backend')
+      return [] as Service[]
     },
     staleTime: 1000 * 60 * 2,
   })
@@ -97,40 +58,28 @@ export function useService(id: string) {
   return useQuery({
     queryKey: serviceKeys.detail(id),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-      if (error) throw error
-      return data as Service
+      // TODO: Implement with new backend
+      console.warn('useService: Not implemented - awaiting new backend')
+      return null as Service | null
     },
     enabled: !!id,
     staleTime: 1000 * 60 * 5,
   })
 }
 
-// Create service with optimistic updates
+// Create service
 export function useCreateService() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (service: ServiceInsert) => {
-      const { data, error } = await supabase
-        .from('services')
-        .insert(service)
-        .select()
-        .single()
-
-      if (error) throw error
-      return data as Service
+      // TODO: Implement with new backend
+      throw new Error('Not implemented - awaiting new backend')
     },
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: serviceKeys.all })
       toast.loading('Đang thêm dịch vụ...', { id: 'create-service' })
     },
-    onSuccess: (data) => {
+    onSuccess: (data: Service) => {
       queryClient.invalidateQueries({ queryKey: serviceKeys.all })
       toast.success(`Đã thêm dịch vụ "${data.name}"`, { id: 'create-service' })
     },
@@ -140,49 +89,23 @@ export function useCreateService() {
   })
 }
 
-// Update service with optimistic updates
+// Update service
 export function useUpdateService() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: ServiceUpdate & { id: string }) => {
-      const { data, error } = await supabase
-        .from('services')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single()
-
-      if (error) throw error
-      return data as Service
+      // TODO: Implement with new backend
+      throw new Error('Not implemented - awaiting new backend')
     },
-    onMutate: async (variables) => {
-      await queryClient.cancelQueries({ queryKey: serviceKeys.detail(variables.id) })
-      
-      const previousService = queryClient.getQueryData<Service>(serviceKeys.detail(variables.id))
-      
-      if (previousService) {
-        queryClient.setQueryData<Service>(serviceKeys.detail(variables.id), {
-          ...previousService,
-          ...variables,
-        })
-      }
-      
+    onMutate: async () => {
       toast.loading('Đang cập nhật...', { id: 'update-service' })
-      return { previousService }
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData<Service>(serviceKeys.detail(data.id), data)
+    onSuccess: (data: Service) => {
       queryClient.invalidateQueries({ queryKey: serviceKeys.all })
       toast.success(`Đã cập nhật dịch vụ "${data.name}"`, { id: 'update-service' })
     },
-    onError: (error: Error, variables, context) => {
-      if (context?.previousService) {
-        queryClient.setQueryData<Service>(
-          serviceKeys.detail(variables.id),
-          context.previousService
-        )
-      }
+    onError: (error: Error) => {
       toast.error(`Lỗi: ${error.message}`, { id: 'update-service' })
     },
   })
@@ -194,19 +117,11 @@ export function useDeleteService() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('services')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
-      return id
+      // TODO: Implement with new backend
+      throw new Error('Not implemented - awaiting new backend')
     },
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: serviceKeys.all })
-      
+    onMutate: async () => {
       toast.loading('Đang xóa...', { id: 'delete-service' })
-      return { id }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: serviceKeys.all })
@@ -224,18 +139,10 @@ export function useToggleServiceActive() {
 
   return useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { data, error } = await supabase
-        .from('services')
-        .update({ is_active })
-        .eq('id', id)
-        .select()
-        .single()
-
-      if (error) throw error
-      return data as Service
+      // TODO: Implement with new backend
+      throw new Error('Not implemented - awaiting new backend')
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData<Service>(serviceKeys.detail(data.id), data)
+    onSuccess: (data: Service) => {
       queryClient.invalidateQueries({ queryKey: serviceKeys.all })
       toast.success(data.is_active ? 'Đã bật dịch vụ' : 'Đã tắt dịch vụ')
     },

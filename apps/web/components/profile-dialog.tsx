@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/hooks/use-user";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,37 +58,14 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
 
   async function onSubmit(values: ProfileFormValues) {
     if (!user) return;
-    
+
     setIsLoading(true);
     setError(null);
     setSuccess(false);
 
-    const supabase = createClient();
-    
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: values.full_name,
-        phone: values.phone || null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", user.id);
-
-    if (error) {
-      setError("Có lỗi xảy ra khi cập nhật hồ sơ: " + error.message);
-      setIsLoading(false);
-      return;
-    }
-
-    await refetch();
-    setSuccess(true);
+    // TODO: Implement with new backend
+    setError("Chức năng cập nhật hồ sơ đang được cập nhật. Vui lòng thử lại sau.");
     setIsLoading(false);
-    
-    // Close dialog after short delay
-    setTimeout(() => {
-      onOpenChange(false);
-      setSuccess(false);
-    }, 1000);
   }
 
   const getInitials = (name: string) => {
@@ -130,7 +106,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             {error}
           </div>
         )}
-        
+
         {success && (
           <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700 border border-green-200">
             Cập nhật thành công!
@@ -174,7 +150,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                 </FormItem>
               )}
             />
-            
+
             <div className="pt-2 text-sm text-muted-foreground">
               <p><strong>Email:</strong> {user?.email}</p>
               <p className="text-xs mt-1">Email không thể thay đổi</p>
