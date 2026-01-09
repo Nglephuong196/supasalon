@@ -63,7 +63,7 @@ export function CustomerForm({ defaultValues, onSubmit }: CustomerFormProps) {
             <FormItem>
               <FormLabel>Số điện thoại *</FormLabel>
               <FormControl>
-                <Input placeholder="0901234567" {...field} />
+                <Input placeholder="0901234567" {...field} value={field.value || ""} />
               </FormControl>
               <FormMessage />
             </FormItem>

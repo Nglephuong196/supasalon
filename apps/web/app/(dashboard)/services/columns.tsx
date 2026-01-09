@@ -10,10 +10,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Service } from "./schema"
+import { ServiceFormValues } from "./schema"
 import { ResourceActions } from "@/components/resource/resource-page"
 
-export const getColumns = ({ onEdit, onDelete }: ResourceActions<Service>): ColumnDef<Service>[] => [
+export const getColumns = ({ onEdit, onDelete }: ResourceActions<ServiceFormValues>): ColumnDef<ServiceFormValues>[] => [
   {
     accessorKey: "name",
     header: "Tên dịch vụ",
@@ -21,7 +21,10 @@ export const getColumns = ({ onEdit, onDelete }: ResourceActions<Service>): Colu
   {
     accessorKey: "duration",
     header: "Thời lượng",
-    cell: ({ row }) => `${row.getValue("duration")} phút`,
+    cell: ({ row }) => {
+      const duration = row.getValue("duration") as number | null
+      return duration ? `${duration} phút` : "-"
+    },
   },
   {
     accessorKey: "price",

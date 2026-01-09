@@ -1,27 +1,17 @@
-"use client"
+import { getEmployees, getEmployeeGroups } from "@/lib/queries/server-queries"
+import { EmployeesPageClient } from "./page-client"
 
-import { ResourcePage } from "@/components/resource/resource-page"
-import { getColumns } from "./columns"
-import { EmployeeForm } from "./employee-form"
-import { Employee } from "./schema"
+export default async function EmployeesPage() {
+  // Server-side data fetching
+  const [employees, groups] = await Promise.all([
+    getEmployees(),
+    getEmployeeGroups()
+  ])
 
-// Mock data
-const initialData: Employee[] = [
-  { id: "1", name: "Lê Văn C", role: "Stylist chính", phone: "0909998887", status: "Active" },
-  { id: "2", name: "Nguyễn Thị D", role: "Thợ phụ", phone: "0918887776", status: "Active" },
-]
-
-export default function EmployeesPage() {
   return (
-    <ResourcePage<Employee>
-      title="Nhân viên"
-      initialData={initialData}
-      searchKey="name"
-      addButtonLabel="Thêm nhân viên"
-      getColumns={getColumns}
-      FormComponent={EmployeeForm}
-      dialogTitle={(isEditing) => isEditing ? "Sửa nhân viên" : "Thêm nhân viên mới"}
-      dialogDescription="Nhập thông tin nhân viên vào form bên dưới."
+    <EmployeesPageClient 
+      initialEmployees={employees} 
+      initialGroups={groups} 
     />
   )
 }

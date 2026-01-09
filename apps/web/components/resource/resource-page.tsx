@@ -45,6 +45,11 @@ interface ResourcePageProps<T> {
   dialogDescription?: string
   dateFilterField?: keyof T
   statsCards?: React.ReactNode
+  isLoading?: boolean
+  // Optional external handlers for integration with TanStack Query
+  onAdd?: (data: T) => Promise<boolean | void> | boolean | void
+  onEdit?: (data: T) => Promise<boolean | void> | boolean | void
+  onDelete?: (item: T) => Promise<void> | void
 }
 
 export function ResourcePage<T extends { id?: string }>({
@@ -58,6 +63,10 @@ export function ResourcePage<T extends { id?: string }>({
   dialogDescription = "Nhập thông tin vào form bên dưới.",
   dateFilterField,
   statsCards,
+  isLoading = false,
+  onAdd,
+  onEdit: onEditExternal,
+  onDelete: onDeleteExternal,
 }: ResourcePageProps<T>) {
   const [data, setData] = useState<T[]>(initialData)
   const [isOpen, setIsOpen] = useState(false)
@@ -70,6 +79,11 @@ export function ResourcePage<T extends { id?: string }>({
   })
   const [searchQuery, setSearchQuery] = useState("")
   const [quickFilter, setQuickFilter] = useState("today")
+
+  // Sync with external data (from TanStack Query)
+  useEffect(() => {
+    setData(initialData)
+  }, [initialData])
 
   // Update dateRange when quickFilter changes
   const handleQuickFilterChange = (value: string) => {
@@ -106,23 +120,45 @@ export function ResourcePage<T extends { id?: string }>({
   }, [dateRange])
 
 
-  const handleCreate = (newItem: T) => {
-    // Generate a random ID if not provided (mock behavior)
-    // In a real app, the backend would assign the ID
-    const itemWithId = { ...newItem, id: Math.random().toString() }
-    setData([...data, itemWithId])
-    setIsOpen(false)
+  const handleCreate = async (newItem: T) => {
+    if (onAdd) {
+      const result = await onAdd(newItem)
+      if (result !== false) {
+        setIsOpen(false)
+      }
+    } else {
+      // Fallback to local state management
+      const itemWithId = { ...newItem, id: Math.random().toString() }
+      setData([...data, itemWithId])
+      setIsOpen(false)
+    }
   }
 
-  const handleUpdate = (updatedItem: T) => {
-    setData(data.map((item) => (item.id === updatedItem.id ? updatedItem : item)))
-    setIsOpen(false)
-    setEditingItem(null)
+  const handleUpdate = async (updatedItem: T) => {
+    if (onEditExternal) {
+      const result = await onEditExternal(updatedItem)
+      if (result !== false) {
+        setIsOpen(false)
+        setEditingItem(null)
+      }
+    } else {
+      // Fallback to local state management
+      setData(data.map((item) => (item.id === updatedItem.id ? updatedItem : item)))
+      setIsOpen(false)
+      setEditingItem(null)
+    }
   }
 
-  const handleDelete = (itemToDelete: T) => {
-    if (confirm("Bạn có chắc chắn muốn xóa mục này?")) {
-      setData(data.filter((item) => item.id !== itemToDelete.id))
+  const handleDelete = async (itemToDelete: T) => {
+    if (onDeleteExternal) {
+      if (confirm("Bạn có chắc chắn muốn xóa mục này?")) {
+        await onDeleteExternal(itemToDelete)
+      }
+    } else {
+      // Fallback to local state management
+      if (confirm("Bạn có chắc chắn muốn xóa mục này?")) {
+        setData(data.filter((item) => item.id !== itemToDelete.id))
+      }
     }
   }
 

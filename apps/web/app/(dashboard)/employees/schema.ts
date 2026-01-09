@@ -2,10 +2,16 @@ import { z } from "zod"
 
 export const employeeSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(2, { message: "Tên phải có ít nhất 2 ký tự." }),
-  role: z.string().min(2, { message: "Vị trí không được để trống." }),
-  phone: z.string().min(10, { message: "Số điện thoại không hợp lệ." }),
-  status: z.enum(["Active", "Inactive"]),
+  name: z.string().min(1, "Tên nhân viên không được để trống"),
+  email: z.string().email("Email không hợp lệ").min(1, "Email không được để trống"),
+  password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự").optional(),
+  group_id: z.string().min(1, "Vui lòng chọn nhóm"),
+  status: z.enum(["active", "inactive"]).default("active"),
+  avatar_url: z.string().nullable().optional(),
+  allow_booking: z.boolean().default(true),
+  allow_overlap: z.boolean().default(false),
+  birthday: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
 })
 
-export type Employee = z.infer<typeof employeeSchema>
+export type EmployeeFormValues = z.infer<typeof employeeSchema>
