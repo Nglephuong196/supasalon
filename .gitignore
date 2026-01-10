@@ -17,6 +17,16 @@ node_modules/
 .next/
 /out/
 
+# apps/api (cloudflare workers)
+.wrangler/
+.dev.vars
+
+# apps/web-svelte (sveltekit)
+.svelte-kit/
+.netlify/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
 # apps/mobile (expo)
 .expo/
 dist/
@@ -51,6 +61,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel

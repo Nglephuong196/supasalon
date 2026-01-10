@@ -1,16 +1,15 @@
 {
   "name": "api",
-  "version": "1.0.50",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch src/index.ts"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "@sinclair/typebox": "^0.34.47",
-    "elysia": "latest"
+    "hono": "^4.11.3"
   },
   "devDependencies": {
-    "bun-types": "latest"
-  },
-  "module": "src/index.js"
+    "wrangler": "^4.4.0"
+  }
 }

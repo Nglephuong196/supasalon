@@ -5,11 +5,12 @@ A monorepo for salon management with web and mobile apps.
 ## Tech Stack
 
 - **Web**: Next.js 16 + React 19 + Tailwind CSS
-- **API**: Elysia (Bun-native HTTP framework)
+- **Web (Svelte)**: SvelteKit 2 + Svelte 5
+- **API**: Hono (Cloudflare Workers)
 - **Mobile**: Expo + React Native
-- **Database**: PostgreSQL (backend TBD)
+- **Database**: Supabase (PostgreSQL)
 - **Monorepo**: Bun workspaces
-- **Hosting**: Cloudflare Workers (via OpenNext)
+- **Hosting**: Cloudflare Workers
 
 ## Getting Started
 
@@ -26,8 +27,11 @@ bun install
 ### Development
 
 ```bash
-# Start web app
+# Start web app (Next.js)
 bun dev:web
+
+# Start web app (SvelteKit)
+bun dev:web-svelte
 
 # Start API server
 bun dev:api
@@ -59,7 +63,8 @@ bun build:mobile:android
 salon-pro/
 ├── apps/
 │   ├── web/          # Next.js web app
-│   ├── api/          # Elysia API server
+│   ├── web-svelte/   # SvelteKit web app
+│   ├── api/          # Hono API (Cloudflare Workers)
 │   └── mobile/       # Expo mobile app
 └── packages/
     ├── database/     # Database types
