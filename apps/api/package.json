@@ -4,12 +4,20 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply supasalon-db --local",
+    "db:migrate:prod": "wrangler d1 migrations apply supasalon-db --remote",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "better-auth": "^1.4.10",
+    "drizzle-orm": "^0.45.1",
     "hono": "^4.11.3"
   },
   "devDependencies": {
-    "wrangler": "^4.4.0"
+    "@cloudflare/workers-types": "^4.20260109.0",
+    "drizzle-kit": "^0.31.8",
+    "wrangler": "^4.58.0"
   }
 }

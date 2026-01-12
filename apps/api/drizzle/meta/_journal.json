@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1768033078607,
+      "tag": "0000_true_medusa",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1768040375818,
+      "tag": "0001_chilly_random",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1768139302599,
+      "tag": "0002_omniscient_loners",
+      "breakpoints": true
+    }
+  ]
+}

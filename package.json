@@ -6,6 +6,7 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "bun run --filter web-svelte --filter api dev",
     "dev:web": "bun run --filter web dev",
     "dev:web-svelte": "bun run --filter web-svelte dev",
     "dev:api": "bun run --filter api dev",
