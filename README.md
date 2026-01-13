@@ -1,17 +1,128 @@
-# Salon Pro
+# Supasalon
 
-A monorepo for salon management with web and mobile apps.
+A multi-tenant salon management SaaS with web and mobile apps.
 
 ## Tech Stack
 
-- **Web**: Next.js 16 + React 19 + Tailwind CSS
-- **Web (Svelte)**: SvelteKit 2 + Svelte 5
-- **API**: Hono (Cloudflare Workers)
-- **Mobile**: Expo + React Native
-- **Database**: Cloudflare D1 (SQLite) + Drizzle ORM
-- **Auth**: Better Auth
-- **Monorepo**: Bun workspaces
-- **Hosting**: Cloudflare Workers
+| Layer | Technology |
+|-------|------------|
+| **Web (Primary)** | SvelteKit 2 + Svelte 5 + Tailwind v4 + shadcn-svelte |
+| **Web (Legacy)** | Next.js 16 + React 19 |
+| **API** | Hono on Cloudflare Workers |
+| **Mobile** | Expo 54 + React Native |
+| **Database** | Cloudflare D1 (SQLite) + Drizzle ORM |
+| **Auth** | Better Auth (email/password) |
+| **Monorepo** | Bun workspaces |
+| **Hosting** | Cloudflare (Workers + Pages) |
+
+## Project Structure
+
+```
+supasalon/
+├── apps/
+│   ├── api/              # Hono API (Cloudflare Workers)
+│   ├── web-svelte/       # SvelteKit web app (PRIMARY)
+│   ├── web/              # Next.js web app (legacy)
+│   └── mobile/           # Expo mobile app
+└── packages/
+    ├── constants/        # Shared constants (Vietnam provinces, phone validation)
+    └── database/         # Shared database types
+```
+
+## Architecture Overview
+
+### API (`apps/api`)
+
+Hono serverless API deployed to Cloudflare Workers with D1 database.
+
+**Entry point:** `src/index.ts`
+
+**Structure:**
+- `src/controllers/` - Route handlers (auth, users, salons, customers, services, bookings, invoices)
+- `src/services/` - Business logic layer
+- `src/db/` - Database connection and schema
+- `src/lib/auth.ts` - Better Auth configuration
+
+**Environment variables** (`.dev.vars`):
+```
+BETTER_AUTH_SECRET=<your-secret>
+BETTER_AUTH_URL=http://localhost:8787
+```
+
+**API Routes:**
+| Route | Description |
+|-------|-------------|
+| `GET /` | Health check |
+| `/api/auth/*` | Better Auth endpoints (signup, signin, session, etc.) |
+| `/users` | User management |
+| `/salons` | Salon CRUD |
+| `/customers` | Customer management |
+| `/service-categories` | Service category CRUD |
+| `/services` | Service CRUD |
+| `/bookings` | Booking management |
+| `/invoices` | Invoice management |
+
+**CORS:** Configured for `localhost:5173` (SvelteKit dev server)
+
+### Database Schema (`apps/api/src/db/schema.ts`)
+
+**Better Auth tables:**
+- `user` - Users with role (admin/owner/staff)
+- `session` - Auth sessions (7-day expiry)
+- `account` - OAuth accounts
+- `verification` - Email verification tokens
+
+**Business tables:**
+- `salons` - Linked to owner (user)
+- `customers` - Linked to salon
+- `serviceCategories` - Linked to salon
+- `services` - Linked to category
+- `bookings` - Links salon, customer, service
+- `invoices` - Linked to booking
+
+**Auto-create salon on signup:** When a user signs up with `salonName`, a salon is automatically created via Better Auth database hooks.
+
+### Web App (`apps/web-svelte`)
+
+SvelteKit 2 with Svelte 5, deployed to Cloudflare Pages.
+
+**UI Stack:**
+- Tailwind CSS v4
+- shadcn-svelte (Radix-based components)
+- bits-ui
+- lucide-svelte (icons)
+
+**Auth client:** `src/lib/auth-client.ts`
+```typescript
+import { signIn, signUp, signOut, useSession } from '$lib/auth-client';
+```
+
+**Custom user fields in auth:**
+- `salonName` - Salon name (used to auto-create salon)
+- `province` - Vietnamese province
+- `address` - Street address
+- `phone` - Phone number
+
+**Routes:**
+- `/` - Landing page
+- `/(auth)/login` - Login page
+- `/(auth)/signup` - Signup page
+- `/dashboard` - Protected dashboard
+
+**Environment variables** (`.env`):
+```
+VITE_AUTH_BASE_URL=http://localhost:8787
+```
+
+### Shared Packages
+
+**`@repo/constants`:**
+- `VIETNAM_PROVINCES` - List of 34 Vietnamese provinces (post-2025 reform)
+- `VIETNAM_PHONE_REGEX` - Vietnamese phone number validation
+- `isValidVietnamesePhone()` - Phone validation helper
+
+**`@repo/database`:**
+- Shared TypeScript types (placeholder for future expansion)
 
 ## Getting Started
 
@@ -25,140 +136,81 @@ A monorepo for salon management with web and mobile apps.
 bun install
 ```
 
+### First-Time Database Setup
+
+```bash
+cd apps/api
+cp .dev.vars.example .dev.vars  # Edit with your secrets
+bun run db:generate             # Generate migration
+bun run db:migrate:local        # Apply to local D1
+```
+
 ### Development
 
 ```bash
-# Start web app (Next.js)
-bun dev:web
+# Start both API and SvelteKit (recommended)
+bun dev
 
-# Start web app (SvelteKit)
-bun dev:web-svelte
-
-# Start API server
-bun dev:api
-
-# Start mobile app
-bun dev:mobile
-
-# Start mobile on specific platform
-bun dev:mobile:ios
-bun dev:mobile:android
-bun dev:mobile:web
+# Or individually:
+bun dev:api           # API on http://localhost:8787
+bun dev:web-svelte    # Web on http://localhost:5173
+bun dev:mobile        # Expo mobile
 ```
-
-### Build
-
-```bash
-# Build web
-bun build:web
-
-# Build mobile
-bun build:mobile:web
-bun build:mobile:ios
-bun build:mobile:android
-```
-
-## Project Structure
-
-```
-salon-pro/
-├── apps/
-│   ├── web/          # Next.js web app
-│   ├── web-svelte/   # SvelteKit web app
-│   ├── api/          # Hono API (Cloudflare Workers)
-│   └── mobile/       # Expo mobile app
-└── packages/
-    ├── database/     # Database types
-    └── constants/    # Shared constants
-```
-
-## Deployment
-
-### Cloudflare Workers (Web App)
-
-**Local commands:**
-
-```bash
-cd apps/web
-
-# Build for Cloudflare
-bun run cf:build
-
-# Deploy to Cloudflare
-bun run cf:deploy
-
-# Local dev with Cloudflare runtime
-bun run cf:dev
-```
-
-**CI/CD:** Push to `master` triggers auto-deploy via GitHub Actions.
-
-**Required GitHub Secrets:**
-
-- `CLOUDFLARE_API_TOKEN` - [Create here](https://dash.cloudflare.com/profile/api-tokens)
-- `CLOUDFLARE_ACCOUNT_ID` - Found in Cloudflare Dashboard → Overview
 
 ## Database Development
 
-All database commands should be run from the `apps/api` directory:
+All commands from `apps/api`:
 
 ```bash
 cd apps/api
 ```
 
-### Schema Development Workflow
+### Workflow
 
-1. **Modify Schema** - Edit `src/db/schema.ts`
+1. **Edit schema** - `src/db/schema.ts`
+2. **Generate migration** - `bun run db:generate`
+3. **Apply locally** - `bun run db:migrate:local`
+4. **Apply to production** - `bun run db:migrate:prod`
 
-2. **Generate Migration** - Creates SQL migration file in `drizzle/`:
-   ```bash
-   bun run db:generate
-   ```
+### Commands
 
-3. **Apply Migration Locally** - Runs migration on local D1:
-   ```bash
-   bun run db:migrate:local
-   ```
-
-4. **Apply Migration to Production** - Runs migration on remote D1:
-   ```bash
-   bun run db:migrate:prod
-   ```
-
-### Better Auth Schema
-
-The schema includes Better Auth tables (`user`, `session`, `account`, `verification`). If you need to regenerate or reference the Better Auth schema:
-
-```bash
-bunx @better-auth/cli generate --config src/lib/auth.ts
-```
-
-This generates the required auth tables. The current schema in `src/db/schema.ts` already includes these tables with the correct structure.
-
-### Database Studio
-
-To visually explore and edit your database:
-
-```bash
-bun run db:studio
-```
-
-### Available Scripts
-
-| Script | Description |
-|--------|-------------|
+| Command | Description |
+|---------|-------------|
 | `bun run db:generate` | Generate migration from schema changes |
 | `bun run db:migrate:local` | Apply migrations to local D1 |
 | `bun run db:migrate:prod` | Apply migrations to remote D1 |
 | `bun run db:studio` | Open Drizzle Studio GUI |
 
-### First-Time Setup
+### Better Auth Schema
 
-When starting fresh or after resetting:
+Regenerate auth tables if needed:
+```bash
+bunx @better-auth/cli generate --config src/lib/auth.ts
+```
+
+## Deployment
+
+### API (Cloudflare Workers)
 
 ```bash
 cd apps/api
-bun run db:generate      # Generate initial migration
-bun run db:migrate:local # Apply to local D1
+bun run deploy
 ```
 
+### Web (Cloudflare Pages)
+
+```bash
+cd apps/web-svelte
+bun run deploy
+```
+
+## Key Files Reference
+
+| File | Purpose |
+|------|---------|
+| `apps/api/src/index.ts` | API entry point and routes |
+| `apps/api/src/lib/auth.ts` | Better Auth configuration |
+| `apps/api/src/db/schema.ts` | Database schema (all tables) |
+| `apps/api/wrangler.jsonc` | Cloudflare Workers config |
+| `apps/web-svelte/src/lib/auth-client.ts` | Frontend auth client |
+| `packages/constants/vietnam.ts` | Vietnam provinces & phone validation |

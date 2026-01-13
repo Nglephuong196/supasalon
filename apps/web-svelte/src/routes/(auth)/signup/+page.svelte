@@ -11,8 +11,7 @@
     import { Input } from "$lib/components/ui/input";
     import { Label } from "$lib/components/ui/label";
     import { Select } from "$lib/components/ui/select";
-    import Store from "lucide-svelte/icons/store";
-    import Loader2 from "lucide-svelte/icons/loader-2";
+    import { Store, Loader } from "@lucide/svelte";
     import { VIETNAM_PROVINCES, VIETNAM_PHONE_REGEX } from "@repo/constants";
     import { signUp } from "$lib/auth-client";
     import { goto } from "$app/navigation";
@@ -148,10 +147,15 @@
             email,
             password,
             name: ownerName,
-            salonName,
-            province,
-            address,
-            phone,
+            // Additional fields are passed to the server's databaseHooks via fetchOptions
+            fetchOptions: {
+                body: {
+                    salonName,
+                    province,
+                    address,
+                    phone,
+                } as Record<string, unknown>,
+            },
         });
 
         if (result.error) {
@@ -159,7 +163,7 @@
                 result.error.message || "Đăng ký thất bại. Vui lòng thử lại.";
             isLoading = false;
         } else {
-            goto("/dashboard");
+            goto("/");
         }
     }
 </script>
@@ -342,7 +346,7 @@
 
             <Button type="submit" class="w-full" size="lg" disabled={isLoading}>
                 {#if isLoading}
-                    <Loader2 class="mr-2 h-4 w-4 animate-spin" />
+                    <Loader class="mr-2 h-4 w-4 animate-spin" />
                     Đang tạo tài khoản...
                 {:else}
                     Đăng ký

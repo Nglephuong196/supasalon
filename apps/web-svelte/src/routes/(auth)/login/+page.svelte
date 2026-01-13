@@ -10,9 +10,8 @@
     import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input";
     import { Label } from "$lib/components/ui/label";
-    import LogIn from "lucide-svelte/icons/log-in";
-    import Loader2 from "lucide-svelte/icons/loader-2";
-    import { signIn } from "$lib/auth-client";
+    import { LogIn, Loader, Sparkles } from "@lucide/svelte";
+    import { signIn, authClient } from "$lib/auth-client";
     import { goto } from "$app/navigation";
 
     let email = $state("");
@@ -27,11 +26,11 @@
     function validateEmail(value: string): boolean {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!value) {
-            emailError = "Vui lòng nhập email";
+            emailError = "Please enter email";
             return false;
         }
         if (!emailRegex.test(value)) {
-            emailError = "Email không hợp lệ";
+            emailError = "Invalid email";
             return false;
         }
         emailError = null;
@@ -40,11 +39,11 @@
 
     function validatePassword(value: string): boolean {
         if (!value) {
-            passwordError = "Vui lòng nhập mật khẩu";
+            passwordError = "Please enter password";
             return false;
         }
         if (value.length < 6) {
-            passwordError = "Mật khẩu phải có ít nhất 6 ký tự";
+            passwordError = "Password must be at least 6 characters";
             return false;
         }
         passwordError = null;
@@ -53,6 +52,7 @@
 
     async function handleSubmit(e: SubmitEvent) {
         e.preventDefault();
+        console.log("submit");
 
         const isEmailValid = validateEmail(email);
         const isPasswordValid = validatePassword(password);
@@ -67,86 +67,136 @@
         const result = await signIn.email({
             email,
             password,
+            fetchOptions: {
+                onSuccess: async () => {
+                    goto("/");
+                },
+            },
         });
 
         if (result.error) {
             error =
                 result.error.message ||
-                "Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.";
+                "Login failed. Please check your credentials.";
             isLoading = false;
-        } else {
-            goto("/dashboard");
         }
     }
 </script>
 
-<Card class="shadow-2xl border-0">
-    <CardHeader class="space-y-1 text-center">
-        <div
-            class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground"
-        >
-            <LogIn class="h-7 w-7" />
-        </div>
-        <CardTitle class="text-2xl font-bold">Đăng nhập</CardTitle>
-        <CardDescription>
-            Nhập email và mật khẩu để đăng nhập vào hệ thống
-        </CardDescription>
-    </CardHeader>
-    <CardContent>
-        {#if error}
-            <div
-                class="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive border border-destructive/20"
+<div
+    class="flex items-center justify-center min-h-screen bg-[#FAFAFA] relative overflow-hidden"
+>
+    <!-- Subtle Background Blob - Very Soft Lavender -->
+    <div
+        class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-purple-100/40 rounded-full blur-3xl pointer-events-none"
+    ></div>
+    <div
+        class="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-purple-100/40 rounded-full blur-3xl pointer-events-none"
+    ></div>
+
+    <Card
+        class="w-full max-w-md border-0 shadow-xl shadow-purple-900/5 bg-white rounded-2xl relative z-10 backdrop-blur-sm"
+    >
+        <CardHeader class="space-y-2 text-center pb-8 pt-8">
+            <div class="flex justify-center mb-2">
+                <div
+                    class="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-purple-200"
+                >
+                    <Sparkles class="h-6 w-6" />
+                </div>
+            </div>
+            <CardTitle class="text-2xl font-bold text-gray-900 tracking-tight"
+                >Welcome Back</CardTitle
             >
-                {error}
-            </div>
-        {/if}
-        <form onsubmit={handleSubmit} class="space-y-4">
-            <div class="space-y-2">
-                <Label for="email">Email</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    placeholder="email@example.com"
-                    autocomplete="email"
+            <CardDescription class="text-base text-gray-500">
+                Sign in to manage your salon
+            </CardDescription>
+        </CardHeader>
+        <CardContent class="space-y-6 px-8">
+            {#if error}
+                <div
+                    class="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-600 border border-red-100 flex items-center gap-2"
+                >
+                    ⚠️ {error}
+                </div>
+            {/if}
+            <form onsubmit={handleSubmit} class="space-y-5">
+                <div class="space-y-2">
+                    <Label
+                        for="email"
+                        class="text-sm font-semibold text-gray-700"
+                        >Email Address</Label
+                    >
+                    <Input
+                        id="email"
+                        type="email"
+                        placeholder="hello@salon.com"
+                        autocomplete="email"
+                        disabled={isLoading}
+                        bind:value={email}
+                        onblur={() => validateEmail(email)}
+                        class="h-11 bg-gray-50/50 border-gray-200 focus:bg-white focus:border-purple-500 transition-all rounded-lg"
+                    />
+                    {#if emailError}
+                        <p class="text-xs text-red-500 font-medium">
+                            {emailError}
+                        </p>
+                    {/if}
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <Label
+                            for="password"
+                            class="text-sm font-semibold text-gray-700"
+                            >Password</Label
+                        >
+                        <a
+                            href="#"
+                            class="text-sm font-medium text-purple-600 hover:text-purple-700 hover:underline"
+                            >Forgot?</a
+                        >
+                    </div>
+                    <Input
+                        id="password"
+                        type="password"
+                        placeholder="••••••••"
+                        autocomplete="current-password"
+                        disabled={isLoading}
+                        bind:value={password}
+                        onblur={() => validatePassword(password)}
+                        class="h-11 bg-gray-50/50 border-gray-200 focus:bg-white focus:border-purple-500 transition-all rounded-lg"
+                    />
+                    {#if passwordError}
+                        <p class="text-xs text-red-500 font-medium">
+                            {passwordError}
+                        </p>
+                    {/if}
+                </div>
+                <!-- Primary Action Button with Gradient -->
+                <Button
+                    type="submit"
+                    class="w-full btn-primary h-11 rounded-xl text-base mt-2"
                     disabled={isLoading}
-                    bind:value={email}
-                    onblur={() => validateEmail(email)}
-                />
-                {#if emailError}
-                    <p class="text-sm text-destructive">{emailError}</p>
-                {/if}
+                >
+                    {#if isLoading}
+                        <Loader class="mr-2 h-5 w-5 animate-spin" />
+                        Signing in...
+                    {:else}
+                        Sign in
+                    {/if}
+                </Button>
+            </form>
+        </CardContent>
+        <CardFooter class="flex flex-col space-y-4 pb-8">
+            <div class="text-center text-sm text-gray-500">
+                Don't have an account?
+                <a
+                    href="/signup"
+                    class="text-purple-600 font-semibold hover:text-purple-700 ml-1"
+                >
+                    Create account
+                </a>
             </div>
-            <div class="space-y-2">
-                <Label for="password">Mật khẩu</Label>
-                <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    autocomplete="current-password"
-                    disabled={isLoading}
-                    bind:value={password}
-                    onblur={() => validatePassword(password)}
-                />
-                {#if passwordError}
-                    <p class="text-sm text-destructive">{passwordError}</p>
-                {/if}
-            </div>
-            <Button type="submit" class="w-full" size="lg" disabled={isLoading}>
-                {#if isLoading}
-                    <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-                    Đang đăng nhập...
-                {:else}
-                    Đăng nhập
-                {/if}
-            </Button>
-        </form>
-    </CardContent>
-    <CardFooter class="flex flex-col space-y-4">
-        <div class="text-center text-sm text-muted-foreground">
-            Chưa có tài khoản?
-            <a href="/signup" class="text-primary font-medium hover:underline">
-                Đăng ký ngay
-            </a>
-        </div>
-    </CardFooter>
-</Card>
+        </CardFooter>
+    </Card>
+</div>

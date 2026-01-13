@@ -17,30 +17,6 @@ export function createAuth(db: Database, env: { BETTER_AUTH_SECRET: string; BETT
     emailAndPassword: {
       enabled: true,
     },
-    user: {
-      additionalFields: {
-        salonName: {
-          type: "string",
-          required: false,
-          input: true, // Accept during signup
-        },
-        province: {
-          type: "string",
-          required: false,
-          input: true,
-        },
-        address: {
-          type: "string",
-          required: false,
-          input: true,
-        },
-        phone: {
-          type: "string",
-          required: false,
-          input: true,
-        },
-      },
-    },
     databaseHooks: {
       user: {
         create: {
