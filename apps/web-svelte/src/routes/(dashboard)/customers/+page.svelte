@@ -12,64 +12,30 @@
         ChevronRight,
     } from "@lucide/svelte";
     import { cn } from "$lib/utils";
+    import * as Dialog from "$lib/components/ui/dialog";
+    import { Label } from "$lib/components/ui/label";
+    import { enhance } from "$app/forms";
+    import type { SubmitFunction } from "./$types";
+    import { toast } from "svelte-sonner";
 
-    // Mock data
-    const customers = [
-        {
-            id: "1",
-            name: "Nguyễn Văn A",
-            phone: "0901234567",
-            email: "nguyenvana@gmail.com",
-            visits: 15,
-            lastVisit: "10/01/2026",
-            isVip: true,
-        },
-        {
-            id: "2",
-            name: "Trần Thị B",
-            phone: "0912345678",
-            email: "tranthib@gmail.com",
-            visits: 8,
-            lastVisit: "08/01/2026",
-            isVip: false,
-        },
-        {
-            id: "3",
-            name: "Lê Văn C",
-            phone: "0923456789",
-            email: "levanc@gmail.com",
-            visits: 22,
-            lastVisit: "12/01/2026",
-            isVip: true,
-        },
-        {
-            id: "4",
-            name: "Phạm Thị D",
-            phone: "0934567890",
-            email: "phamthid@gmail.com",
-            visits: 5,
-            lastVisit: "05/01/2026",
-            isVip: false,
-        },
-        {
-            id: "5",
-            name: "Hoàng Văn E",
-            phone: "0945678901",
-            email: "hoangvane@gmail.com",
-            visits: 12,
-            lastVisit: "11/01/2026",
-            isVip: false,
-        },
-        {
-            id: "6",
-            name: "Võ Thị F",
-            phone: "0956789012",
-            email: "vothif@gmail.com",
-            visits: 18,
-            lastVisit: "09/01/2026",
-            isVip: true,
-        },
-    ];
+    let isDialogOpen = $state(false);
+    let isLoading = $state(false);
+
+    let { data } = $props();
+
+    const handleSubmit: SubmitFunction = () => {
+        isLoading = true;
+        return async ({ result, update }) => {
+            isLoading = false;
+            if (result.type === "success") {
+                isDialogOpen = false;
+                toast.success("Khách hàng đã được tạo thành công");
+                await update();
+            } else {
+                toast.error("Có lỗi xảy ra, vui lòng thử lại");
+            }
+        };
+    };
 
     function getAvatarGradient(index: number) {
         const gradients = [
@@ -101,10 +67,66 @@
                 Quản lý thông tin khách hàng của bạn
             </p>
         </div>
-        <Button class="btn-gradient shadow-lg shadow-purple-200">
-            <Plus class="h-4 w-4 mr-2" />
-            Thêm khách hàng
-        </Button>
+        <Dialog.Root bind:open={isDialogOpen}>
+            <Dialog.Trigger>
+                <Button class="btn-gradient shadow-lg shadow-purple-200">
+                    <Plus class="h-4 w-4 mr-2" />
+                    Thêm khách hàng
+                </Button>
+            </Dialog.Trigger>
+            <Dialog.Content class="sm:max-w-[425px]">
+                <form
+                    method="POST"
+                    action="?/createCustomer"
+                    use:enhance={handleSubmit}
+                >
+                    <Dialog.Header>
+                        <Dialog.Title>Thêm khách hàng mới</Dialog.Title>
+                        <Dialog.Description>
+                            Nhập thông tin khách hàng mới vào bên dưới. Nhấn lưu
+                            để hoàn tất.
+                        </Dialog.Description>
+                    </Dialog.Header>
+                    <div class="grid gap-4 py-4">
+                        <div class="grid grid-cols-4 items-center gap-4">
+                            <Label for="name" class="text-right">Tên</Label>
+                            <Input
+                                id="name"
+                                name="name"
+                                placeholder="Nguyễn Văn A"
+                                class="col-span-3"
+                                required
+                            />
+                        </div>
+                        <div class="grid grid-cols-4 items-center gap-4">
+                            <Label for="phone" class="text-right">SĐT</Label>
+                            <Input
+                                id="phone"
+                                name="phone"
+                                placeholder="0901234567"
+                                class="col-span-3"
+                                required
+                            />
+                        </div>
+                        <div class="grid grid-cols-4 items-center gap-4">
+                            <Label for="email" class="text-right">Email</Label>
+                            <Input
+                                id="email"
+                                name="email"
+                                placeholder="example@gmail.com"
+                                class="col-span-3"
+                                required
+                            />
+                        </div>
+                    </div>
+                    <Dialog.Footer>
+                        <Button type="submit" disabled={isLoading}>
+                            {isLoading ? "Đang lưu..." : "Lưu khách hàng"}
+                        </Button>
+                    </Dialog.Footer>
+                </form>
+            </Dialog.Content>
+        </Dialog.Root>
     </div>
 
     <!-- Search and filters -->
@@ -135,7 +157,7 @@
 
     <!-- Customers Grid -->
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {#each customers as customer, index}
+        {#each data.customers as customer, index}
             <Card
                 class="p-5 border-0 shadow-sm bg-white hover:shadow-lg transition-all duration-300 cursor-pointer group overflow-hidden relative"
             >
