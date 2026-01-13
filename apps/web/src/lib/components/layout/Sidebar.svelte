@@ -22,12 +22,26 @@
         class?: string;
         collapsed?: boolean;
         onToggle?: () => void;
+        organization?: {
+            id: string;
+            name: string;
+            slug?: string | null;
+            logo?: string | null;
+        } | null;
+        user?: {
+            id: string;
+            name: string;
+            email: string;
+            image?: string | null;
+        } | null;
     }
 
     let {
         class: className = "",
         collapsed = false,
         onToggle,
+        organization = null,
+        user = null,
     }: Props = $props();
 
     const mainNav = [
@@ -81,7 +95,7 @@
                 <div class="flex flex-col">
                     <span
                         class="text-sm font-bold tracking-tight text-foreground leading-none"
-                        >SupaSalon</span
+                        >{organization?.name || "SupaSalon"}</span
                     >
                     <span
                         class="text-[10px] text-muted-foreground font-medium mt-0.5"
@@ -230,17 +244,22 @@
             <div
                 class="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-violet-600 flex items-center justify-center shrink-0 text-white font-semibold shadow-sm"
             >
-                AD
+                {user?.name
+                    ?.split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase() || "U"}
             </div>
 
             {#if !collapsed}
                 <div class="flex flex-col min-w-0 flex-1">
                     <span
                         class="text-xs font-bold truncate text-foreground group-hover:text-primary transition-colors"
-                        >Admin User</span
+                        >{user?.name || "User"}</span
                     >
                     <span class="text-[10px] text-muted-foreground truncate"
-                        >admin@salon.com</span
+                        >{user?.email || ""}</span
                     >
                 </div>
                 <LogOut

@@ -3,7 +3,7 @@
     import Header from "$lib/components/layout/Header.svelte";
     import { Toaster } from "$lib/components/ui/sonner";
 
-    let { children } = $props();
+    let { children, data } = $props();
 
     let isSidebarCollapsed = $state(false);
     let isMobileMenuOpen = $state(false);
@@ -15,6 +15,8 @@
         <Sidebar
             collapsed={isSidebarCollapsed}
             onToggle={() => (isSidebarCollapsed = !isSidebarCollapsed)}
+            organization={data.organization}
+            user={data.user}
         />
     </div>
 
@@ -32,7 +34,11 @@
                 class="h-full w-72 shadow-2xl transition-transform duration-300"
                 onclick={(e) => e.stopPropagation()}
             >
-                <Sidebar onToggle={() => (isMobileMenuOpen = false)} />
+                <Sidebar
+                    onToggle={() => (isMobileMenuOpen = false)}
+                    organization={data.organization}
+                    user={data.user}
+                />
             </div>
         </div>
     {/if}

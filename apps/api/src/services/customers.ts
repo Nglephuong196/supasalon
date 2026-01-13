@@ -1,20 +1,20 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import type { Database } from "../db";
 import { customers, type NewCustomer } from "../db/schema";
 
 export class CustomersService {
-  constructor(private db: Database) {}
+  constructor(private db: Database) { }
 
-  async findAll() {
-    return this.db.select().from(customers);
+  async findAll(organizationId: string) {
+    return this.db.select().from(customers).where(eq(customers.organizationId, organizationId));
   }
 
-  async findById(id: number) {
-    return this.db.select().from(customers).where(eq(customers.id, id)).get();
+  async findById(id: number, organizationId: string) {
+    return this.db.select().from(customers).where(and(eq(customers.id, id), eq(customers.organizationId, organizationId))).get();
   }
 
-  async findBySalonId(salonId: number) {
-    return this.db.select().from(customers).where(eq(customers.salonId, salonId));
+  async findByOrganizationId(organizationId: string) {
+    return this.findAll(organizationId);
   }
 
   async create(data: NewCustomer) {
@@ -22,13 +22,13 @@ export class CustomersService {
     return result[0];
   }
 
-  async update(id: number, data: Partial<NewCustomer>) {
-    const result = await this.db.update(customers).set(data).where(eq(customers.id, id)).returning();
+  async update(id: number, organizationId: string, data: Partial<NewCustomer>) {
+    const result = await this.db.update(customers).set(data).where(and(eq(customers.id, id), eq(customers.organizationId, organizationId))).returning();
     return result[0];
   }
 
-  async delete(id: number) {
-    const result = await this.db.delete(customers).where(eq(customers.id, id)).returning();
+  async delete(id: number, organizationId: string) {
+    const result = await this.db.delete(customers).where(and(eq(customers.id, id), eq(customers.organizationId, organizationId))).returning();
     return result[0];
   }
 }

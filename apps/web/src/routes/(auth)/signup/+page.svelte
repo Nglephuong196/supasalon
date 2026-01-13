@@ -13,7 +13,7 @@
     import { Select } from "$lib/components/ui/select";
     import { Store, Loader } from "@lucide/svelte";
     import { VIETNAM_PROVINCES, VIETNAM_PHONE_REGEX } from "@repo/constants";
-    import { signUp } from "$lib/auth-client";
+    import { signUp, organization } from "$lib/auth-client";
     import { goto } from "$app/navigation";
 
     // Form state
@@ -147,15 +147,6 @@
             email,
             password,
             name: ownerName,
-            // Additional fields are passed to the server's databaseHooks via fetchOptions
-            fetchOptions: {
-                body: {
-                    salonName,
-                    province,
-                    address,
-                    phone,
-                } as Record<string, unknown>,
-            },
         });
 
         if (result.error) {
@@ -163,6 +154,18 @@
                 result.error.message || "Đăng ký thất bại. Vui lòng thử lại.";
             isLoading = false;
         } else {
+            // Create organization after successful signup
+            try {
+                await organization.create({
+                    name: salonName,
+                    slug: salonName
+                        .toLowerCase()
+                        .replace(/\s+/g, "-")
+                        .replace(/[^a-z0-9-]/g, ""),
+                });
+            } catch (e) {
+                console.error("Error creating organization:", e);
+            }
             goto("/");
         }
     }

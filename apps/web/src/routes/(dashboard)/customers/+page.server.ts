@@ -1,97 +1,76 @@
 import { fail } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
+import type { Customer } from '$lib/types';
 
-// Mock database
-let customers = [
-    {
-        id: "1",
-        name: "Nguyễn Văn A",
-        phone: "0901234567",
-        email: "nguyenvana@gmail.com",
-        visits: 15,
-        lastVisit: "10/01/2026",
-        isVip: true,
-    },
-    {
-        id: "2",
-        name: "Trần Thị B",
-        phone: "0912345678",
-        email: "tranthib@gmail.com",
-        visits: 8,
-        lastVisit: "08/01/2026",
-        isVip: false,
-    },
-    {
-        id: "3",
-        name: "Lê Văn C",
-        phone: "0923456789",
-        email: "levanc@gmail.com",
-        visits: 22,
-        lastVisit: "12/01/2026",
-        isVip: true,
-    },
-    {
-        id: "4",
-        name: "Phạm Thị D",
-        phone: "0934567890",
-        email: "phamthid@gmail.com",
-        visits: 5,
-        lastVisit: "05/01/2026",
-        isVip: false,
-    },
-    {
-        id: "5",
-        name: "Hoàng Văn E",
-        phone: "0945678901",
-        email: "hoangvane@gmail.com",
-        visits: 12,
-        lastVisit: "11/01/2026",
-        isVip: false,
-    },
-    {
-        id: "6",
-        name: "Võ Thị F",
-        phone: "0956789012",
-        email: "vothif@gmail.com",
-        visits: 18,
-        lastVisit: "09/01/2026",
-        isVip: true,
-    },
-];
+const API_URL = 'http://localhost:8787';
 
-export const load: PageServerLoad = async () => {
-    return {
-        customers,
-    };
+export const load: PageServerLoad = async ({ fetch, request, cookies }) => {
+    const organizationId = cookies.get('organizationId');
+
+    if (!organizationId) {
+        return { customers: [] };
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/customers`, {
+            headers: {
+                cookie: request.headers.get('cookie') || '',
+                'X-Organization-Id': organizationId
+            }
+        });
+
+        if (!response.ok) {
+            throw error(response.status, 'Failed to fetch customers');
+        }
+
+        const customers: Customer[] = await response.json();
+        return { customers };
+    } catch (e) {
+        console.error("Error fetching customers", e);
+        return { customers: [] };
+    }
 };
 
 export const actions: Actions = {
-    createCustomer: async ({ request }) => {
+    createCustomer: async ({ request, fetch, cookies }) => {
+        const organizationId = cookies.get('organizationId');
+
+        if (!organizationId) {
+            return fail(400, { message: "Organization not selected" });
+        }
+
         const data = await request.formData();
         const name = data.get("name") as string;
         const phone = data.get("phone") as string;
-        const email = data.get("email") as string;
+        const email = data.get("email") as string | null;
+        const notes = data.get("notes") as string | null;
 
-        if (!name || !phone || !email) {
+        if (!name || !phone) {
             return fail(400, { missing: true });
         }
 
-        // Simulate database delay
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        try {
+            const response = await fetch(`${API_URL}/customers`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    cookie: request.headers.get('cookie') || '',
+                    'X-Organization-Id': organizationId
+                },
+                body: JSON.stringify({ name, phone, email: email || null, notes: notes || '' })
+            });
 
-        // Add to mock database
-        const newCustomer = {
-            id: Math.random().toString(36).substr(2, 9),
-            name,
-            phone,
-            email,
-            visits: 0,
-            lastVisit: new Date().toLocaleDateString("vi-VN"),
-            isVip: false,
-        };
+            if (!response.ok) {
+                const res = await response.json();
+                return fail(response.status, { message: res.error || "Failed to create customer" });
+            }
 
-        customers = [newCustomer, ...customers];
-
-        return { success: true };
+            return { success: true };
+        } catch (e) {
+            console.error("Error creating customer", e);
+            return fail(500, { message: "Server error" });
+        }
     },
 };
+

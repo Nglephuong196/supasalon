@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { organization } from "better-auth/plugins";
 import type { Database } from "../db";
 import * as schema from "../db/schema";
 
@@ -17,33 +18,11 @@ export function createAuth(db: Database, env: { BETTER_AUTH_SECRET: string; BETT
     emailAndPassword: {
       enabled: true,
     },
-    databaseHooks: {
-      user: {
-        create: {
-          after: async (user, context) => {
-            // Get custom fields from the request body
-            const body = context?.body as {
-              salonName?: string;
-              province?: string;
-              address?: string;
-              phone?: string;
-            } | undefined;
-
-            // Create salon if salonName was provided
-            if (body?.salonName) {
-              await db.insert(schema.salons).values({
-                ownerId: user.id,
-                name: body.salonName,
-                address: body.province
-                  ? `${body.address || ""}, ${body.province}`.trim()
-                  : body.address || null,
-                phone: body.phone || null,
-              });
-            }
-          },
-        },
-      },
-    },
+    plugins: [
+      organization({
+        allowUserToCreateOrganization: true,
+      })
+    ],
     session: {
       expiresIn: 60 * 60 * 24 * 7, // 7 days
       updateAge: 60 * 60 * 24, // 1 day

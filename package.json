@@ -18,7 +18,11 @@
     "build:mobile:ios": "bun run --filter mobile build:ios",
     "build:mobile:android": "bun run --filter mobile build:android",
     "lint": "bun run --filter '*' lint",
-    "lint:web": "bun run --filter web lint"
+    "lint:web": "bun run --filter web lint",
+    "db:generate": "bun run --filter api db:generate",
+    "db:migrate:local": "bun run --filter api db:migrate:local",
+    "db:migrate:prod": "bun run --filter api db:migrate:prod",
+    "db:studio": "bun run --filter api db:studio"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260109.0",

@@ -12,7 +12,6 @@ export const user = sqliteTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: integer("emailVerified", { mode: "boolean" }).notNull().default(false),
   image: text("image"),
-  role: text("role", { enum: ["admin", "owner", "staff"] }).notNull().default("owner"),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
@@ -27,6 +26,7 @@ export const session = sqliteTable("session", {
   ipAddress: text("ipAddress"),
   userAgent: text("userAgent"),
   userId: text("userId").notNull().references(() => user.id),
+  activeOrganizationId: text("activeOrganizationId"),
 });
 
 // Account (better-auth)
@@ -56,20 +56,41 @@ export const verification = sqliteTable("verification", {
   updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
-// Salons
-export const salons = sqliteTable("salons", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  ownerId: text("owner_id").notNull().references(() => user.id),
+// Organization (better-auth)
+export const organization = sqliteTable("organization", {
+  id: text("id").primaryKey(),
   name: text("name").notNull(),
-  address: text("address"),
-  phone: text("phone"),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  slug: text("slug").unique(),
+  logo: text("logo"),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  metadata: text("metadata"),
 });
+
+// Member (better-auth)
+export const member = sqliteTable("member", {
+  id: text("id").primaryKey(),
+  organizationId: text("organizationId").notNull().references(() => organization.id),
+  userId: text("userId").notNull().references(() => user.id),
+  role: text("role").notNull(),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+// Invitation (better-auth)
+export const invitation = sqliteTable("invitation", {
+  id: text("id").primaryKey(),
+  organizationId: text("organizationId").notNull().references(() => organization.id),
+  email: text("email").notNull(),
+  role: text("role"),
+  status: text("status").notNull(),
+  expiresAt: integer("expiresAt", { mode: "timestamp" }).notNull(),
+  inviterId: text("inviterId").notNull().references(() => user.id),
+});
+
 
 // Customers
 export const customers = sqliteTable("customers", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  salonId: integer("salon_id").notNull().references(() => salons.id),
+  organizationId: text("organization_id").notNull().references(() => organization.id),
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
@@ -80,7 +101,7 @@ export const customers = sqliteTable("customers", {
 // Service Categories
 export const serviceCategories = sqliteTable("service_categories", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  salonId: integer("salon_id").notNull().references(() => salons.id),
+  organizationId: text("organization_id").notNull().references(() => organization.id),
   name: text("name").notNull(),
   description: text("description"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
@@ -100,7 +121,7 @@ export const services = sqliteTable("services", {
 // Bookings
 export const bookings = sqliteTable("bookings", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  salonId: integer("salon_id").notNull().references(() => salons.id),
+  organizationId: text("organization_id").notNull().references(() => organization.id),
   customerId: integer("customer_id").notNull().references(() => customers.id),
   serviceId: integer("service_id").notNull().references(() => services.id),
   date: integer("date", { mode: "timestamp" }).notNull(),
@@ -126,7 +147,7 @@ export const invoices = sqliteTable("invoices", {
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
-  salons: many(salons),
+  memberships: many(member),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -137,20 +158,31 @@ export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, { fields: [account.userId], references: [user.id] }),
 }));
 
-export const salonsRelations = relations(salons, ({ one, many }) => ({
-  owner: one(user, { fields: [salons.ownerId], references: [user.id] }),
+export const organizationRelations = relations(organization, ({ many }) => ({
+  members: many(member),
+  invitations: many(invitation),
   customers: many(customers),
   serviceCategories: many(serviceCategories),
   bookings: many(bookings),
 }));
 
+export const memberRelations = relations(member, ({ one }) => ({
+  user: one(user, { fields: [member.userId], references: [user.id] }),
+  organization: one(organization, { fields: [member.organizationId], references: [organization.id] }),
+}));
+
+export const invitationRelations = relations(invitation, ({ one }) => ({
+  organization: one(organization, { fields: [invitation.organizationId], references: [organization.id] }),
+  inviter: one(user, { fields: [invitation.inviterId], references: [user.id] }),
+}));
+
 export const customersRelations = relations(customers, ({ one, many }) => ({
-  salon: one(salons, { fields: [customers.salonId], references: [salons.id] }),
+  organization: one(organization, { fields: [customers.organizationId], references: [organization.id] }),
   bookings: many(bookings),
 }));
 
 export const serviceCategoriesRelations = relations(serviceCategories, ({ one, many }) => ({
-  salon: one(salons, { fields: [serviceCategories.salonId], references: [salons.id] }),
+  organization: one(organization, { fields: [serviceCategories.organizationId], references: [organization.id] }),
   services: many(services),
 }));
 
@@ -160,7 +192,7 @@ export const servicesRelations = relations(services, ({ one, many }) => ({
 }));
 
 export const bookingsRelations = relations(bookings, ({ one }) => ({
-  salon: one(salons, { fields: [bookings.salonId], references: [salons.id] }),
+  organization: one(organization, { fields: [bookings.organizationId], references: [organization.id] }),
   customer: one(customers, { fields: [bookings.customerId], references: [customers.id] }),
   service: one(services, { fields: [bookings.serviceId], references: [services.id] }),
   invoice: one(invoices),
@@ -180,8 +212,14 @@ export type NewUser = typeof user.$inferInsert;
 export type Session = typeof session.$inferSelect;
 export type Account = typeof account.$inferSelect;
 
-export type Salon = typeof salons.$inferSelect;
-export type NewSalon = typeof salons.$inferInsert;
+export type Organization = typeof organization.$inferSelect;
+export type NewOrganization = typeof organization.$inferInsert;
+
+export type Member = typeof member.$inferSelect;
+export type NewMember = typeof member.$inferInsert;
+
+export type Invitation = typeof invitation.$inferSelect;
+export type NewInvitation = typeof invitation.$inferInsert;
 
 export type Customer = typeof customers.$inferSelect;
 export type NewCustomer = typeof customers.$inferInsert;

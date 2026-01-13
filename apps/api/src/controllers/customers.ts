@@ -1,51 +1,66 @@
 import { Hono } from "hono";
-import { createDb } from "../db";
 import { CustomersService } from "../services";
 import type { NewCustomer } from "../db/schema";
+import type { Database } from "../db";
 
 type Bindings = { DB: D1Database };
+type Variables = {
+  db: Database;
+  organization: { id: string; role: string };
+  user: any;
+};
 
-export const customersController = new Hono<{ Bindings: Bindings }>();
+export const customersController = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 customersController.get("/", async (c) => {
-  const service = new CustomersService(createDb(c.env.DB));
-  const salonId = c.req.query("salonId");
-  if (salonId) {
-    const customers = await service.findBySalonId(parseInt(salonId));
-    return c.json(customers);
-  }
-  const customers = await service.findAll();
+  const service = new CustomersService(c.get("db"));
+  const organization = c.get("organization");
+  const customers = await service.findAll(organization.id);
   return c.json(customers);
 });
 
 customersController.get("/:id", async (c) => {
-  const service = new CustomersService(createDb(c.env.DB));
+  const service = new CustomersService(c.get("db"));
+  const organization = c.get("organization");
   const id = parseInt(c.req.param("id"));
-  const customer = await service.findById(id);
+
+  const customer = await service.findById(id, organization.id);
   if (!customer) return c.json({ error: "Customer not found" }, 404);
   return c.json(customer);
 });
 
 customersController.post("/", async (c) => {
-  const service = new CustomersService(createDb(c.env.DB));
+  const service = new CustomersService(c.get("db"));
+  const organization = c.get("organization");
   const body = await c.req.json<NewCustomer>();
-  const customer = await service.create(body);
+
+  const customerData = { ...body, organizationId: organization.id };
+
+  const customer = await service.create(customerData);
   return c.json(customer, 201);
 });
 
 customersController.put("/:id", async (c) => {
-  const service = new CustomersService(createDb(c.env.DB));
+  const service = new CustomersService(c.get("db"));
+  const organization = c.get("organization");
   const id = parseInt(c.req.param("id"));
   const body = await c.req.json<Partial<NewCustomer>>();
-  const customer = await service.update(id, body);
+
+  if (body.organizationId && body.organizationId !== organization.id) {
+    return c.json({ error: "Cannot move customer to another organization" }, 403);
+  }
+
+  const customer = await service.update(id, organization.id, body);
   if (!customer) return c.json({ error: "Customer not found" }, 404);
   return c.json(customer);
 });
 
 customersController.delete("/:id", async (c) => {
-  const service = new CustomersService(createDb(c.env.DB));
+  const service = new CustomersService(c.get("db"));
+  const organization = c.get("organization");
   const id = parseInt(c.req.param("id"));
-  const customer = await service.delete(id);
+
+  const customer = await service.delete(id, organization.id);
   if (!customer) return c.json({ error: "Customer not found" }, 404);
   return c.json({ message: "Customer deleted" });
 });

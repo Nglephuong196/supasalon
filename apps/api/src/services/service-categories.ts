@@ -1,20 +1,16 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import type { Database } from "../db";
 import { serviceCategories, type NewServiceCategory } from "../db/schema";
 
 export class ServiceCategoriesService {
-  constructor(private db: Database) {}
+  constructor(private db: Database) { }
 
-  async findAll() {
-    return this.db.select().from(serviceCategories);
+  async findAll(organizationId: string) {
+    return this.db.select().from(serviceCategories).where(eq(serviceCategories.organizationId, organizationId));
   }
 
-  async findById(id: number) {
-    return this.db.select().from(serviceCategories).where(eq(serviceCategories.id, id)).get();
-  }
-
-  async findBySalonId(salonId: number) {
-    return this.db.select().from(serviceCategories).where(eq(serviceCategories.salonId, salonId));
+  async findById(id: number, organizationId: string) {
+    return this.db.select().from(serviceCategories).where(and(eq(serviceCategories.id, id), eq(serviceCategories.organizationId, organizationId))).get();
   }
 
   async create(data: NewServiceCategory) {
@@ -22,13 +18,13 @@ export class ServiceCategoriesService {
     return result[0];
   }
 
-  async update(id: number, data: Partial<NewServiceCategory>) {
-    const result = await this.db.update(serviceCategories).set(data).where(eq(serviceCategories.id, id)).returning();
+  async update(id: number, organizationId: string, data: Partial<NewServiceCategory>) {
+    const result = await this.db.update(serviceCategories).set(data).where(and(eq(serviceCategories.id, id), eq(serviceCategories.organizationId, organizationId))).returning();
     return result[0];
   }
 
-  async delete(id: number) {
-    const result = await this.db.delete(serviceCategories).where(eq(serviceCategories.id, id)).returning();
+  async delete(id: number, organizationId: string) {
+    const result = await this.db.delete(serviceCategories).where(and(eq(serviceCategories.id, id), eq(serviceCategories.organizationId, organizationId))).returning();
     return result[0];
   }
 }

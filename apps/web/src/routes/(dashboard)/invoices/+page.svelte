@@ -64,6 +64,11 @@
     function formatPrice(price: number) {
         return new Intl.NumberFormat("vi-VN").format(price) + "đ";
     }
+
+    function formatDate(dateStr: string) {
+        if (!dateStr) return "";
+        return new Date(dateStr).toLocaleDateString("vi-VN");
+    }
 </script>
 
 <svelte:head>
@@ -132,7 +137,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y">
-                    {#each invoices as invoice}
+                    {#each data.invoices as invoice}
                         <tr class="hover:bg-muted/50">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
@@ -140,30 +145,38 @@
                                         class="h-4 w-4 text-muted-foreground"
                                     />
                                     <span class="text-sm font-medium"
-                                        >{invoice.id}</span
+                                        >#{invoice.id}</span
                                     >
                                 </div>
                             </td>
                             <td class="px-4 py-3 text-sm"
-                                >{invoice.customerName}</td
+                                >{invoice.booking?.customer?.name || "N/A"}</td
                             >
                             <td class="px-4 py-3 text-sm text-muted-foreground"
-                                >{invoice.date}</td
+                                >{formatDate(invoice.createdAt)}</td
                             >
                             <td class="px-4 py-3 text-sm"
-                                >{invoice.services.join(", ")}</td
+                                >{invoice.booking?.service?.name || "N/A"}</td
                             >
                             <td class="px-4 py-3 text-sm font-medium"
-                                >{formatPrice(invoice.total)}</td
+                                >{formatPrice(invoice.amount)}</td
                             >
                             <td class="px-4 py-3">
                                 <span
                                     class={cn(
                                         "px-2 py-1 rounded-full text-xs font-medium",
-                                        statusStyles[invoice.status],
+                                        statusStyles[
+                                            invoice.status
+                                                .charAt(0)
+                                                .toUpperCase() +
+                                                invoice.status.slice(1)
+                                        ],
                                     )}
                                 >
-                                    {statusLabels[invoice.status]}
+                                    {statusLabels[
+                                        invoice.status.charAt(0).toUpperCase() +
+                                            invoice.status.slice(1)
+                                    ] || invoice.status}
                                 </span>
                             </td>
                         </tr>

@@ -113,9 +113,19 @@
                             <Input
                                 id="email"
                                 name="email"
-                                placeholder="example@gmail.com"
+                                type="email"
+                                placeholder="example@gmail.com (tùy chọn)"
                                 class="col-span-3"
-                                required
+                            />
+                        </div>
+                        <div class="grid grid-cols-4 items-center gap-4">
+                            <Label for="notes" class="text-right">Ghi chú</Label
+                            >
+                            <Input
+                                id="notes"
+                                name="notes"
+                                placeholder="Ghi chú về khách hàng (tùy chọn)"
+                                class="col-span-3"
                             />
                         </div>
                     </div>
@@ -161,8 +171,8 @@
             <Card
                 class="p-5 border-0 shadow-sm bg-white hover:shadow-lg transition-all duration-300 cursor-pointer group overflow-hidden relative"
             >
-                <!-- VIP ribbon -->
-                {#if customer.isVip}
+                <!-- VIP ribbon (Mock logic for now) -->
+                {#if false}
                     <div class="absolute top-3 right-3">
                         <div
                             class="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
@@ -199,29 +209,29 @@
                                 class="flex items-center gap-2 text-sm text-gray-500 group/item hover:text-purple-600 transition-colors"
                             >
                                 <Phone class="h-4 w-4" />
-                                <span>{customer.phone}</span>
+                                <span>{customer.phone || "N/A"}</span>
                             </div>
                             <div
                                 class="flex items-center gap-2 text-sm text-gray-500 group/item hover:text-purple-600 transition-colors"
                             >
                                 <Mail class="h-4 w-4" />
-                                <span class="truncate">{customer.email}</span>
+                                <span class="truncate"
+                                    >{customer.email || "N/A"}</span
+                                >
                             </div>
                         </div>
 
-                        <!-- Stats bar -->
+                        <!-- Stats bar (Mock data for display) -->
                         <div
                             class="flex items-center gap-4 mt-4 pt-4 border-t border-gray-100"
                         >
                             <div class="flex items-center gap-1.5">
                                 <Calendar class="h-3.5 w-3.5 text-gray-400" />
-                                <span class="text-xs text-gray-500"
-                                    >{customer.visits} lần</span
-                                >
+                                <span class="text-xs text-gray-500">0 lần</span>
                             </div>
                             <div class="text-xs text-gray-400">•</div>
                             <span class="text-xs text-gray-500"
-                                >Lần cuối: {customer.lastVisit}</span
+                                >Lần cuối: -</span
                             >
                         </div>
                     </div>

@@ -11,68 +11,34 @@
     } from "@lucide/svelte";
     import { cn } from "$lib/utils";
 
-    // Mock data
-    const bookings = [
-        {
-            id: "1",
-            customerName: "Nguyễn Văn A",
-            service: "Cắt tóc",
-            staffName: "Trần B",
-            date: "12/01/2026",
-            time: "09:00",
-            status: "Confirmed",
-        },
-        {
-            id: "2",
-            customerName: "Trần Thị C",
-            service: "Gội đầu",
-            staffName: "Lê D",
-            date: "12/01/2026",
-            time: "10:30",
-            status: "Pending",
-        },
-        {
-            id: "3",
-            customerName: "Lê Văn E",
-            service: "Nhuộm tóc",
-            staffName: "Trần B",
-            date: "12/01/2026",
-            time: "14:00",
-            status: "Completed",
-        },
-        {
-            id: "4",
-            customerName: "Phạm Thị F",
-            service: "Cắt tóc",
-            staffName: "Nguyễn G",
-            date: "12/01/2026",
-            time: "15:30",
-            status: "Cancelled",
-        },
-        {
-            id: "5",
-            customerName: "Hoàng Văn H",
-            service: "Uốn tóc",
-            staffName: "Lê D",
-            date: "12/01/2026",
-            time: "16:00",
-            status: "Confirmed",
-        },
-    ];
+    let { data } = $props();
 
     const statusStyles: Record<string, string> = {
-        Confirmed: "bg-green-100 text-green-700",
-        Pending: "bg-yellow-100 text-yellow-700",
-        Completed: "bg-blue-100 text-blue-700",
-        Cancelled: "bg-red-100 text-red-700",
+        confirmed: "bg-green-100 text-green-700",
+        pending: "bg-yellow-100 text-yellow-700",
+        completed: "bg-blue-100 text-blue-700",
+        cancelled: "bg-red-100 text-red-700",
     };
 
     const statusLabels: Record<string, string> = {
-        Confirmed: "Đã xác nhận",
-        Pending: "Chờ xác nhận",
-        Completed: "Hoàn thành",
-        Cancelled: "Đã hủy",
+        confirmed: "Đã xác nhận",
+        pending: "Chờ xác nhận",
+        completed: "Hoàn thành",
+        cancelled: "Đã hủy",
     };
+
+    function formatDate(dateStr: string) {
+        if (!dateStr) return "";
+        return new Date(dateStr).toLocaleDateString("vi-VN");
+    }
+
+    function formatTime(dateStr: string) {
+        if (!dateStr) return "";
+        return new Date(dateStr).toLocaleTimeString("vi-VN", {
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    }
 </script>
 
 <svelte:head>
@@ -107,7 +73,7 @@
                         </p>
                         <div class="flex items-baseline gap-2">
                             <span class="text-2xl font-bold"
-                                >{bookings.length}</span
+                                >{data.bookings.length}</span
                             >
                             <span class="text-xs font-medium text-green-500"
                                 >↑+12%</span
@@ -196,10 +162,6 @@
                         >
                         <th
                             class="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
-                            >Nhân viên</th
-                        >
-                        <th
-                            class="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
                             >Ngày</th
                         >
                         <th
@@ -213,25 +175,32 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y">
-                    {#each bookings as booking}
+                    {#each data.bookings as booking}
                         <tr class="hover:bg-muted/50">
                             <td class="px-4 py-3 text-sm font-medium"
-                                >{booking.customerName}</td
+                                >{booking.customer?.name || "N/A"}</td
                             >
-                            <td class="px-4 py-3 text-sm">{booking.service}</td>
                             <td class="px-4 py-3 text-sm"
-                                >{booking.staffName}</td
+                                >{booking.service?.name || "N/A"}</td
                             >
-                            <td class="px-4 py-3 text-sm">{booking.date}</td>
-                            <td class="px-4 py-3 text-sm">{booking.time}</td>
+                            <td class="px-4 py-3 text-sm"
+                                >{formatDate(booking.date)}</td
+                            >
+                            <td class="px-4 py-3 text-sm"
+                                >{formatTime(booking.date)}</td
+                            >
                             <td class="px-4 py-3">
                                 <span
                                     class={cn(
                                         "px-2 py-1 rounded-full text-xs font-medium",
-                                        statusStyles[booking.status],
+                                        statusStyles[
+                                            booking.status.toLowerCase()
+                                        ],
                                     )}
                                 >
-                                    {statusLabels[booking.status]}
+                                    {statusLabels[
+                                        booking.status.toLowerCase()
+                                    ] || booking.status}
                                 </span>
                             </td>
                         </tr>

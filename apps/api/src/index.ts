@@ -1,9 +1,10 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { initDb } from "./middleware/db";
+import type { Database } from "./db";
 import {
   authController,
   usersController,
-  salonsController,
   customersController,
   serviceCategoriesController,
   servicesController,
@@ -17,7 +18,11 @@ type Bindings = {
   BETTER_AUTH_URL: string;
 };
 
-const app = new Hono<{ Bindings: Bindings }>();
+type Variables = {
+  db: Database;
+};
+
+const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 // Middleware
 app.use("*", cors({
@@ -26,6 +31,7 @@ app.use("*", cors({
   allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowHeaders: ["Content-Type", "Authorization"],
 }));
+app.use("*", initDb);
 
 // Health check
 app.get("/", (c) => {
@@ -35,13 +41,19 @@ app.get("/", (c) => {
 // Auth routes (handled by better-auth)
 app.route("/api/auth", authController);
 
-// Resource routes
-app.route("/users", usersController);
-app.route("/salons", salonsController);
-app.route("/customers", customersController);
-app.route("/service-categories", serviceCategoriesController);
-app.route("/services", servicesController);
-app.route("/bookings", bookingsController);
-app.route("/invoices", invoicesController);
+// Protected routes (require tenancy)
+import { ensureTenant } from "./middleware/tenant";
+
+const protectedRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+protectedRoutes.use("*", ensureTenant);
+
+protectedRoutes.route("/users", usersController);
+protectedRoutes.route("/customers", customersController);
+protectedRoutes.route("/service-categories", serviceCategoriesController);
+protectedRoutes.route("/services", servicesController);
+protectedRoutes.route("/bookings", bookingsController);
+protectedRoutes.route("/invoices", invoicesController);
+
+app.route("/", protectedRoutes);
 
 export default app;
