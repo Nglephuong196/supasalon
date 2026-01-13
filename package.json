@@ -6,16 +6,14 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun run --filter web-svelte --filter api dev",
+    "dev": "bun run --filter web --filter api dev",
     "dev:web": "bun run --filter web dev",
-    "dev:web-svelte": "bun run --filter web-svelte dev",
     "dev:api": "bun run --filter api dev",
     "dev:mobile": "bun run --filter mobile dev",
     "dev:mobile:web": "bun run --filter mobile dev:web",
     "dev:mobile:ios": "bun run --filter mobile dev:ios",
     "dev:mobile:android": "bun run --filter mobile dev:android",
     "build:web": "bun run --filter web build",
-    "build:web-svelte": "bun run --filter web-svelte build",
     "build:mobile:web": "bun run --filter mobile build:web",
     "build:mobile:ios": "bun run --filter mobile build:ios",
     "build:mobile:android": "bun run --filter mobile build:android",

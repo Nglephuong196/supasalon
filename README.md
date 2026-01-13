@@ -6,8 +6,8 @@ A multi-tenant salon management SaaS with web and mobile apps.
 
 | Layer | Technology |
 |-------|------------|
-| **Web (Primary)** | SvelteKit 2 + Svelte 5 + Tailwind v4 + shadcn-svelte |
-| **Web (Legacy)** | Next.js 16 + React 19 |
+
+| **Web** | SvelteKit 2 + Svelte 5 + Tailwind v4 + shadcn-svelte |
 | **API** | Hono on Cloudflare Workers |
 | **Mobile** | Expo 54 + React Native |
 | **Database** | Cloudflare D1 (SQLite) + Drizzle ORM |
@@ -21,8 +21,8 @@ A multi-tenant salon management SaaS with web and mobile apps.
 supasalon/
 ├── apps/
 │   ├── api/              # Hono API (Cloudflare Workers)
-│   ├── web-svelte/       # SvelteKit web app (PRIMARY)
-│   ├── web/              # Next.js web app (legacy)
+│   ├── web/              # SvelteKit web app
+
 │   └── mobile/           # Expo mobile app
 └── packages/
     ├── constants/        # Shared constants (Vietnam provinces, phone validation)
@@ -82,7 +82,7 @@ BETTER_AUTH_URL=http://localhost:8787
 
 **Auto-create salon on signup:** When a user signs up with `salonName`, a salon is automatically created via Better Auth database hooks.
 
-### Web App (`apps/web-svelte`)
+### Web App (`apps/web`)
 
 SvelteKit 2 with Svelte 5, deployed to Cloudflare Pages.
 
@@ -153,7 +153,7 @@ bun dev
 
 # Or individually:
 bun dev:api           # API on http://localhost:8787
-bun dev:web-svelte    # Web on http://localhost:5173
+bun dev:web           # Web on http://localhost:5173
 bun dev:mobile        # Expo mobile
 ```
 
@@ -200,7 +200,7 @@ bun run deploy
 ### Web (Cloudflare Pages)
 
 ```bash
-cd apps/web-svelte
+cd apps/web
 bun run deploy
 ```
 

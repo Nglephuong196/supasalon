@@ -1,11 +1,9 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "salon-pro",
-  "main": ".open-next/worker.js",
-  "compatibility_date": "2025-01-05",
-  "compatibility_flags": ["nodejs_compat"],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  }
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "supasalon-web",
+    "compatibility_date": "2026-01-10",
+    "compatibility_flags": [
+        "nodejs_compat"
+    ],
+    "pages_build_output_dir": ".svelte-kit/cloudflare"
 }
