@@ -1,7 +1,10 @@
 export { authController } from "./auth";
 export { usersController } from "./users";
 export { customersController } from "./customers";
+export { customerMembershipsController } from "./customer-memberships";
 export { serviceCategoriesController } from "./service-categories";
 export { servicesController } from "./services";
 export { bookingsController } from "./bookings";
 export { invoicesController } from "./invoices";
+export { membershipTiersController } from "./membership-tiers";
+export { membersController } from "./members";

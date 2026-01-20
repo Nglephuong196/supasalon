@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { InvoicesService } from "../services";
 import type { NewInvoice } from "../db/schema";
 import type { Database } from "../db";
+import { requirePermission } from "../middleware/permission";
+import { RESOURCES, ACTIONS } from "@repo/constants";
 
 type Bindings = { DB: D1Database };
 type Variables = {
@@ -12,14 +14,15 @@ type Variables = {
 
 export const invoicesController = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-invoicesController.get("/", async (c) => {
+// Read operations
+invoicesController.get("/", requirePermission(RESOURCES.INVOICE, ACTIONS.READ), async (c) => {
   const service = new InvoicesService(c.get("db"));
   const organization = c.get("organization");
   const invoices = await service.findAll(organization.id);
   return c.json(invoices);
 });
 
-invoicesController.get("/:id", async (c) => {
+invoicesController.get("/:id", requirePermission(RESOURCES.INVOICE, ACTIONS.READ), async (c) => {
   const service = new InvoicesService(c.get("db"));
   const organization = c.get("organization");
   const id = parseInt(c.req.param("id"));
@@ -28,7 +31,7 @@ invoicesController.get("/:id", async (c) => {
   return c.json(invoice);
 });
 
-invoicesController.get("/booking/:bookingId", async (c) => {
+invoicesController.get("/booking/:bookingId", requirePermission(RESOURCES.INVOICE, ACTIONS.READ), async (c) => {
   const service = new InvoicesService(c.get("db"));
   const organization = c.get("organization");
   const bookingId = parseInt(c.req.param("bookingId"));
@@ -37,7 +40,8 @@ invoicesController.get("/booking/:bookingId", async (c) => {
   return c.json(invoice);
 });
 
-invoicesController.post("/", async (c) => {
+// Create operation
+invoicesController.post("/", requirePermission(RESOURCES.INVOICE, ACTIONS.CREATE), async (c) => {
   const service = new InvoicesService(c.get("db"));
   const organization = c.get("organization");
   const body = await c.req.json<NewInvoice>();
@@ -50,7 +54,8 @@ invoicesController.post("/", async (c) => {
   }
 });
 
-invoicesController.put("/:id", async (c) => {
+// Update operation
+invoicesController.put("/:id", requirePermission(RESOURCES.INVOICE, ACTIONS.UPDATE), async (c) => {
   const service = new InvoicesService(c.get("db"));
   const organization = c.get("organization");
   const id = parseInt(c.req.param("id"));
@@ -61,7 +66,8 @@ invoicesController.put("/:id", async (c) => {
   return c.json(invoice);
 });
 
-invoicesController.delete("/:id", async (c) => {
+// Delete operation
+invoicesController.delete("/:id", requirePermission(RESOURCES.INVOICE, ACTIONS.DELETE), async (c) => {
   const service = new InvoicesService(c.get("db"));
   const organization = c.get("organization");
   const id = parseInt(c.req.param("id"));

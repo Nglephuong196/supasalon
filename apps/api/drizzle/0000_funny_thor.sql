@@ -17,27 +17,57 @@ CREATE TABLE `account` (
 --> statement-breakpoint
 CREATE TABLE `bookings` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`salon_id` integer NOT NULL,
+	`organization_id` text NOT NULL,
 	`customer_id` integer NOT NULL,
 	`service_id` integer NOT NULL,
 	`date` integer NOT NULL,
 	`status` text DEFAULT 'pending' NOT NULL,
 	`notes` text,
 	`created_at` integer NOT NULL,
-	FOREIGN KEY (`salon_id`) REFERENCES `salons`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `customers` (
+CREATE TABLE `customer_memberships` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`salon_id` integer NOT NULL,
-	`name` text NOT NULL,
-	`email` text,
-	`phone` text,
+	`customer_id` integer NOT NULL,
+	`type` text NOT NULL,
+	`status` text DEFAULT 'active' NOT NULL,
+	`start_date` integer NOT NULL,
+	`end_date` integer,
 	`notes` text,
 	`created_at` integer NOT NULL,
-	FOREIGN KEY (`salon_id`) REFERENCES `salons`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `customers` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`organization_id` text NOT NULL,
+	`name` text NOT NULL,
+	`email` text,
+	`phone` text NOT NULL,
+	`gender` text,
+	`location` text,
+	`birthday` integer,
+	`notes` text,
+	`total_spent` real DEFAULT 0 NOT NULL,
+	`membership_tier_id` integer,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`membership_tier_id`) REFERENCES `membership_tiers`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `invitation` (
+	`id` text PRIMARY KEY NOT NULL,
+	`organizationId` text NOT NULL,
+	`email` text NOT NULL,
+	`role` text,
+	`status` text NOT NULL,
+	`expiresAt` integer NOT NULL,
+	`inviterId` text NOT NULL,
+	FOREIGN KEY (`organizationId`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`inviterId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `invoices` (
@@ -51,23 +81,53 @@ CREATE TABLE `invoices` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `invoices_booking_id_unique` ON `invoices` (`booking_id`);--> statement-breakpoint
-CREATE TABLE `salons` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`owner_id` text NOT NULL,
-	`name` text NOT NULL,
-	`address` text,
-	`phone` text,
-	`created_at` integer NOT NULL,
-	FOREIGN KEY (`owner_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
+CREATE TABLE `member` (
+	`id` text PRIMARY KEY NOT NULL,
+	`organizationId` text NOT NULL,
+	`userId` text NOT NULL,
+	`role` text NOT NULL,
+	`createdAt` integer NOT NULL,
+	FOREIGN KEY (`organizationId`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE TABLE `member_permissions` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`member_id` text NOT NULL,
+	`permissions` text NOT NULL,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`member_id`) REFERENCES `member`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE TABLE `membership_tiers` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`organization_id` text NOT NULL,
+	`name` text NOT NULL,
+	`min_spending` real NOT NULL,
+	`discount_percent` real DEFAULT 0 NOT NULL,
+	`min_spending_to_maintain` real,
+	`sort_order` integer DEFAULT 0 NOT NULL,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `organization` (
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`slug` text,
+	`logo` text,
+	`createdAt` integer NOT NULL,
+	`metadata` text
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `organization_slug_unique` ON `organization` (`slug`);--> statement-breakpoint
 CREATE TABLE `service_categories` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`salon_id` integer NOT NULL,
+	`organization_id` text NOT NULL,
 	`name` text NOT NULL,
 	`description` text,
 	`created_at` integer NOT NULL,
-	FOREIGN KEY (`salon_id`) REFERENCES `salons`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `services` (
@@ -90,6 +150,7 @@ CREATE TABLE `session` (
 	`ipAddress` text,
 	`userAgent` text,
 	`userId` text NOT NULL,
+	`activeOrganizationId` text,
 	FOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -100,7 +161,6 @@ CREATE TABLE `user` (
 	`email` text NOT NULL,
 	`emailVerified` integer DEFAULT false NOT NULL,
 	`image` text,
-	`role` text DEFAULT 'owner' NOT NULL,
 	`createdAt` integer NOT NULL,
 	`updatedAt` integer NOT NULL
 );

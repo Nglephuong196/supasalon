@@ -1,14 +1,32 @@
+export interface MembershipTier {
+    id: number;
+    organizationId: string;
+    name: string;
+    minSpending: number;
+    discountPercent: number;
+    minSpendingToMaintain: number | null;
+    sortOrder: number;
+    createdAt: string;
+}
+
 export interface Customer {
     id: number;
     organizationId: string;
     name: string;
     email: string | null;
     phone: string | null;
+    gender: "male" | "female" | "other" | null;
+    location: string | null;
+    birthday: string | null;
     notes: string | null;
+    totalSpent: number;
+    membershipTierId: number | null;
+    membershipTier?: MembershipTier | null;
     createdAt: string; // serialized Date
 }
 
-export type NewCustomer = Omit<Customer, "id" | "createdAt" | "organizationId">;
+export type NewCustomer = Omit<Customer, "id" | "createdAt" | "organizationId" | "totalSpent" | "membershipTierId" | "membershipTier">;
+
 
 export interface ServiceCategory {
     id: number;

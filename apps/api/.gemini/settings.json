@@ -1,0 +1,12 @@
+{
+    "$schema": "https://json.schemastore.org/gemini-settings.json",
+    "mcpServers": {
+        "better-auth": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@nicepkg/mcp-server-better-auth@latest"
+            ]
+        }
+    }
+}

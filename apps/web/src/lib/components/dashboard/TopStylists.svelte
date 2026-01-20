@@ -52,7 +52,7 @@
         class="flex flex-row items-center justify-between pb-3 border-b border-border/30 space-y-0 bg-gray-50/30"
     >
         <CardTitle class="text-sm font-semibold text-foreground tracking-tight">
-            Top Performance
+            Top doanh thu
         </CardTitle>
         <Button
             variant="ghost"
@@ -95,7 +95,7 @@
                             ></div>
                         </div>
                         <span class="text-[10px] text-muted-foreground"
-                            >{stylist.appointments} apts</span
+                            >{stylist.appointments} lượt</span
                         >
                     </div>
                 </div>
@@ -110,7 +110,7 @@
                 variant="ghost"
                 size="sm"
                 class="w-full text-xs font-medium text-muted-foreground hover:text-primary h-8"
-                >View All Staff</Button
+                >Xem tất cả</Button
             >
         </div>
     </CardContent>

@@ -17,7 +17,7 @@
     async function handleLogout() {
         isLoggingOut = true;
         await signOut();
-        goto("/login");
+        goto("/signin");
     }
 
     function getInitials(name: string | null | undefined): string {
@@ -53,7 +53,7 @@
             />
             <Input
                 type="search"
-                placeholder="Search..."
+                placeholder="Tìm kiếm..."
                 class="pl-9 h-9 w-64 bg-secondary/40 border-transparent focus:bg-background focus:border-border transition-all text-sm shadow-none rounded-md"
             />
         </div>
@@ -83,7 +83,7 @@
                 class="h-8 w-8 text-muted-foreground hover:text-foreground"
                 onclick={handleLogout}
                 disabled={isLoggingOut}
-                title="Log out"
+                title="Đăng xuất"
             >
                 <LogOut class="h-4 w-4" />
             </Button>

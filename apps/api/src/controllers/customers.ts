@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { CustomersService } from "../services";
 import type { NewCustomer } from "../db/schema";
 import type { Database } from "../db";
+import { requirePermission } from "../middleware/permission";
+import { RESOURCES, ACTIONS } from "@repo/constants";
 
 type Bindings = { DB: D1Database };
 type Variables = {
@@ -12,14 +14,15 @@ type Variables = {
 
 export const customersController = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
-customersController.get("/", async (c) => {
+// Read operations
+customersController.get("/", requirePermission(RESOURCES.CUSTOMER, ACTIONS.READ), async (c) => {
   const service = new CustomersService(c.get("db"));
   const organization = c.get("organization");
   const customers = await service.findAll(organization.id);
   return c.json(customers);
 });
 
-customersController.get("/:id", async (c) => {
+customersController.get("/:id", requirePermission(RESOURCES.CUSTOMER, ACTIONS.READ), async (c) => {
   const service = new CustomersService(c.get("db"));
   const organization = c.get("organization");
   const id = parseInt(c.req.param("id"));
@@ -29,7 +32,8 @@ customersController.get("/:id", async (c) => {
   return c.json(customer);
 });
 
-customersController.post("/", async (c) => {
+// Create operation
+customersController.post("/", requirePermission(RESOURCES.CUSTOMER, ACTIONS.CREATE), async (c) => {
   const service = new CustomersService(c.get("db"));
   const organization = c.get("organization");
   const body = await c.req.json<NewCustomer>();
@@ -40,7 +44,8 @@ customersController.post("/", async (c) => {
   return c.json(customer, 201);
 });
 
-customersController.put("/:id", async (c) => {
+// Update operation
+customersController.put("/:id", requirePermission(RESOURCES.CUSTOMER, ACTIONS.UPDATE), async (c) => {
   const service = new CustomersService(c.get("db"));
   const organization = c.get("organization");
   const id = parseInt(c.req.param("id"));
@@ -55,7 +60,8 @@ customersController.put("/:id", async (c) => {
   return c.json(customer);
 });
 
-customersController.delete("/:id", async (c) => {
+// Delete operation
+customersController.delete("/:id", requirePermission(RESOURCES.CUSTOMER, ACTIONS.DELETE), async (c) => {
   const service = new CustomersService(c.get("db"));
   const organization = c.get("organization");
   const id = parseInt(c.req.param("id"));

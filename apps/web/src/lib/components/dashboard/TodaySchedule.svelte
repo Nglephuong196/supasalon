@@ -61,7 +61,7 @@
         class="flex flex-row items-center justify-between pb-3 border-b border-border/30 space-y-0 bg-gray-50/30"
     >
         <CardTitle class="text-sm font-semibold text-foreground tracking-tight">
-            Today's Schedule
+            Lịch hôm nay
         </CardTitle>
         <Button
             variant="ghost"
@@ -120,7 +120,7 @@
                 variant="ghost"
                 size="sm"
                 class="w-full text-xs font-medium text-muted-foreground hover:text-primary h-8"
-                >View Calendar</Button
+                >Xem lịch</Button
             >
         </div>
     </CardContent>

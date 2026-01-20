@@ -18,7 +18,7 @@
 
     $effect(() => {
         const today = new Date();
-        formattedDate = today.toLocaleDateString("en-US", {
+        formattedDate = today.toLocaleDateString("vi-VN", {
             weekday: "long",
             day: "numeric",
             month: "long",
@@ -28,7 +28,7 @@
 </script>
 
 <svelte:head>
-    <title>Overview | SupaSalon</title>
+    <title>Tổng quan | SupaSalon</title>
 </svelte:head>
 
 <div class="flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
@@ -38,10 +38,10 @@
     >
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-foreground">
-                Overview
+                Tổng quan
             </h1>
             <p class="text-muted-foreground mt-1">
-                Your salon's performance at a glance.
+                Hiệu suất salon của bạn trong nháy mắt.
             </p>
         </div>
         <div class="flex items-center gap-3">
@@ -52,7 +52,7 @@
             </span>
             <Button class="btn-clean shadow-sm">
                 <Plus class="h-4 w-4 mr-2" />
-                New Booking
+                Đặt lịch mới
             </Button>
         </div>
     </div>
@@ -60,33 +60,33 @@
     <!-- Stats Cards -->
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
-            title="Total Revenue"
-            value="$12,450"
-            description="vs last month"
+            title="Tổng doanh thu"
+            value="12.450.000 ₫"
+            description="so với tháng trước"
             icon={DollarSign}
             trend="up"
             trendValue="+12%"
         />
         <StatsCard
-            title="Appointments"
+            title="Cuộc hẹn"
             value="45"
-            description="vs yesterday"
+            description="so với hôm qua"
             icon={CalendarDays}
             trend="up"
             trendValue="+5%"
         />
         <StatsCard
-            title="New Customers"
+            title="Khách hàng mới"
             value="8"
-            description="vs last week"
+            description="so với tuần trước"
             icon={Users}
             trend="up"
             trendValue="+2%"
         />
         <StatsCard
-            title="Avg. Ticket"
-            value="$85"
-            description="vs last month"
+            title="Hóa đơn trung bình"
+            value="850.000 ₫"
+            description="so với tháng trước"
             icon={TrendingUp}
             trend="up"
             trendValue="+1.5%"
@@ -105,21 +105,21 @@
                         <div class="flex items-center gap-2">
                             <BarChart3 class="h-4 w-4 text-muted-foreground" />
                             <h3 class="text-sm font-semibold text-foreground">
-                                Revenue Trends
+                                Biểu đồ doanh thu
                             </h3>
                         </div>
                         <div class="flex gap-1 p-1 bg-muted/50 rounded-lg">
                             <button
                                 class="text-xs px-3 py-1 rounded-md bg-background shadow-sm text-foreground font-medium transition-all"
-                                >Week</button
+                                >Tuần</button
                             >
                             <button
                                 class="text-xs px-3 py-1 rounded-md hover:bg-background/50 text-muted-foreground font-medium transition-all"
-                                >Month</button
+                                >Tháng</button
                             >
                             <button
                                 class="text-xs px-3 py-1 rounded-md hover:bg-background/50 text-muted-foreground font-medium transition-all"
-                                >Year</button
+                                >Năm</button
                             >
                         </div>
                     </div>
@@ -136,7 +136,7 @@
                                 <div
                                     class="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs py-1 px-2 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity border border-border pointer-events-none"
                                 >
-                                    ${height * 10}
+                                    {height * 10}.000 ₫
                                 </div>
                             </div>
                         {/each}
@@ -144,9 +144,9 @@
                     <div
                         class="flex justify-between px-2 pt-2 border-t border-border/40 text-xs text-muted-foreground font-medium"
                     >
-                        <span>Mon</span><span>Tue</span><span>Wed</span><span
-                            >Thu</span
-                        ><span>Fri</span><span>Sat</span><span>Sun</span>
+                        <span>T2</span><span>T3</span><span>T4</span><span
+                            >T5</span
+                        ><span>T6</span><span>T7</span><span>CN</span>
                     </div>
                 </CardContent>
             </Card>

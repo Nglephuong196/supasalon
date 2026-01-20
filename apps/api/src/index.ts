@@ -6,10 +6,13 @@ import {
   authController,
   usersController,
   customersController,
+  customerMembershipsController,
   serviceCategoriesController,
   servicesController,
   bookingsController,
   invoicesController,
+  membershipTiersController,
+  membersController,
 } from "./controllers";
 
 type Bindings = {
@@ -49,10 +52,13 @@ protectedRoutes.use("*", ensureTenant);
 
 protectedRoutes.route("/users", usersController);
 protectedRoutes.route("/customers", customersController);
+protectedRoutes.route("/customer-memberships", customerMembershipsController);
 protectedRoutes.route("/service-categories", serviceCategoriesController);
 protectedRoutes.route("/services", servicesController);
 protectedRoutes.route("/bookings", bookingsController);
 protectedRoutes.route("/invoices", invoicesController);
+protectedRoutes.route("/membership-tiers", membershipTiersController);
+protectedRoutes.route("/members", membersController);
 
 app.route("/", protectedRoutes);
 

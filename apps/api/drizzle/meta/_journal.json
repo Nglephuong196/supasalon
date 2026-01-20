@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1768216082240,
-      "tag": "0000_daffy_mindworm",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1768296288430,
-      "tag": "0001_gigantic_white_queen",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1768298729093,
-      "tag": "0002_black_rocket_racer",
+      "when": 1768473557462,
+      "tag": "0000_funny_thor",
       "breakpoints": true
     }
   ]

@@ -175,194 +175,220 @@
     <title>Đăng ký Salon | SupaSalon</title>
 </svelte:head>
 
-<Card class="shadow-2xl border-0">
-    <CardHeader class="space-y-1 text-center">
-        <div
-            class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground"
-        >
-            <Store class="h-7 w-7" />
-        </div>
-        <CardTitle class="text-2xl font-bold">Đăng ký Salon</CardTitle>
-        <CardDescription>
-            Tạo tài khoản và đăng ký salon của bạn
-        </CardDescription>
-    </CardHeader>
-    <CardContent>
-        {#if error}
+<div
+    class="flex items-center justify-center min-h-screen bg-[#FAFAFA] relative overflow-hidden py-8"
+>
+    <!-- Subtle Background Blob - Very Soft Lavender -->
+    <div
+        class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-purple-100/40 rounded-full blur-3xl pointer-events-none"
+    ></div>
+    <div
+        class="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-purple-100/40 rounded-full blur-3xl pointer-events-none"
+    ></div>
+
+    <Card
+        class="w-full max-w-lg shadow-2xl border-0 relative z-10 bg-white rounded-2xl"
+    >
+        <CardHeader class="space-y-1 text-center">
             <div
-                class="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive border border-destructive/20"
+                class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground"
             >
-                {error}
+                <Store class="h-7 w-7" />
             </div>
-        {/if}
-        <form onsubmit={handleSubmit} class="space-y-4">
-            <!-- Account Section -->
-            <div class="space-y-3">
+            <CardTitle class="text-2xl font-bold">Đăng ký Salon</CardTitle>
+            <CardDescription>
+                Tạo tài khoản và đăng ký salon của bạn
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            {#if error}
                 <div
-                    class="text-sm font-medium text-muted-foreground uppercase tracking-wide"
+                    class="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive border border-destructive/20"
                 >
-                    Thông tin tài khoản
+                    {error}
                 </div>
-                <div class="space-y-2">
-                    <Label for="ownerName">Họ và tên</Label>
-                    <Input
-                        id="ownerName"
-                        placeholder="Nguyễn Văn A"
-                        autocomplete="name"
-                        disabled={isLoading}
-                        bind:value={ownerName}
-                        onblur={() => validateOwnerName(ownerName)}
-                    />
-                    {#if errors.ownerName}
-                        <p class="text-sm text-destructive">
-                            {errors.ownerName}
-                        </p>
-                    {/if}
-                </div>
-                <div class="space-y-2">
-                    <Label for="email">Email</Label>
-                    <Input
-                        id="email"
-                        type="email"
-                        placeholder="email@example.com"
-                        autocomplete="email"
-                        disabled={isLoading}
-                        bind:value={email}
-                        onblur={() => validateEmail(email)}
-                    />
-                    {#if errors.email}
-                        <p class="text-sm text-destructive">{errors.email}</p>
-                    {/if}
-                </div>
-                <div class="grid grid-cols-2 gap-3">
+            {/if}
+            <form onsubmit={handleSubmit} class="space-y-4">
+                <!-- Account Section -->
+                <div class="space-y-3">
+                    <div
+                        class="text-sm font-medium text-muted-foreground uppercase tracking-wide"
+                    >
+                        Thông tin tài khoản
+                    </div>
                     <div class="space-y-2">
-                        <Label for="password">Mật khẩu</Label>
+                        <Label for="ownerName">Họ và tên</Label>
                         <Input
-                            id="password"
-                            type="password"
-                            placeholder="••••••••"
-                            autocomplete="new-password"
+                            id="ownerName"
+                            placeholder="Nguyễn Văn A"
+                            autocomplete="name"
                             disabled={isLoading}
-                            bind:value={password}
-                            onblur={() => validatePassword(password)}
+                            bind:value={ownerName}
+                            onblur={() => validateOwnerName(ownerName)}
                         />
-                        {#if errors.password}
+                        {#if errors.ownerName}
                             <p class="text-sm text-destructive">
-                                {errors.password}
+                                {errors.ownerName}
                             </p>
                         {/if}
                     </div>
                     <div class="space-y-2">
-                        <Label for="confirmPassword">Xác nhận</Label>
+                        <Label for="email">Email</Label>
                         <Input
-                            id="confirmPassword"
-                            type="password"
-                            placeholder="••••••••"
-                            autocomplete="new-password"
+                            id="email"
+                            type="email"
+                            placeholder="email@example.com"
+                            autocomplete="email"
                             disabled={isLoading}
-                            bind:value={confirmPassword}
-                            onblur={() =>
-                                validateConfirmPassword(confirmPassword)}
+                            bind:value={email}
+                            onblur={() => validateEmail(email)}
                         />
-                        {#if errors.confirmPassword}
+                        {#if errors.email}
                             <p class="text-sm text-destructive">
-                                {errors.confirmPassword}
+                                {errors.email}
                             </p>
                         {/if}
                     </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-2">
+                            <Label for="password">Mật khẩu</Label>
+                            <Input
+                                id="password"
+                                type="password"
+                                placeholder="••••••••"
+                                autocomplete="new-password"
+                                disabled={isLoading}
+                                bind:value={password}
+                                onblur={() => validatePassword(password)}
+                            />
+                            {#if errors.password}
+                                <p class="text-sm text-destructive">
+                                    {errors.password}
+                                </p>
+                            {/if}
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="confirmPassword">Xác nhận</Label>
+                            <Input
+                                id="confirmPassword"
+                                type="password"
+                                placeholder="••••••••"
+                                autocomplete="new-password"
+                                disabled={isLoading}
+                                bind:value={confirmPassword}
+                                onblur={() =>
+                                    validateConfirmPassword(confirmPassword)}
+                            />
+                            {#if errors.confirmPassword}
+                                <p class="text-sm text-destructive">
+                                    {errors.confirmPassword}
+                                </p>
+                            {/if}
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Salon Section -->
-            <div class="space-y-3 pt-2 border-t">
-                <div
-                    class="text-sm font-medium text-muted-foreground uppercase tracking-wide pt-2"
+                <!-- Salon Section -->
+                <div class="space-y-3 pt-2 border-t">
+                    <div
+                        class="text-sm font-medium text-muted-foreground uppercase tracking-wide pt-2"
+                    >
+                        Thông tin Salon
+                    </div>
+                    <div class="space-y-2">
+                        <Label for="salonName">Tên Salon</Label>
+                        <Input
+                            id="salonName"
+                            placeholder="VD: Beauty Spa & Nail"
+                            disabled={isLoading}
+                            bind:value={salonName}
+                            onblur={() => validateSalonName(salonName)}
+                        />
+                        {#if errors.salonName}
+                            <p class="text-sm text-destructive">
+                                {errors.salonName}
+                            </p>
+                        {/if}
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-2">
+                            <Label for="province">Tỉnh/Thành phố</Label>
+                            <Select
+                                id="province"
+                                disabled={isLoading}
+                                bind:value={province}
+                                placeholder="Chọn tỉnh/thành"
+                                onchange={() => validateProvince(province)}
+                            >
+                                {#each VIETNAM_PROVINCES as prov}
+                                    <option value={prov}>{prov}</option>
+                                {/each}
+                            </Select>
+                            {#if errors.province}
+                                <p class="text-sm text-destructive">
+                                    {errors.province}
+                                </p>
+                            {/if}
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="phone">Số điện thoại</Label>
+                            <Input
+                                id="phone"
+                                type="tel"
+                                placeholder="0901234567"
+                                disabled={isLoading}
+                                bind:value={phone}
+                                onblur={() => validatePhone(phone)}
+                            />
+                            {#if errors.phone}
+                                <p class="text-sm text-destructive">
+                                    {errors.phone}
+                                </p>
+                            {/if}
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <Label for="address">Địa chỉ</Label>
+                        <Input
+                            id="address"
+                            placeholder="Số nhà, đường, phường/xã, quận/huyện"
+                            disabled={isLoading}
+                            bind:value={address}
+                            onblur={() => validateAddress(address)}
+                        />
+                        {#if errors.address}
+                            <p class="text-sm text-destructive">
+                                {errors.address}
+                            </p>
+                        {/if}
+                    </div>
+                </div>
+
+                <Button
+                    type="submit"
+                    class="w-full"
+                    size="lg"
+                    disabled={isLoading}
                 >
-                    Thông tin Salon
-                </div>
-                <div class="space-y-2">
-                    <Label for="salonName">Tên Salon</Label>
-                    <Input
-                        id="salonName"
-                        placeholder="VD: Beauty Spa & Nail"
-                        disabled={isLoading}
-                        bind:value={salonName}
-                        onblur={() => validateSalonName(salonName)}
-                    />
-                    {#if errors.salonName}
-                        <p class="text-sm text-destructive">
-                            {errors.salonName}
-                        </p>
+                    {#if isLoading}
+                        <Loader class="mr-2 h-4 w-4 animate-spin" />
+                        Đang tạo tài khoản...
+                    {:else}
+                        Đăng ký
                     {/if}
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="space-y-2">
-                        <Label for="province">Tỉnh/Thành phố</Label>
-                        <Select
-                            id="province"
-                            disabled={isLoading}
-                            bind:value={province}
-                            placeholder="Chọn tỉnh/thành"
-                            onchange={() => validateProvince(province)}
-                        >
-                            {#each VIETNAM_PROVINCES as prov}
-                                <option value={prov}>{prov}</option>
-                            {/each}
-                        </Select>
-                        {#if errors.province}
-                            <p class="text-sm text-destructive">
-                                {errors.province}
-                            </p>
-                        {/if}
-                    </div>
-                    <div class="space-y-2">
-                        <Label for="phone">Số điện thoại</Label>
-                        <Input
-                            id="phone"
-                            type="tel"
-                            placeholder="0901234567"
-                            disabled={isLoading}
-                            bind:value={phone}
-                            onblur={() => validatePhone(phone)}
-                        />
-                        {#if errors.phone}
-                            <p class="text-sm text-destructive">
-                                {errors.phone}
-                            </p>
-                        {/if}
-                    </div>
-                </div>
-                <div class="space-y-2">
-                    <Label for="address">Địa chỉ</Label>
-                    <Input
-                        id="address"
-                        placeholder="Số nhà, đường, phường/xã, quận/huyện"
-                        disabled={isLoading}
-                        bind:value={address}
-                        onblur={() => validateAddress(address)}
-                    />
-                    {#if errors.address}
-                        <p class="text-sm text-destructive">{errors.address}</p>
-                    {/if}
-                </div>
+                </Button>
+            </form>
+        </CardContent>
+        <CardFooter class="flex flex-col space-y-4">
+            <div class="text-center text-sm text-muted-foreground">
+                Đã có tài khoản?
+                <a
+                    href="/signin"
+                    class="text-primary font-medium hover:underline"
+                >
+                    Đăng nhập
+                </a>
             </div>
-
-            <Button type="submit" class="w-full" size="lg" disabled={isLoading}>
-                {#if isLoading}
-                    <Loader class="mr-2 h-4 w-4 animate-spin" />
-                    Đang tạo tài khoản...
-                {:else}
-                    Đăng ký
-                {/if}
-            </Button>
-        </form>
-    </CardContent>
-    <CardFooter class="flex flex-col space-y-4">
-        <div class="text-center text-sm text-muted-foreground">
-            Đã có tài khoản?
-            <a href="/login" class="text-primary font-medium hover:underline">
-                Đăng nhập
-            </a>
-        </div>
-    </CardFooter>
-</Card>
+        </CardFooter>
+    </Card>
+</div>

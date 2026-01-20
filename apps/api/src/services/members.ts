@@ -1,76 +1,149 @@
 import { eq, and } from "drizzle-orm";
+import { member, memberPermissions, invitation, user, type Member } from "../db/schema";
 import type { Database } from "../db";
-import { member, user } from "../db/schema";
+import { hasPermission, type Permissions, type Resource, type Action } from "@repo/constants";
 
 export class MembersService {
     constructor(private db: Database) { }
 
     async findAll(organizationId: string) {
-        return this.db
-            .select({
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                image: user.image,
-                role: member.role,
-                joinedAt: member.createdAt,
-            })
-            .from(member)
-            .innerJoin(user, eq(member.userId, user.id))
-            .where(eq(member.organizationId, organizationId));
+        const rows = await this.db.query.member.findMany({
+            where: eq(member.organizationId, organizationId),
+            with: {
+                user: true,
+                permissions: true,
+            },
+        });
+        return rows;
     }
 
-    async findByUserId(organizationId: string, userId: string) {
-        return this.db
-            .select({
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                image: user.image,
-                role: member.role,
-                joinedAt: member.createdAt,
-                memberId: member.id,
-            })
-            .from(member)
-            .innerJoin(user, eq(member.userId, user.id))
-            .where(and(eq(member.organizationId, organizationId), eq(member.userId, userId)))
-            .get();
+    async findById(memberId: string, organizationId: string) {
+        return this.db.query.member.findFirst({
+            where: and(eq(member.id, memberId), eq(member.organizationId, organizationId)),
+            with: {
+                user: true,
+                permissions: true,
+            }
+        });
     }
 
-    async addMember(organizationId: string, userId: string, role: string = "member") {
-        // Check if already member
-        const existing = await this.db.select().from(member).where(and(eq(member.organizationId, organizationId), eq(member.userId, userId))).get();
+    async findInvitations(organizationId: string) {
+        return this.db.query.invitation.findMany({
+            where: eq(invitation.organizationId, organizationId)
+        });
+    }
+
+    async updatePermissions(memberId: string, organizationId: string, permissions: Permissions) {
+        // Verify member belongs to org
+        const targetMember = await this.findById(memberId, organizationId);
+        if (!targetMember) return null;
+
+        // Check if permissions record exists
+        const existing = await this.db.query.memberPermissions.findFirst({
+            where: eq(memberPermissions.memberId, memberId)
+        });
+
         if (existing) {
-            throw new Error("User is already a member of this organization");
+            // Update existing permissions
+            await this.db.update(memberPermissions)
+                .set({ permissions: permissions as any })
+                .where(eq(memberPermissions.memberId, memberId));
+        } else {
+            // Insert new permissions
+            await this.db.insert(memberPermissions).values({
+                memberId,
+                permissions: permissions as any,
+            });
         }
 
-        // Generate ID for member if needed (better-auth uses CUID/UUID usually, I might need a generator or let DB handle if I have one)
-        // Since my schema defined id as text primary key, I need to generate it.
-        // I'll import crypto for UUID
+        return this.findById(memberId, organizationId);
+    }
+
+    async addMember(organizationId: string, userId: string, role: string) {
+        // Generate a random ID for the member entry
         const id = crypto.randomUUID();
 
-        const result = await this.db.insert(member).values({
+        await this.db.insert(member).values({
             id,
             organizationId,
             userId,
             role,
             createdAt: new Date(),
         }).returning();
-        return result[0];
+
+        return this.findById(id, organizationId);
+    }
+    async findByUserId(organizationId: string, userId: string) {
+        return this.db.query.member.findFirst({
+            where: and(eq(member.userId, userId), eq(member.organizationId, organizationId)),
+            with: {
+                user: true,
+                permissions: true,
+            }
+        });
     }
 
-    async updateRole(organizationId: string, userId: string, role: string) {
-        const result = await this.db.update(member)
+    async updateRole(organizationId: string, memberId: string, role: string) {
+        const targetMember = await this.findById(memberId, organizationId);
+        if (!targetMember) return null;
+
+        await this.db.update(member)
             .set({ role })
-            .where(and(eq(member.organizationId, organizationId), eq(member.userId, userId)))
+            .where(eq(member.id, memberId))
             .returning();
-        return result[0];
+
+        return this.findById(memberId, organizationId);
     }
 
     async removeMember(organizationId: string, userId: string) {
-        const result = await this.db.delete(member)
-            .where(and(eq(member.organizationId, organizationId), eq(member.userId, userId)))
+        const targetMember = await this.findByUserId(organizationId, userId);
+        if (!targetMember) return null;
+
+        await this.db.delete(member)
+            .where(eq(member.id, targetMember.id))
             .returning();
-        return result[0];
+
+        return true;
+    }
+
+    async removeById(organizationId: string, memberId: string) {
+        const targetMember = await this.findById(memberId, organizationId);
+        if (!targetMember) return false;
+
+        await this.db.delete(member).where(eq(member.id, memberId)).returning();
+        return true;
+    }
+
+    async removeByEmail(organizationId: string, email: string) {
+        // Find user by email
+        const userFound = await this.db.query.user.findFirst({
+            where: eq(user.email, email)
+        });
+
+        if (!userFound) return false;
+
+        return this.removeMember(organizationId, userFound.id);
+    }
+
+    async getPermissions(memberId: string, organizationId: string): Promise<Permissions | null> {
+        // Verify member belongs to org
+        const targetMember = await this.findById(memberId, organizationId);
+        if (!targetMember) return null;
+
+        const permissionRecord = await this.db.query.memberPermissions.findFirst({
+            where: eq(memberPermissions.memberId, memberId)
+        });
+
+        return permissionRecord?.permissions as Permissions || null;
+    }
+
+    async checkPermission(
+        memberId: string,
+        organizationId: string,
+        resource: Resource,
+        action: Action
+    ): Promise<boolean> {
+        const userPermissions = await this.getPermissions(memberId, organizationId);
+        return hasPermission(userPermissions, resource, action);
     }
 }

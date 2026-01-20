@@ -25,7 +25,10 @@
     "db:studio": "bun run --filter api db:studio"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260109.0",
     "api": "workspace:*"
+  },
+  "dependencies": {
+    "wangler": "^0.0.8",
+    "wrangler": "^4.59.1"
   }
 }

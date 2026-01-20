@@ -48,7 +48,7 @@
         class="flex flex-row items-center justify-between pb-3 border-b border-border/30 space-y-0 bg-gray-50/30"
     >
         <CardTitle class="text-sm font-semibold text-foreground tracking-tight">
-            Low Stock
+            Sắp hết hàng
         </CardTitle>
         <Button
             variant="ghost"
@@ -86,7 +86,7 @@
                         {product.name}
                     </p>
                     <p class="text-xs text-muted-foreground">
-                        Min required: <span class="font-medium text-foreground"
+                        Tối thiểu: <span class="font-medium text-foreground"
                             >{product.minStock}</span
                         >
                     </p>
@@ -100,7 +100,7 @@
                             : "bg-amber-50 text-amber-700 border-amber-200",
                     )}
                 >
-                    {product.stock} left
+                    {product.stock} còn lại
                 </div>
             </div>
         {/each}
@@ -109,7 +109,7 @@
                 variant="ghost"
                 size="sm"
                 class="w-full text-xs font-medium text-muted-foreground hover:text-primary h-8"
-                >Inventory Report</Button
+                >Báo cáo kho</Button
             >
         </div>
     </CardContent>

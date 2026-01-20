@@ -26,11 +26,11 @@
     function validateEmail(value: string): boolean {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!value) {
-            emailError = "Please enter email";
+            emailError = "Vui lòng nhập email";
             return false;
         }
         if (!emailRegex.test(value)) {
-            emailError = "Invalid email";
+            emailError = "Email không hợp lệ";
             return false;
         }
         emailError = null;
@@ -39,11 +39,11 @@
 
     function validatePassword(value: string): boolean {
         if (!value) {
-            passwordError = "Please enter password";
+            passwordError = "Vui lòng nhập mật khẩu";
             return false;
         }
         if (value.length < 6) {
-            passwordError = "Password must be at least 6 characters";
+            passwordError = "Mật khẩu phải có ít nhất 6 ký tự";
             return false;
         }
         passwordError = null;
@@ -77,11 +77,15 @@
         if (result.error) {
             error =
                 result.error.message ||
-                "Login failed. Please check your credentials.";
+                "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.";
             isLoading = false;
         }
     }
 </script>
+
+<svelte:head>
+    <title>Đăng nhập | SupaSalon</title>
+</svelte:head>
 
 <div
     class="flex items-center justify-center min-h-screen bg-[#FAFAFA] relative overflow-hidden"
@@ -106,10 +110,10 @@
                 </div>
             </div>
             <CardTitle class="text-2xl font-bold text-gray-900 tracking-tight"
-                >Welcome Back</CardTitle
+                >Chào mừng trở lại</CardTitle
             >
             <CardDescription class="text-base text-gray-500">
-                Sign in to manage your salon
+                Đăng nhập để quản lý salon của bạn
             </CardDescription>
         </CardHeader>
         <CardContent class="space-y-6 px-8">
@@ -124,13 +128,12 @@
                 <div class="space-y-2">
                     <Label
                         for="email"
-                        class="text-sm font-semibold text-gray-700"
-                        >Email Address</Label
+                        class="text-sm font-semibold text-gray-700">Email</Label
                     >
                     <Input
                         id="email"
                         type="email"
-                        placeholder="hello@salon.com"
+                        placeholder="email@salon.com"
                         autocomplete="email"
                         disabled={isLoading}
                         bind:value={email}
@@ -148,12 +151,12 @@
                         <Label
                             for="password"
                             class="text-sm font-semibold text-gray-700"
-                            >Password</Label
+                            >Mật khẩu</Label
                         >
                         <a
                             href="#"
                             class="text-sm font-medium text-purple-600 hover:text-purple-700 hover:underline"
-                            >Forgot?</a
+                            >Quên mật khẩu?</a
                         >
                     </div>
                     <Input
@@ -180,21 +183,21 @@
                 >
                     {#if isLoading}
                         <Loader class="mr-2 h-5 w-5 animate-spin" />
-                        Signing in...
+                        Đang đăng nhập...
                     {:else}
-                        Sign in
+                        Đăng nhập
                     {/if}
                 </Button>
             </form>
         </CardContent>
         <CardFooter class="flex flex-col space-y-4 pb-8">
             <div class="text-center text-sm text-gray-500">
-                Don't have an account?
+                Chưa có tài khoản?
                 <a
                     href="/signup"
                     class="text-purple-600 font-semibold hover:text-purple-700 ml-1"
                 >
-                    Create account
+                    Đăng ký ngay
                 </a>
             </div>
         </CardFooter>

@@ -1,11 +1,11 @@
-import { redirect, type Handle } from '@sveltejs/kit';
+import { redirect, type Handle, type HandleFetch } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
 // Define protected routes that require authentication (root is dashboard)
 const protectedRoutes = ['/', '/bookings', '/customers', '/services', '/products', '/employees', '/invoices', '/settings'];
 
 // Define auth routes (redirect to dashboard if already logged in)
-const authRoutes = ['/login', '/signup'];
+const authRoutes = ['/signin', '/signup'];
 
 // API URL for server-side calls
 const API_URL = 'http://127.0.0.1:8787';
@@ -48,7 +48,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     const isProtected = protectedRoutes.some(route => pathname === route || (route !== '/' && pathname.startsWith(route)));
     if (isProtected) {
         if (!session) {
-            throw redirect(303, '/login');
+            throw redirect(303, '/signin');
         }
     }
 
@@ -60,4 +60,31 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
 
     return resolve(event);
+};
+
+/**
+ * handleFetch intercepts all fetch() calls made on the server.
+ * We use it to automatically inject the X-Organization-Id header for API requests.
+ */
+export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
+    // Check if request is to our API (both localhost and 127.0.0.1)
+    const isApiRequest = request.url.startsWith('http://localhost:8787') ||
+        request.url.startsWith('http://127.0.0.1:8787');
+
+    if (isApiRequest) {
+        const organizationId = event.cookies.get('organizationId');
+
+        // Create new headers with organization ID
+        const headers = new Headers(request.headers);
+        if (organizationId) {
+            headers.set('X-Organization-Id', organizationId);
+        }
+
+        // Clone request with modified headers
+        const modifiedRequest = new Request(request, { headers });
+
+        return fetch(modifiedRequest);
+    }
+
+    return fetch(request);
 };

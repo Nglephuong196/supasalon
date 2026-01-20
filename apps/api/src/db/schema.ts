@@ -87,14 +87,31 @@ export const invitation = sqliteTable("invitation", {
 });
 
 
+// Membership Tiers (configurable per organization)
+export const membershipTiers = sqliteTable("membership_tiers", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  organizationId: text("organization_id").notNull().references(() => organization.id),
+  name: text("name").notNull(),
+  minSpending: real("min_spending").notNull(),
+  discountPercent: real("discount_percent").notNull().default(0),
+  minSpendingToMaintain: real("min_spending_to_maintain"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
 // Customers
 export const customers = sqliteTable("customers", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   organizationId: text("organization_id").notNull().references(() => organization.id),
   name: text("name").notNull(),
   email: text("email"),
-  phone: text("phone"),
+  phone: text("phone").notNull(),
+  gender: text("gender", { enum: ["male", "female", "other"] }),
+  location: text("location"),
+  birthday: integer("birthday", { mode: "timestamp" }),
   notes: text("notes"),
+  totalSpent: real("total_spent").notNull().default(0),
+  membershipTierId: integer("membership_tier_id").references(() => membershipTiers.id),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
@@ -140,6 +157,26 @@ export const invoices = sqliteTable("invoices", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
+// Customer Memberships
+export const customerMemberships = sqliteTable("customer_memberships", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  customerId: integer("customer_id").notNull().references(() => customers.id),
+  type: text("type").notNull(),
+  status: text("status", { enum: ["active", "expired", "cancelled"] }).notNull().default("active"),
+  startDate: integer("start_date", { mode: "timestamp" }).notNull(),
+  endDate: integer("end_date", { mode: "timestamp" }),
+  notes: text("notes"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+// Member Permissions
+export const memberPermissions = sqliteTable("member_permissions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  memberId: text("member_id").notNull().references(() => member.id, { onDelete: 'cascade' }),
+  permissions: text("permissions", { mode: "json" }).notNull().$type<Record<string, string[]>>(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
 // ============================================================================
 // RELATIONS (defined after all tables)
 // ============================================================================
@@ -164,11 +201,18 @@ export const organizationRelations = relations(organization, ({ many }) => ({
   customers: many(customers),
   serviceCategories: many(serviceCategories),
   bookings: many(bookings),
+  membershipTiers: many(membershipTiers),
 }));
 
-export const memberRelations = relations(member, ({ one }) => ({
+export const membershipTiersRelations = relations(membershipTiers, ({ one, many }) => ({
+  organization: one(organization, { fields: [membershipTiers.organizationId], references: [organization.id] }),
+  customers: many(customers),
+}));
+
+export const memberRelations = relations(member, ({ one, many }) => ({
   user: one(user, { fields: [member.userId], references: [user.id] }),
   organization: one(organization, { fields: [member.organizationId], references: [organization.id] }),
+  permissions: many(memberPermissions),
 }));
 
 export const invitationRelations = relations(invitation, ({ one }) => ({
@@ -178,7 +222,13 @@ export const invitationRelations = relations(invitation, ({ one }) => ({
 
 export const customersRelations = relations(customers, ({ one, many }) => ({
   organization: one(organization, { fields: [customers.organizationId], references: [organization.id] }),
+  membershipTier: one(membershipTiers, { fields: [customers.membershipTierId], references: [membershipTiers.id] }),
   bookings: many(bookings),
+  memberships: many(customerMemberships),
+}));
+
+export const customerMembershipsRelations = relations(customerMemberships, ({ one }) => ({
+  customer: one(customers, { fields: [customerMemberships.customerId], references: [customers.id] }),
 }));
 
 export const serviceCategoriesRelations = relations(serviceCategories, ({ one, many }) => ({
@@ -200,6 +250,10 @@ export const bookingsRelations = relations(bookings, ({ one }) => ({
 
 export const invoicesRelations = relations(invoices, ({ one }) => ({
   booking: one(bookings, { fields: [invoices.bookingId], references: [bookings.id] }),
+}));
+
+export const memberPermissionsRelations = relations(memberPermissions, ({ one }) => ({
+  member: one(member, { fields: [memberPermissions.memberId], references: [member.id] }),
 }));
 
 // ============================================================================
@@ -235,3 +289,12 @@ export type NewBooking = typeof bookings.$inferInsert;
 
 export type Invoice = typeof invoices.$inferSelect;
 export type NewInvoice = typeof invoices.$inferInsert;
+
+export type CustomerMembership = typeof customerMemberships.$inferSelect;
+export type NewCustomerMembership = typeof customerMemberships.$inferInsert;
+
+export type MembershipTier = typeof membershipTiers.$inferSelect;
+export type NewMembershipTier = typeof membershipTiers.$inferInsert;
+
+export type MemberPermission = typeof memberPermissions.$inferSelect;
+export type NewMemberPermission = typeof memberPermissions.$inferInsert;

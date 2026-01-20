@@ -7,15 +7,19 @@
 		type ButtonVariant,
 	} from "./button-variants.js";
 	import type { WithElementRef } from "bits-ui";
-	import type { HTMLButtonAttributes } from "svelte/elements";
+	import type {
+		HTMLButtonAttributes,
+		HTMLAnchorAttributes,
+	} from "svelte/elements";
 	import type { Snippet } from "svelte";
 
-	type Props = WithElementRef<HTMLButtonAttributes> & {
-		variant?: ButtonVariant;
-		size?: ButtonSize;
-		builders?: unknown[];
-		children?: Snippet;
-	};
+	type Props = WithElementRef<HTMLButtonAttributes> &
+		Partial<Pick<HTMLAnchorAttributes, "href" | "target" | "rel">> & {
+			variant?: ButtonVariant;
+			size?: ButtonSize;
+			builders?: unknown[];
+			children?: Snippet;
+		};
 
 	let {
 		variant = "default",
@@ -23,16 +27,34 @@
 		class: className,
 		children,
 		ref = $bindable(null),
+		href,
+		target,
+		rel,
 		...restProps
 	}: Props = $props();
 </script>
 
-<ButtonPrimitive.Root
-	bind:ref
-	class={cn(buttonVariants({ variant, size }), className)}
-	{...restProps}
->
-	{#if children}
-		{@render children()}
-	{/if}
-</ButtonPrimitive.Root>
+{#if href}
+	<a
+		bind:this={ref}
+		{href}
+		{target}
+		{rel}
+		class={cn(buttonVariants({ variant, size }), className)}
+		{...restProps as Record<string, unknown>}
+	>
+		{#if children}
+			{@render children()}
+		{/if}
+	</a>
+{:else}
+	<ButtonPrimitive.Root
+		bind:ref
+		class={cn(buttonVariants({ variant, size }), className)}
+		{...restProps}
+	>
+		{#if children}
+			{@render children()}
+		{/if}
+	</ButtonPrimitive.Root>
+{/if}

@@ -3,6 +3,14 @@
     import { cn } from "$lib/utils";
     import { Button } from "$lib/components/ui/button";
     import {
+        checkPermission,
+        RESOURCES,
+        ACTIONS,
+        type Permissions,
+        type Resource,
+        type Action,
+    } from "$lib/permissions";
+    import {
         LayoutDashboard,
         CalendarDays,
         Users,
@@ -17,6 +25,13 @@
         LifeBuoy,
         LogOut,
     } from "@lucide/svelte";
+
+    interface NavItem {
+        title: string;
+        href: string;
+        icon: any;
+        permission?: { resource: Resource; action: Action };
+    }
 
     interface Props {
         class?: string;
@@ -34,6 +49,8 @@
             email: string;
             image?: string | null;
         } | null;
+        role?: string | null;
+        permissions?: Permissions | null;
     }
 
     let {
@@ -42,24 +59,74 @@
         onToggle,
         organization = null,
         user = null,
+        role = null,
+        permissions = null,
     }: Props = $props();
 
-    const mainNav = [
-        { title: "Overview", href: "/", icon: LayoutDashboard },
-        { title: "Bookings", href: "/bookings", icon: CalendarDays },
+    const mainNav: NavItem[] = [
+        { title: "Tổng quan", href: "/", icon: LayoutDashboard },
+        {
+            title: "Lịch hẹn",
+            href: "/bookings",
+            icon: CalendarDays,
+            permission: { resource: RESOURCES.BOOKING, action: ACTIONS.READ },
+        },
     ];
 
-    const managementNav = [
-        { title: "Services", href: "/services", icon: Scissors },
-        { title: "Products", href: "/products", icon: Package },
-        { title: "Customers", href: "/customers", icon: Users },
-        { title: "Staff", href: "/employees", icon: UserCog },
+    const managementNav: NavItem[] = [
+        {
+            title: "Dịch vụ",
+            href: "/services",
+            icon: Scissors,
+            permission: { resource: RESOURCES.SERVICE, action: ACTIONS.READ },
+        },
+        {
+            title: "Sản phẩm",
+            href: "/products",
+            icon: Package,
+            permission: { resource: RESOURCES.PRODUCT, action: ACTIONS.READ },
+        },
+        {
+            title: "Khách hàng",
+            href: "/customers",
+            icon: Users,
+            permission: { resource: RESOURCES.CUSTOMER, action: ACTIONS.READ },
+        },
+        {
+            title: "Nhân viên",
+            href: "/employees",
+            icon: UserCog,
+            permission: { resource: RESOURCES.EMPLOYEE, action: ACTIONS.READ },
+        },
     ];
 
-    const financeNav = [
-        { title: "Invoices", href: "/invoices", icon: Receipt },
-        { title: "Settings", href: "/settings", icon: Settings },
+    const financeNav: NavItem[] = [
+        {
+            title: "Hóa đơn",
+            href: "/invoices",
+            icon: Receipt,
+            permission: { resource: RESOURCES.INVOICE, action: ACTIONS.READ },
+        },
+        { title: "Cài đặt", href: "/settings", icon: Settings },
     ];
+
+    // Filter nav items based on permissions
+    function filterNavItems(items: NavItem[]): NavItem[] {
+        return items.filter((item) => {
+            if (!item.permission) return true;
+            return checkPermission(
+                role,
+                permissions,
+                item.permission.resource,
+                item.permission.action,
+            );
+        });
+    }
+
+    // Reactive filtered nav items
+    let filteredMainNav = $derived(filterNavItems(mainNav));
+    let filteredManagementNav = $derived(filterNavItems(managementNav));
+    let filteredFinanceNav = $derived(filterNavItems(financeNav));
 </script>
 
 <div
@@ -99,7 +166,7 @@
                     >
                     <span
                         class="text-[10px] text-muted-foreground font-medium mt-0.5"
-                        >Management</span
+                        >Quản lý</span
                     >
                 </div>
             </div>
@@ -117,120 +184,128 @@
     </div>
 
     <!-- Navigation -->
-    <div class="flex-1 overflow-y-auto py-4 px-3 space-y-6">
+    <div
+        class="flex-1 overflow-y-auto px-3 py-2 space-y-2 md:py-4 md:space-y-6"
+    >
         <!-- Section: Main -->
-        <div class="space-y-1">
-            {#if !collapsed}
-                <h4
-                    class="px-2 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-2"
-                >
-                    Main Menu
-                </h4>
-            {/if}
-            <nav class="space-y-0.5">
-                {#each mainNav as item}
-                    <a
-                        href={item.href}
-                        class={cn(
-                            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group",
-                            $page.url.pathname === item.href
-                                ? "bg-sidebar-accent text-primary shadow-sm ring-1 ring-sidebar-border"
-                                : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
-                            collapsed ? "justify-center px-2" : "",
-                        )}
-                        title={collapsed ? item.title : undefined}
+        {#if filteredMainNav.length > 0}
+            <div class="space-y-1">
+                {#if !collapsed}
+                    <h4
+                        class="px-2 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-2"
                     >
-                        <item.icon
+                        Menu chính
+                    </h4>
+                {/if}
+                <nav class="space-y-0.5">
+                    {#each filteredMainNav as item}
+                        <a
+                            href={item.href}
                             class={cn(
-                                "h-4.5 w-4.5 shrink-0 transition-colors",
+                                "flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-all duration-200 group",
                                 $page.url.pathname === item.href
-                                    ? "text-primary"
-                                    : "text-muted-foreground group-hover:text-foreground",
+                                    ? "bg-sidebar-accent text-primary shadow-sm ring-1 ring-sidebar-border"
+                                    : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
+                                collapsed ? "justify-center px-2" : "",
                             )}
-                        />
-                        {#if !collapsed}
-                            <span class="truncate">{item.title}</span>
-                        {/if}
-                    </a>
-                {/each}
-            </nav>
-        </div>
+                            title={collapsed ? item.title : undefined}
+                        >
+                            <item.icon
+                                class={cn(
+                                    "h-4.5 w-4.5 shrink-0 transition-colors",
+                                    $page.url.pathname === item.href
+                                        ? "text-primary"
+                                        : "text-muted-foreground group-hover:text-foreground",
+                                )}
+                            />
+                            {#if !collapsed}
+                                <span class="truncate">{item.title}</span>
+                            {/if}
+                        </a>
+                    {/each}
+                </nav>
+            </div>
+        {/if}
 
         <!-- Section: Management -->
-        <div class="space-y-1">
-            {#if !collapsed}
-                <h4
-                    class="px-2 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-2"
-                >
-                    Management
-                </h4>
-            {/if}
-            <nav class="space-y-0.5">
-                {#each managementNav as item}
-                    <a
-                        href={item.href}
-                        class={cn(
-                            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group",
-                            $page.url.pathname === item.href
-                                ? "bg-sidebar-accent text-primary shadow-sm ring-1 ring-sidebar-border"
-                                : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
-                            collapsed ? "justify-center px-2" : "",
-                        )}
-                        title={collapsed ? item.title : undefined}
+        {#if filteredManagementNav.length > 0}
+            <div class="space-y-1">
+                {#if !collapsed}
+                    <h4
+                        class="px-2 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-2"
                     >
-                        <item.icon
+                        Quản lý
+                    </h4>
+                {/if}
+                <nav class="space-y-0.5">
+                    {#each filteredManagementNav as item}
+                        <a
+                            href={item.href}
                             class={cn(
-                                "h-4.5 w-4.5 shrink-0 transition-colors",
+                                "flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-all duration-200 group",
                                 $page.url.pathname === item.href
-                                    ? "text-primary"
-                                    : "text-muted-foreground group-hover:text-foreground",
+                                    ? "bg-sidebar-accent text-primary shadow-sm ring-1 ring-sidebar-border"
+                                    : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
+                                collapsed ? "justify-center px-2" : "",
                             )}
-                        />
-                        {#if !collapsed}
-                            <span class="truncate">{item.title}</span>
-                        {/if}
-                    </a>
-                {/each}
-            </nav>
-        </div>
+                            title={collapsed ? item.title : undefined}
+                        >
+                            <item.icon
+                                class={cn(
+                                    "h-4.5 w-4.5 shrink-0 transition-colors",
+                                    $page.url.pathname === item.href
+                                        ? "text-primary"
+                                        : "text-muted-foreground group-hover:text-foreground",
+                                )}
+                            />
+                            {#if !collapsed}
+                                <span class="truncate">{item.title}</span>
+                            {/if}
+                        </a>
+                    {/each}
+                </nav>
+            </div>
+        {/if}
 
         <!-- Section: System -->
-        <div class="space-y-1">
-            {#if !collapsed}
-                <h4
-                    class="px-2 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-2"
-                >
-                    System
-                </h4>
-            {/if}
-            <nav class="space-y-0.5">
-                {#each financeNav as item}
-                    <a
-                        href={item.href}
-                        class={cn(
-                            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group",
-                            $page.url.pathname === item.href
-                                ? "bg-sidebar-accent text-primary shadow-sm ring-1 ring-sidebar-border"
-                                : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
-                            collapsed ? "justify-center px-2" : "",
-                        )}
-                        title={collapsed ? item.title : undefined}
+        {#if filteredFinanceNav.length > 0}
+            <div class="space-y-1">
+                {#if !collapsed}
+                    <h4
+                        class="px-2 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-2"
                     >
-                        <item.icon
+                        Hệ thống
+                    </h4>
+                {/if}
+                <nav class="space-y-0.5">
+                    {#each filteredFinanceNav as item}
+                        <a
+                            href={item.href}
                             class={cn(
-                                "h-4.5 w-4.5 shrink-0 transition-colors",
+                                "flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-all duration-200 group",
                                 $page.url.pathname === item.href
-                                    ? "text-primary"
-                                    : "text-muted-foreground group-hover:text-foreground",
+                                    ? "bg-sidebar-accent text-primary shadow-sm ring-1 ring-sidebar-border"
+                                    : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
+                                collapsed ? "justify-center px-2" : "",
                             )}
-                        />
-                        {#if !collapsed}
-                            <span class="truncate">{item.title}</span>
-                        {/if}
-                    </a>
-                {/each}
-            </nav>
-        </div>
+                            title={collapsed ? item.title : undefined}
+                        >
+                            <item.icon
+                                class={cn(
+                                    "h-4.5 w-4.5 shrink-0 transition-colors",
+                                    $page.url.pathname === item.href
+                                        ? "text-primary"
+                                        : "text-muted-foreground group-hover:text-foreground",
+                                )}
+                            />
+                            {#if !collapsed}
+                                <span class="truncate">{item.title}</span>
+                            {/if}
+                        </a>
+                    {/each}
+                </nav>
+            </div>
+        {/if}
     </div>
 
     <!-- User section -->
