@@ -10,7 +10,7 @@
     import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input";
     import { Label } from "$lib/components/ui/label";
-    import { Select } from "$lib/components/ui/select";
+    import Combobox from "$lib/components/ui/combobox/combobox.svelte";
     import { Store, Loader } from "@lucide/svelte";
     import { VIETNAM_PROVINCES, VIETNAM_PHONE_REGEX } from "@repo/constants";
     import { signUp, organization } from "$lib/auth-client";
@@ -313,17 +313,15 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div class="space-y-2">
                             <Label for="province">Tỉnh/Thành phố</Label>
-                            <Select
-                                id="province"
-                                disabled={isLoading}
-                                bind:value={province}
+                            <Combobox
                                 placeholder="Chọn tỉnh/thành"
-                                onchange={() => validateProvince(province)}
-                            >
-                                {#each VIETNAM_PROVINCES as prov}
-                                    <option value={prov}>{prov}</option>
-                                {/each}
-                            </Select>
+                                searchPlaceholder="Tìm tỉnh/thành phố..."
+                                items={VIETNAM_PROVINCES.map((prov) => ({
+                                    value: prov,
+                                    label: prov,
+                                }))}
+                                bind:value={province}
+                            />
                             {#if errors.province}
                                 <p class="text-sm text-destructive">
                                     {errors.province}

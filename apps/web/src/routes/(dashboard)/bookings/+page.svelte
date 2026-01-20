@@ -28,6 +28,9 @@
     import { page } from "$app/stores";
     import { get } from "svelte/store";
     import { enhance } from "$app/forms";
+    import DateTimePicker from "$lib/components/ui/date-time-picker/date-time-picker.svelte";
+    import Combobox from "$lib/components/ui/combobox/combobox.svelte";
+    import * as Select from "$lib/components/ui/select";
     import { toast } from "svelte-sonner";
     import type { PageData } from "./$types";
 
@@ -61,13 +64,42 @@
     let isCreateOpen = $state(false);
     let isDeleteOpen = $state(false);
     let deletingBooking = $state<any>(null);
+    let isQuickCreateOpen = $state(false);
+
+    // Customer Autocomplete state
+    let customerSearchQuery = $state("");
+    let showCustomerResults = $state(false);
+
+    let customerItems = $derived(
+        (data.customers || []).map((c: any) => ({
+            value: c.id.toString(),
+            label: `${c.name} - ${c.phone}`,
+        })),
+    );
+
+    $effect(() => {
+        if (newBooking.customerId) {
+            const customer = data.customers?.find(
+                (c: any) => c.id.toString() === newBooking.customerId,
+            );
+            if (customer) {
+                newBooking.customerPhone = customer.phone;
+            }
+        }
+    });
+
+    function selectCustomer(customer: any) {
+        newBooking.customerId = customer.id.toString();
+        newBooking.customerPhone = customer.phone;
+        customerSearchQuery = `${customer.name} - ${customer.phone}`;
+        showCustomerResults = false;
+    }
 
     // Form states for create
     let newBooking = $state({
         customerId: "",
         customerPhone: "",
         date: "",
-        time: "",
         guestCount: "1",
         status: "confirmed",
         notes: "",
@@ -75,10 +107,10 @@
     });
 
     const statusStyles: Record<string, string> = {
-        confirmed: "bg-green-100 text-green-700 border-green-200",
-        pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
+        confirmed: "bg-emerald-100 text-emerald-700 border-emerald-200",
+        pending: "bg-amber-100 text-amber-700 border-amber-200",
         completed: "bg-blue-100 text-blue-700 border-blue-200",
-        cancelled: "bg-red-100 text-red-700 border-red-200",
+        cancelled: "bg-rose-100 text-rose-700 border-rose-200",
     };
 
     const statusLabels: Record<string, string> = {
@@ -372,213 +404,255 @@
         </Card>
     </div>
 
-    <!-- Quick Filters Row -->
-    <Card class="p-4">
-        <div
-            class="flex flex-col lg:flex-row lg:items-center gap-4 justify-between"
-        >
-            <!-- Date Filter Buttons -->
-            <div class="flex items-center gap-2 flex-wrap">
-                <div
-                    class="inline-flex rounded-lg border border-gray-200 p-1 bg-gray-50"
-                >
-                    <button
-                        class={cn(
-                            "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-                            dateFilter === "today"
-                                ? "bg-white shadow-sm text-purple-600"
-                                : "text-gray-600 hover:text-gray-900",
-                        )}
-                        onclick={() => setDateFilter("today")}
+    <!-- Bookings Table Card -->
+    <div
+        class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm"
+    >
+        <!-- Filters Header -->
+        <div class="p-4 border-b border-gray-100 space-y-4">
+            <div
+                class="flex flex-col lg:flex-row lg:items-center gap-4 justify-between"
+            >
+                <!-- Date Filter Buttons -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    <div
+                        class="inline-flex rounded-lg border border-gray-200 p-1 bg-gray-50"
                     >
-                        Hôm nay
-                    </button>
-                    <button
-                        class={cn(
-                            "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-                            dateFilter === "week"
-                                ? "bg-white shadow-sm text-purple-600"
-                                : "text-gray-600 hover:text-gray-900",
-                        )}
-                        onclick={() => setDateFilter("week")}
-                    >
-                        7 ngày tới
-                    </button>
-                    <button
-                        class={cn(
-                            "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-                            dateFilter === "month"
-                                ? "bg-white shadow-sm text-purple-600"
-                                : "text-gray-600 hover:text-gray-900",
-                        )}
-                        onclick={() => setDateFilter("month")}
-                    >
-                        Tháng này
-                    </button>
+                        <button
+                            class={cn(
+                                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                dateFilter === "today"
+                                    ? "bg-white shadow-sm text-purple-600"
+                                    : "text-gray-600 hover:text-gray-900",
+                            )}
+                            onclick={() => setDateFilter("today")}
+                        >
+                            Hôm nay
+                        </button>
+                        <button
+                            class={cn(
+                                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                dateFilter === "week"
+                                    ? "bg-white shadow-sm text-purple-600"
+                                    : "text-gray-600 hover:text-gray-900",
+                            )}
+                            onclick={() => setDateFilter("week")}
+                        >
+                            7 ngày tới
+                        </button>
+                        <button
+                            class={cn(
+                                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                dateFilter === "month"
+                                    ? "bg-white shadow-sm text-purple-600"
+                                    : "text-gray-600 hover:text-gray-900",
+                            )}
+                            onclick={() => setDateFilter("month")}
+                        >
+                            Tháng này
+                        </button>
+                    </div>
+
+                    <!-- Custom Date Range -->
+                    <div class="flex items-center gap-2">
+                        <Input
+                            type="date"
+                            class="w-36 h-9"
+                            bind:value={fromDate}
+                            onchange={() => {
+                                dateFilter = "custom";
+                                if (toDate) applyFilters();
+                            }}
+                        />
+                        <span class="text-muted-foreground">~</span>
+                        <Input
+                            type="date"
+                            class="w-36 h-9"
+                            bind:value={toDate}
+                            onchange={() => {
+                                dateFilter = "custom";
+                                if (fromDate) applyFilters();
+                            }}
+                        />
+                    </div>
                 </div>
 
-                <!-- Custom Date Range -->
+                <!-- Status Filter -->
                 <div class="flex items-center gap-2">
-                    <Input
-                        type="date"
-                        class="w-36 h-9"
-                        bind:value={fromDate}
-                        onchange={() => {
-                            dateFilter = "custom";
-                            if (toDate) applyFilters();
-                        }}
-                    />
-                    <span class="text-muted-foreground">~</span>
-                    <Input
-                        type="date"
-                        class="w-36 h-9"
-                        bind:value={toDate}
-                        onchange={() => {
-                            dateFilter = "custom";
-                            if (fromDate) applyFilters();
-                        }}
-                    />
+                    <select
+                        class="h-9 px-3 rounded-md border border-input bg-background text-sm focus:border-purple-500 focus:ring-purple-500"
+                        bind:value={statusFilter}
+                        onchange={() => applyFilters()}
+                    >
+                        {#each statusOptions as option}
+                            <option value={option.value}>{option.label}</option>
+                        {/each}
+                    </select>
                 </div>
             </div>
 
-            <!-- Status Filter -->
-            <div class="flex items-center gap-2">
-                <select
-                    class="h-9 px-3 rounded-md border border-input bg-background text-sm"
-                    bind:value={statusFilter}
-                    onchange={() => applyFilters()}
+            <!-- Search Row -->
+            <div class="flex items-center gap-4">
+                <div class="relative flex-1 max-w-sm">
+                    <Search
+                        class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+                    />
+                    <Input
+                        type="search"
+                        placeholder="Tìm theo tên hoặc SĐT..."
+                        class="pl-9 h-9"
+                        bind:value={searchQuery}
+                        onkeydown={(e) => e.key === "Enter" && applyFilters()}
+                    />
+                </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onclick={() => applyFilters()}
                 >
-                    {#each statusOptions as option}
-                        <option value={option.value}>{option.label}</option>
-                    {/each}
-                </select>
+                    <Filter class="h-4 w-4 mr-2" />
+                    Lọc
+                </Button>
             </div>
         </div>
 
-        <!-- Search Row -->
-        <div class="flex items-center gap-4 mt-4">
-            <div class="relative flex-1 max-w-sm">
-                <Search
-                    class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
-                />
-                <Input
-                    type="search"
-                    placeholder="Tìm theo tên hoặc SĐT..."
-                    class="pl-9 h-9"
-                    bind:value={searchQuery}
-                    onkeydown={(e) => e.key === "Enter" && applyFilters()}
-                />
-            </div>
-            <Button variant="outline" size="sm" onclick={() => applyFilters()}>
-                <Filter class="h-4 w-4 mr-2" />
-                Lọc
-            </Button>
-        </div>
-    </Card>
-
-    <!-- Bookings Table -->
-    <Card>
+        <!-- Bookings Table -->
         <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="border-b bg-gray-50/50">
+            <table class="w-full text-sm">
+                <thead class="border-b border-gray-100 bg-muted/40">
                     <tr>
+                        <th class="h-12 w-[50px] px-4 align-middle">
+                            <input
+                                type="checkbox"
+                                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                        </th>
                         <th
-                            class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
                             >Ngày đặt</th
                         >
                         <th
-                            class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
                             >Giờ</th
                         >
                         <th
-                            class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
                             >Mã</th
                         >
                         <th
-                            class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
                             >Khách hàng</th
                         >
                         <th
-                            class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide"
-                            >Dịch vụ & ghi chú</th
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
+                            >Dịch vụ & Ghi chú</th
                         >
                         <th
-                            class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
                             >Trạng thái</th
                         >
                         <th
-                            class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide"
+                            class="h-12 px-4 text-right align-middle font-medium text-muted-foreground"
                         ></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y">
+                <tbody class="divide-y divide-gray-100">
                     {#each groupedBookings as group, groupIndex}
                         {#each group.bookings as booking, bookingIndex}
                             <tr
                                 class={cn(
                                     "hover:bg-muted/50 transition-colors",
                                     bookingIndex === 0 && groupIndex > 0
-                                        ? "border-t-2 border-gray-200"
+                                        ? "border-t border-gray-100"
                                         : "",
                                 )}
                             >
                                 <!-- Date (show only for first item in group) -->
-                                <td class="px-4 py-3 text-sm">
+                                <td class="p-4 align-top w-[50px]">
+                                    <input
+                                        type="checkbox"
+                                        class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    />
+                                </td>
+                                <td class="p-4 align-top w-[140px]">
                                     {#if bookingIndex === 0}
-                                        <div class="font-medium">
-                                            {formatShortDate(booking.date)}
-                                        </div>
-                                        <div
-                                            class="text-xs text-muted-foreground"
-                                        >
-                                            {getDateLabel(booking.date)}
-                                            {#if group.bookings.length > 1}
-                                                ({group.bookings.length})
-                                            {/if}
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="font-semibold text-foreground"
+                                            >
+                                                {formatShortDate(booking.date)}
+                                            </span>
+                                            <span
+                                                class="text-xs text-muted-foreground"
+                                            >
+                                                {getDateLabel(booking.date)}
+                                                {#if group.bookings.length > 1}
+                                                    <span
+                                                        class="ml-1 inline-flex items-center justify-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium"
+                                                    >
+                                                        {group.bookings.length}
+                                                    </span>
+                                                {/if}
+                                            </span>
                                         </div>
                                     {/if}
                                 </td>
 
                                 <!-- Time -->
-                                <td class="px-4 py-3 text-sm font-medium">
+                                <td class="p-4 align-top font-medium w-[100px]">
                                     {formatTime(booking.date)}
                                 </td>
 
                                 <!-- Code -->
-                                <td
-                                    class="px-4 py-3 text-sm font-mono text-purple-600"
-                                >
-                                    {generateBookingCode(booking.id)}
+                                <td class="p-4 align-top w-[120px]">
+                                    <span
+                                        class="font-mono text-xs font-medium bg-muted px-2 py-1 rounded"
+                                    >
+                                        {generateBookingCode(booking.id)}
+                                    </span>
                                 </td>
 
                                 <!-- Customer -->
-                                <td class="px-4 py-3">
-                                    <div
-                                        class="text-sm font-medium text-blue-600 hover:underline cursor-pointer"
-                                    >
-                                        {booking.customer?.name || "N/A"}
-                                    </div>
-                                    <div class="text-xs text-muted-foreground">
-                                        SĐT: {booking.customer?.phone || "N/A"}
+                                <td class="p-4 align-top">
+                                    <div class="flex flex-col gap-1">
+                                        <div
+                                            class="font-medium text-primary hover:underline cursor-pointer"
+                                        >
+                                            {booking.customer?.name || "N/A"}
+                                        </div>
+                                        <div
+                                            class="flex items-center text-xs text-muted-foreground gap-1"
+                                        >
+                                            <span class="tabular-nums"
+                                                >{booking.customer?.phone ||
+                                                    "N/A"}</span
+                                            >
+                                        </div>
                                     </div>
                                 </td>
 
                                 <!-- Service & Notes -->
-                                <td class="px-4 py-3">
-                                    <div class="text-sm">
-                                        - {booking.service?.name || "N/A"}
-                                    </div>
-                                    {#if booking.notes}
-                                        <div
-                                            class="text-xs text-muted-foreground mt-1"
-                                        >
-                                            {booking.notes}
+                                <td class="p-4 align-top max-w-[300px]">
+                                    <div class="space-y-1">
+                                        <div class="font-medium">
+                                            {booking.bookingServices?.[0]
+                                                ?.service?.name || "N/A"}
                                         </div>
-                                    {/if}
+                                        {#if booking.notes}
+                                            <div
+                                                class="text-xs text-muted-foreground italic flex items-start gap-1"
+                                            >
+                                                <span class="mt-0.5 opacity-70"
+                                                    >Note:</span
+                                                >
+                                                {booking.notes}
+                                            </div>
+                                        {/if}
+                                    </div>
                                 </td>
 
                                 <!-- Status -->
-                                <td class="px-4 py-3">
+                                <td class="p-4 align-top">
                                     {#if data.canUpdate}
                                         <DropdownMenu.Root>
                                             <DropdownMenu.Trigger>
@@ -586,7 +660,7 @@
                                                     <button
                                                         {...props}
                                                         class={cn(
-                                                            "px-3 py-1 rounded-md text-xs font-medium border inline-flex items-center gap-1",
+                                                            "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 gap-1",
                                                             statusStyles[
                                                                 booking.status
                                                             ],
@@ -596,7 +670,7 @@
                                                             booking.status
                                                         ] || booking.status}
                                                         <ChevronRight
-                                                            class="h-3 w-3 rotate-90"
+                                                            class="h-3 w-3 rotate-90 opacity-50"
                                                         />
                                                     </button>
                                                 {/snippet}
@@ -626,7 +700,7 @@
                                     {:else}
                                         <span
                                             class={cn(
-                                                "px-3 py-1 rounded-md text-xs font-medium border",
+                                                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                                                 statusStyles[booking.status],
                                             )}
                                         >
@@ -637,7 +711,7 @@
                                 </td>
 
                                 <!-- Actions -->
-                                <td class="px-4 py-3 text-right">
+                                <td class="p-4 align-top text-right">
                                     {#if data.canUpdate || data.canDelete}
                                         <DropdownMenu.Root>
                                             <DropdownMenu.Trigger>
@@ -646,7 +720,7 @@
                                                         {...props}
                                                         variant="ghost"
                                                         size="icon"
-                                                        class="h-8 w-8"
+                                                        class="h-8 w-8 text-muted-foreground hover:text-foreground"
                                                     >
                                                         <MoreVertical
                                                             class="h-4 w-4"
@@ -660,12 +734,12 @@
                                                         <Pencil
                                                             class="mr-2 h-4 w-4"
                                                         />
-                                                        Chỉnh sửa
+                                                        Ch chỉnh sửa
                                                     </DropdownMenu.Item>
                                                 {/if}
                                                 {#if data.canDelete}
                                                     <DropdownMenu.Item
-                                                        class="text-red-600"
+                                                        class="text-red-600 focus:text-red-600"
                                                         onclick={() =>
                                                             openDeleteDialog(
                                                                 booking,
@@ -685,21 +759,30 @@
                         {/each}
                     {:else}
                         <tr>
-                            <td
-                                colspan="7"
-                                class="px-4 py-12 text-center text-muted-foreground"
-                            >
-                                <div class="flex flex-col items-center gap-2">
-                                    <CalendarCheck
-                                        class="h-12 w-12 text-gray-300"
-                                    />
-                                    <p>Không có lịch hẹn nào</p>
+                            <td colspan="7" class="h-[400px] text-center">
+                                <div
+                                    class="flex flex-col items-center justify-center gap-2 text-muted-foreground"
+                                >
+                                    <div
+                                        class="rounded-full bg-muted/50 p-4 mb-2"
+                                    >
+                                        <CalendarCheck
+                                            class="h-8 w-8 text-muted-foreground/50"
+                                        />
+                                    </div>
+                                    <h3 class="text-lg font-semibold">
+                                        Chưa có lịch hẹn
+                                    </h3>
+                                    <p class="text-sm max-w-sm mx-auto mb-4">
+                                        Hiện tại chưa có lịch hẹn nào. Hãy tạo
+                                        lịch hẹn mới đ bắ đầu.
+                                    </p>
                                     {#if data.canCreate}
                                         <Button
-                                            variant="link"
                                             onclick={() =>
                                                 (isCreateOpen = true)}
                                         >
+                                            <Plus class="mr-2 h-4 w-4" />
                                             Tạo lịch hẹn mới
                                         </Button>
                                     {/if}
@@ -714,7 +797,7 @@
         <!-- Pagination -->
         {#if data.pagination && data.pagination.totalPages > 1}
             <div
-                class="flex items-center justify-between px-4 py-3 border-t bg-gray-50/50"
+                class="flex items-center justify-between px-4 py-3 border-t bg-muted/20"
             >
                 <div class="text-sm text-muted-foreground">
                     Hiển thị {(currentPage - 1) * pageSize + 1} đến {Math.min(
@@ -724,7 +807,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <select
-                        class="h-8 px-2 rounded border border-input bg-background text-sm"
+                        class="h-8 px-2 rounded border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         bind:value={pageSize}
                         onchange={() => {
                             currentPage = 1;
@@ -735,7 +818,7 @@
                         <option value={20}>20 / trang</option>
                         <option value={50}>50 / trang</option>
                     </select>
-                    <div class="flex items-center">
+                    <div class="flex items-center gap-1">
                         <Button
                             variant="outline"
                             size="icon"
@@ -770,7 +853,7 @@
                 </div>
             </div>
         {/if}
-    </Card>
+    </div>
 </div>
 
 <!-- Create Booking Dialog -->
@@ -787,40 +870,59 @@
                     </Dialog.Header>
 
                     <!-- Customer Info Section -->
-                    <div class="space-y-4">
-                        <h3 class="text-sm font-medium text-gray-700">
-                            Thông tin khách hàng
-                        </h3>
-
-                        <div class="relative">
-                            <Input
-                                type="tel"
-                                placeholder="Số điện thoại"
-                                class="pr-10"
-                                bind:value={newBooking.customerPhone}
-                            />
-                            <button
-                                type="button"
-                                class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
-                            >
-                                <UserCheck class="h-5 w-5" />
-                            </button>
+                    <div class="space-y-4 relative">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-medium text-gray-700">
+                                Thông tin khách hàng
+                            </h3>
+                            {#if newBooking.customerId}
+                                <button
+                                    type="button"
+                                    class="text-xs text-red-500 hover:underline"
+                                    onclick={() => {
+                                        newBooking.customerId = "";
+                                        newBooking.customerPhone = "";
+                                        customerSearchQuery = "";
+                                    }}
+                                >
+                                    Xóa chọn
+                                </button>
+                            {/if}
                         </div>
 
-                        <select
-                            id="customerId"
-                            name="customerId"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            bind:value={newBooking.customerId}
-                            required
-                        >
-                            <option value="">Tên KH hoặc Mã KH</option>
-                            {#each data.customers || [] as customer}
-                                <option value={customer.id}
-                                    >{customer.name} - {customer.phone}</option
+                        <div class="relative">
+                            <div class="flex gap-2">
+                                <Combobox
+                                    items={customerItems}
+                                    bind:value={newBooking.customerId}
+                                    placeholder="Tìm khách hàng..."
+                                    searchPlaceholder="Tìm theo tên hoặc SĐT..."
+                                    emptyText="Không tìm thấy khách hàng."
+                                    class="flex-1"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    title="Thêm khách hàng mới"
+                                    onclick={() => (isQuickCreateOpen = true)}
                                 >
-                            {/each}
-                        </select>
+                                    <Plus class="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        <!-- Hidden inputs for form submission -->
+                        <input
+                            type="hidden"
+                            name="customerId"
+                            bind:value={newBooking.customerId}
+                        />
+                        <input
+                            type="hidden"
+                            name="customerPhone"
+                            bind:value={newBooking.customerPhone}
+                        />
                     </div>
 
                     <!-- Booking Info Section -->
@@ -829,31 +931,17 @@
                             Thông tin lịch hẹn
                         </h3>
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-1">
-                                <Label
-                                    for="bookingDate"
-                                    class="text-xs text-gray-500">Ngày:</Label
-                                >
-                                <Input
-                                    type="date"
-                                    id="bookingDate"
-                                    bind:value={newBooking.date}
-                                    required
-                                />
-                            </div>
-                            <div class="space-y-1">
-                                <Label
-                                    for="bookingTime"
-                                    class="text-xs text-gray-500">Giờ:</Label
-                                >
-                                <Input
-                                    type="time"
-                                    id="bookingTime"
-                                    bind:value={newBooking.time}
-                                    required
-                                />
-                            </div>
+                        <div class="space-y-1">
+                            <Label
+                                for="bookingDateTime"
+                                class="text-xs text-gray-500">Thời gian:</Label
+                            >
+                            <DateTimePicker bind:value={newBooking.date} />
+                            <input
+                                type="hidden"
+                                name="date"
+                                bind:value={newBooking.date}
+                            />
                         </div>
 
                         <div class="space-y-1">
@@ -865,6 +953,7 @@
                                 type="number"
                                 id="guestCount"
                                 min="1"
+                                name="guestCount"
                                 bind:value={newBooking.guestCount}
                             />
                         </div>
@@ -873,15 +962,33 @@
                             <Label for="status" class="text-xs text-gray-500"
                                 >Trạng thái:</Label
                             >
-                            <select
-                                id="status"
-                                name="status"
-                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            <Select.Root
+                                type="single"
                                 bind:value={newBooking.status}
+                                name="status"
                             >
-                                <option value="confirmed">Đã xác nhận</option>
-                                <option value="pending">Chờ xác nhận</option>
-                            </select>
+                                <Select.Trigger class="w-full">
+                                    {#snippet children()}
+                                        {newBooking.status === "confirmed"
+                                            ? "Đã xác nhận"
+                                            : newBooking.status === "pending"
+                                              ? "Chờ xác nhận"
+                                              : "Chọn trạng thái"}
+                                    {/snippet}
+                                </Select.Trigger>
+                                <Select.Content>
+                                    <Select.Item
+                                        value="confirmed"
+                                        label="Đã xác nhận"
+                                        >Đã xác nhận</Select.Item
+                                    >
+                                    <Select.Item
+                                        value="pending"
+                                        label="Chờ xác nhận"
+                                        >Chờ xác nhận</Select.Item
+                                    >
+                                </Select.Content>
+                            </Select.Root>
                         </div>
 
                         <div class="space-y-1">
@@ -893,20 +1000,13 @@
                                 name="notes"
                                 placeholder="Nhập ghi chú"
                                 rows="3"
-                                class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none"
+                                class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                 bind:value={newBooking.notes}
                             ></textarea>
                         </div>
                     </div>
 
                     <!-- Hidden field for combined date/time -->
-                    <input
-                        type="hidden"
-                        name="date"
-                        value={newBooking.date && newBooking.time
-                            ? `${newBooking.date}T${newBooking.time}`
-                            : ""}
-                    />
                 </div>
 
                 <!-- Right Panel: Service Selection -->
@@ -922,42 +1022,96 @@
                         <div
                             class="flex items-center gap-2 mb-3 p-3 bg-white rounded-lg border border-gray-200"
                         >
-                            <select
-                                class="flex h-9 flex-1 rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                bind:value={service.categoryId}
-                            >
-                                <option value="">Nhóm dịch vụ</option>
-                                {#each data.serviceCategories || [] as category}
-                                    <option value={category.id}
-                                        >{category.name}</option
-                                    >
-                                {/each}
-                            </select>
+                            <div class="flex-1">
+                                <Select.Root
+                                    type="single"
+                                    bind:value={service.categoryId}
+                                >
+                                    <Select.Trigger class="w-full">
+                                        {#snippet children()}
+                                            {(
+                                                data.serviceCategories || []
+                                            ).find(
+                                                (c) =>
+                                                    c.id.toString() ===
+                                                    service.categoryId,
+                                            )?.name || "Nhóm dịch vụ"}
+                                        {/snippet}
+                                    </Select.Trigger>
+                                    <Select.Content>
+                                        {#each data.serviceCategories || [] as category}
+                                            <Select.Item
+                                                value={category.id.toString()}
+                                                label={category.name}
+                                                >{category.name}</Select.Item
+                                            >
+                                        {/each}
+                                    </Select.Content>
+                                </Select.Root>
+                            </div>
 
-                            <select
-                                name="serviceId"
-                                class="flex h-9 flex-1 rounded-md border border-input bg-background px-3 py-1 text-sm"
-                                bind:value={service.serviceId}
-                                required
-                            >
-                                <option value="">Chọn dịch vụ</option>
-                                {#each (data.services || []).filter((s: any) => !service.categoryId || s.categoryId === parseInt(service.categoryId)) as svc}
-                                    <option value={svc.id}>{svc.name}</option>
-                                {/each}
-                            </select>
+                            <div class="flex-1">
+                                <Combobox
+                                    class="flex-1"
+                                    placeholder="Chọn dịch vụ"
+                                    searchPlaceholder="Tìm dịch vụ..."
+                                    items={(data.services || [])
+                                        .filter(
+                                            (s: any) =>
+                                                !service.categoryId ||
+                                                s.categoryId ===
+                                                    parseInt(
+                                                        service.categoryId,
+                                                    ),
+                                        )
+                                        .map((s: any) => ({
+                                            value: s.id.toString(),
+                                            label: s.name,
+                                        }))}
+                                    bind:value={service.serviceId}
+                                />
+                                <!-- Hidden input for form submission -->
+                                <input
+                                    type="hidden"
+                                    name="serviceId"
+                                    value={service.serviceId}
+                                />
+                            </div>
 
-                            <select
-                                class="flex h-9 rounded-md border border-input bg-purple-100 text-purple-700 px-3 py-1 text-sm min-w-[120px]"
-                                bind:value={service.staffId}
-                            >
-                                <option value="">Chọn nhân viên</option>
-                                {#each data.members || [] as member}
-                                    <option value={member.id}
-                                        >{member.user?.name ||
-                                            member.name}</option
+                            <div class="min-w-[150px]">
+                                <Select.Root
+                                    type="single"
+                                    bind:value={service.staffId}
+                                    name="memberId"
+                                >
+                                    <Select.Trigger
+                                        class="w-full bg-purple-50 text-purple-900 border-purple-200"
                                     >
-                                {/each}
-                            </select>
+                                        {#snippet children()}
+                                            {(data.members || []).find(
+                                                (m) => m.id === service.staffId,
+                                            )?.user?.name ||
+                                                (data.members || []).find(
+                                                    (m) =>
+                                                        m.id ===
+                                                        service.staffId,
+                                                )?.name ||
+                                                "Chọn nhân viên"}
+                                        {/snippet}
+                                    </Select.Trigger>
+                                    <Select.Content>
+                                        {#each data.members || [] as member}
+                                            <Select.Item
+                                                value={member.id}
+                                                label={member.user?.name ||
+                                                    member.name}
+                                                >{member.user?.name ||
+                                                    member.name}</Select.Item
+                                            >
+                                        {/each}
+                                    </Select.Content>
+                                </Select.Root>
+                            </div>
 
                             {#if newBooking.services.length > 1}
                                 <button
@@ -1049,3 +1203,65 @@
         </form>
     </AlertDialog.Content>
 </AlertDialog.Root>
+
+<!-- Quick Create Customer Dialog -->
+<Dialog.Root bind:open={isQuickCreateOpen}>
+    <Dialog.Content class="sm:max-w-[425px]">
+        <Dialog.Header>
+            <Dialog.Title>Thêm nhanh khách hàng</Dialog.Title>
+            <Dialog.Description>
+                Tạo khách hàng mới chỉ với tên và số điện thoại.
+            </Dialog.Description>
+        </Dialog.Header>
+        <form
+            action="?/createCustomer"
+            method="POST"
+            use:enhance={({ formData }) => {
+                return async ({ result }) => {
+                    if (result.type === "success") {
+                        const newCustomer = result.data?.customer;
+                        if (newCustomer) {
+                            // Select the newly created customer
+                            newBooking.customerId = newCustomer.id.toString();
+                            newBooking.customerPhone = newCustomer.phone;
+                            customerSearchQuery = `${newCustomer.name} - ${newCustomer.phone}`;
+                            isQuickCreateOpen = false;
+                            toast.success("Đã thêm khách hàng mới");
+                        }
+                    } else if (result.type === "failure") {
+                        toast.error(result.data?.message || "Có lỗi xảy ra");
+                    }
+                };
+            }}
+            class="space-y-4 py-4"
+        >
+            <div class="space-y-2">
+                <Label for="quickName">Tên khách hàng</Label>
+                <Input
+                    id="quickName"
+                    name="name"
+                    placeholder="Nhập tên khách hàng"
+                    required
+                />
+            </div>
+            <div class="space-y-2">
+                <Label for="quickPhone">Số điện thoại</Label>
+                <Input
+                    id="quickPhone"
+                    name="phone"
+                    placeholder="Nhập số điện thoại"
+                    value={customerSearchQuery}
+                    required
+                />
+            </div>
+            <Dialog.Footer>
+                <Button
+                    variant="outline"
+                    type="button"
+                    onclick={() => (isQuickCreateOpen = false)}>Hủy</Button
+                >
+                <Button type="submit">Lưu khách hàng</Button>
+            </Dialog.Footer>
+        </form>
+    </Dialog.Content>
+</Dialog.Root>

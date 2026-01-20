@@ -7,10 +7,18 @@ import { z } from "zod";
 
 export const createBookingSchema = z.object({
     customerId: z.number().int().positive(),
-    serviceId: z.number().int().positive(),
+    serviceId: z.number().int().positive().optional(),
+    services: z.array(z.object({
+        serviceId: z.number().int().positive(),
+        memberId: z.string().optional(),
+    })).optional(),
+    guestCount: z.number().int().positive().default(1),
     date: z.string().datetime({ message: "Date must be a valid ISO datetime string" }).transform((str) => new Date(str)),
     notes: z.string().max(500).optional().default(""),
     status: z.enum(["pending", "confirmed", "completed", "cancelled"]).optional().default("pending"),
+}).refine(data => data.serviceId || (data.services && data.services.length > 0), {
+    message: "Either serviceId or services must be provided",
+    path: ["serviceId"]
 });
 
 export const updateBookingSchema = z.object({

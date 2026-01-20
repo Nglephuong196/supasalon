@@ -123,13 +123,20 @@ export const actions: Actions = {
 
         const data = await request.formData();
         const customerId = data.get('customerId');
-        const serviceId = data.get('serviceId');
+        const serviceIds = data.getAll('serviceId');
+        const memberIds = data.getAll('memberId');
         const date = data.get('date');
         const notes = data.get('notes') || '';
+        const guestCount = parseInt(data.get('guestCount')?.toString() || '1');
 
-        if (!customerId || !serviceId || !date) {
+        if (!customerId || serviceIds.length === 0 || !date) {
             return fail(400, { message: 'Missing required fields' });
         }
+
+        const services = serviceIds.map((id, index) => ({
+            serviceId: parseInt(id.toString()),
+            memberId: memberIds[index]?.toString() || undefined
+        }));
 
         try {
             const res = await fetch(`${PUBLIC_API_URL}/bookings`, {
@@ -141,7 +148,8 @@ export const actions: Actions = {
                 },
                 body: JSON.stringify({
                     customerId: parseInt(customerId as string),
-                    serviceId: parseInt(serviceId as string),
+                    services,
+                    guestCount,
                     date: new Date(date as string).toISOString(),
                     notes,
                     status: 'pending',
@@ -223,6 +231,42 @@ export const actions: Actions = {
             return { success: true };
         } catch (e) {
             console.error('Delete booking error:', e);
+            return fail(500, { message: 'Server error' });
+        }
+    },
+
+    createCustomer: async ({ request, fetch, cookies }) => {
+        const organizationId = cookies.get('organizationId');
+        if (!organizationId) return fail(401, { message: 'Unauthorized' });
+
+        const data = await request.formData();
+        const name = data.get('name');
+        const phone = data.get('phone');
+
+        if (!name || !phone) {
+            return fail(400, { message: 'Missing required fields' });
+        }
+
+        try {
+            const res = await fetch(`${PUBLIC_API_URL}/customers`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    cookie: request.headers.get('cookie') || '',
+                    'X-Organization-Id': organizationId,
+                },
+                body: JSON.stringify({ name, phone }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                return fail(res.status, { message: err.error || 'Failed to create customer' });
+            }
+
+            const newCustomer = await res.json();
+            return { success: true, customer: newCustomer };
+        } catch (e) {
+            console.error('Create customer error:', e);
             return fail(500, { message: 'Server error' });
         }
     },

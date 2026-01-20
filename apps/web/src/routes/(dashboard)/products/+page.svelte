@@ -92,76 +92,104 @@
         </Button>
     </div>
 
-    <!-- Search -->
-    <div class="flex items-center gap-4">
-        <div class="relative flex-1 max-w-sm">
-            <Search
-                class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
-            />
-            <Input
-                type="search"
-                placeholder="Tìm kiếm sản phẩm..."
-                class="pl-9"
-            />
+    <!-- Products Content -->
+    <div
+        class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm"
+    >
+        <div
+            class="p-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-gray-100"
+        >
+            <div>
+                <h3 class="font-semibold leading-none tracking-tight">
+                    Danh sách sản phẩm
+                </h3>
+                <p class="text-sm text-muted-foreground mt-2">
+                    Quản lý {products.length} sản phẩm trong kho
+                </p>
+            </div>
+            <div class="relative w-full max-w-sm">
+                <Search
+                    class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+                />
+                <Input
+                    type="search"
+                    placeholder="Tìm kiếm sản phẩm..."
+                    class="pl-9 h-9"
+                />
+            </div>
         </div>
-    </div>
-
-    <!-- Products Table -->
-    <Card>
         <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="border-b">
+            <table class="w-full text-sm">
+                <thead class="border-b border-gray-100 bg-muted/40">
                     <tr>
+                        <th class="h-12 w-[50px] px-4 align-middle">
+                            <input
+                                type="checkbox"
+                                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                        </th>
                         <th
-                            class="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >Sản phẩm</th
                         >
                         <th
-                            class="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >Danh mục</th
                         >
                         <th
-                            class="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >Tồn kho</th
                         >
                         <th
-                            class="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >Trạng thái</th
                         >
                         <th
-                            class="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >Giá</th
                         >
+                        <th
+                            class="h-12 px-4 text-right align-middle font-medium text-muted-foreground"
+                        ></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y">
+                <tbody class="divide-y divide-gray-100">
                     {#each products as product}
                         {@const status = getStockStatus(
                             product.stock,
                             product.minStock,
                         )}
-                        <tr class="hover:bg-muted/50">
-                            <td class="px-4 py-3">
+                        <tr class="hover:bg-muted/50 transition-colors">
+                            <td class="p-4 align-middle">
+                                <input
+                                    type="checkbox"
+                                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                />
+                            </td>
+                            <td class="p-4 align-middle">
                                 <div class="flex items-center gap-3">
                                     <div
-                                        class="h-10 w-10 rounded-lg bg-muted flex items-center justify-center"
+                                        class="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0"
                                     >
                                         <Package
                                             class="h-5 w-5 text-muted-foreground"
                                         />
                                     </div>
-                                    <span class="text-sm font-medium"
+                                    <span class="font-medium text-foreground"
                                         >{product.name}</span
                                     >
                                 </div>
                             </td>
-                            <td class="px-4 py-3 text-sm">{product.category}</td
+                            <td class="p-4 align-middle text-muted-foreground"
+                                >{product.category}</td
                             >
-                            <td class="px-4 py-3 text-sm">{product.stock}</td>
-                            <td class="px-4 py-3">
+                            <td class="p-4 align-middle font-medium"
+                                >{product.stock}</td
+                            >
+                            <td class="p-4 align-middle">
                                 <span
                                     class={cn(
-                                        "px-2 py-1 rounded-full text-xs font-medium",
+                                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                                         status.class,
                                     )}
                                 >
@@ -169,14 +197,23 @@
                                 </span>
                             </td>
                             <td
-                                class="px-4 py-3 text-sm font-medium text-green-600"
+                                class="p-4 align-middle font-medium text-green-600"
                             >
                                 {formatPrice(product.price)}
+                            </td>
+                            <td class="p-4 align-middle text-right">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8 text-muted-foreground"
+                                >
+                                    <div class="h-4 w-4 rotate-90">...</div>
+                                </Button>
                             </td>
                         </tr>
                     {/each}
                 </tbody>
             </table>
         </div>
-    </Card>
+    </div>
 </div>

@@ -13,7 +13,8 @@
 		"deploy": "bun run build && wrangler pages deploy .svelte-kit/cloudflare --project-name=supasalon-web"
 	},
 	"dependencies": {
-		"@lucide/svelte": "^0.562.0",
+		"@internationalized/date": "^3.10.1",
+		"@lucide/svelte": "^0.561.0",
 		"@repo/constants": "workspace:*",
 		"better-auth": "^1.4.10",
 		"mode-watcher": "^1.1.0",

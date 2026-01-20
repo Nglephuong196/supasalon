@@ -90,81 +90,106 @@
         </Button>
     </div>
 
-    <!-- Search -->
-    <div class="flex items-center gap-4">
-        <div class="relative flex-1 max-w-sm">
-            <Search
-                class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
-            />
-            <Input
-                type="search"
-                placeholder="Tìm kiếm hóa đơn..."
-                class="pl-9"
-            />
+    <!-- Invoices Content -->
+    <div
+        class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm"
+    >
+        <div
+            class="p-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-gray-100"
+        >
+            <div>
+                <h3 class="font-semibold leading-none tracking-tight">
+                    Danh sách hóa đơn
+                </h3>
+                <p class="text-sm text-muted-foreground mt-2">
+                    Quản lý {invoices.length} hóa đơn trong hệ thống
+                </p>
+            </div>
+            <div class="relative w-full max-w-sm">
+                <Search
+                    class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+                />
+                <Input
+                    type="search"
+                    placeholder="Tìm kiếm hóa đơn..."
+                    class="pl-9 h-9"
+                />
+            </div>
         </div>
-    </div>
-
-    <!-- Invoices Table -->
-    <Card>
         <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="border-b">
+            <table class="w-full text-sm">
+                <thead class="border-b border-gray-100 bg-muted/40">
                     <tr>
+                        <th class="h-12 w-[50px] px-4 align-middle">
+                            <input
+                                type="checkbox"
+                                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                        </th>
                         <th
-                            class="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >Mã hóa đơn</th
                         >
                         <th
-                            class="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >Khách hàng</th
                         >
                         <th
-                            class="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >Ngày</th
                         >
                         <th
-                            class="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >Dịch vụ</th
                         >
                         <th
-                            class="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >Tổng tiền</th
                         >
                         <th
-                            class="px-4 py-3 text-left text-sm font-medium text-muted-foreground"
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground"
                             >Trạng thái</th
                         >
+                        <th
+                            class="h-12 px-4 text-right align-middle font-medium text-muted-foreground"
+                        ></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y">
-                    {#each data.invoices as invoice}
-                        <tr class="hover:bg-muted/50">
-                            <td class="px-4 py-3">
-                                <div class="flex items-center gap-2">
-                                    <Receipt
-                                        class="h-4 w-4 text-muted-foreground"
-                                    />
-                                    <span class="text-sm font-medium"
-                                        >#{invoice.id}</span
-                                    >
+                <tbody class="divide-y divide-gray-100">
+                    {#each invoices as invoice}
+                        <tr class="hover:bg-muted/50 transition-colors">
+                            <td class="p-4 align-middle">
+                                <input
+                                    type="checkbox"
+                                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                />
+                            </td>
+                            <td class="p-4 align-middle font-medium"
+                                >#{invoice.id}</td
+                            >
+                            <td class="p-4 align-middle">
+                                <div class="font-medium">
+                                    {invoice.customerName || "Khách vãng lai"}
+                                </div>
+                                <div
+                                    class="text-xs text-muted-foreground mt-0.5"
+                                >
+                                    SĐT: ---
                                 </div>
                             </td>
-                            <td class="px-4 py-3 text-sm"
-                                >{invoice.booking?.customer?.name || "N/A"}</td
-                            >
-                            <td class="px-4 py-3 text-sm text-muted-foreground"
-                                >{formatDate(invoice.createdAt)}</td
-                            >
-                            <td class="px-4 py-3 text-sm"
-                                >{invoice.booking?.service?.name || "N/A"}</td
-                            >
-                            <td class="px-4 py-3 text-sm font-medium"
-                                >{formatPrice(invoice.amount)}</td
-                            >
-                            <td class="px-4 py-3">
+                            <td class="p-4 align-middle text-muted-foreground">
+                                {formatDate(invoice.date)}
+                            </td>
+                            <td class="p-4 align-middle">
+                                {invoice.services.join(", ") || "N/A"}
+                            </td>
+                            <td class="p-4 align-middle font-medium">
+                                {formatPrice(invoice.total)}
+                            </td>
+                            <td class="p-4 align-middle">
                                 <span
                                     class={cn(
-                                        "px-2 py-1 rounded-full text-xs font-medium",
+                                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                                         statusStyles[
                                             invoice.status
                                                 .charAt(0)
@@ -179,10 +204,19 @@
                                     ] || invoice.status}
                                 </span>
                             </td>
+                            <td class="p-4 align-middle text-right">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    class="h-8 w-8 text-muted-foreground"
+                                >
+                                    <div class="h-4 w-4 rotate-90">...</div>
+                                </Button>
+                            </td>
                         </tr>
                     {/each}
                 </tbody>
             </table>
         </div>
-    </Card>
+    </div>
 </div>

@@ -1,6 +1,7 @@
 import { eq, and, gte, lte, like, or, desc, sql } from "drizzle-orm";
 import type { Database } from "../db";
-import { bookings, customers, type NewBooking } from "../db/schema";
+import { bookings, customers, type NewBooking, bookingServices, services, serviceCategories } from "../db/schema";
+import type { NewBookingService } from "../db/schema";
 
 export interface BookingFilters {
   from?: Date;
@@ -58,11 +59,14 @@ export class BookingsService {
       where: and(...conditions),
       with: {
         customer: true,
-        service: {
+        bookingServices: {
           with: {
+            service: true,
             category: true,
+            member: true
           }
         },
+        // Legacy support/check if needing service relation directly? No, removed from booking.
       },
       orderBy: [desc(bookings.date)],
       limit: limit,
@@ -92,7 +96,9 @@ export class BookingsService {
       where: eq(bookings.organizationId, organizationId),
       with: {
         customer: true,
-        service: true,
+        bookingServices: {
+          with: { service: true }
+        },
       },
       orderBy: (bookings, { desc }) => [desc(bookings.date)],
     });
@@ -110,9 +116,57 @@ export class BookingsService {
     return this.db.select().from(bookings).where(and(eq(bookings.customerId, customerId), eq(bookings.organizationId, organizationId)));
   }
 
-  async create(data: NewBooking) {
-    const result = await this.db.insert(bookings).values(data).returning();
-    return result[0];
+  async create(data: any) {
+    // Input normalization: legacy serviceId vs services array
+    const servicesList = data.services || [];
+    if (data.serviceId) {
+      servicesList.push({ serviceId: data.serviceId });
+    }
+
+    if (servicesList.length === 0) {
+      throw new Error("At least one service is required");
+    }
+
+    // Insert Booking
+    // Extract strictly booking fields to avoid passing 'services' or 'serviceId' to insert
+    const bookingData: NewBooking = {
+      organizationId: data.organizationId,
+      customerId: data.customerId,
+      date: data.date,
+      status: data.status,
+      guestCount: data.guestCount,
+      notes: data.notes
+    };
+
+    const [booking] = await this.db.insert(bookings).values(bookingData).returning();
+
+    // Insert Booking Services
+    for (const s of servicesList) {
+      // Fetch service details for snapshot
+      const service = await this.db.query.services.findFirst({
+        where: eq(services.id, s.serviceId)
+      });
+
+      if (service) {
+        const bookingServiceData: NewBookingService = {
+          bookingId: booking.id,
+          serviceId: service.id,
+          categoryId: service.categoryId,
+          memberId: s.memberId,
+          price: service.price // Snapshot
+        };
+        await this.db.insert(bookingServices).values(bookingServiceData);
+      }
+    }
+
+    // Return the full booking with relations
+    return this.db.query.bookings.findFirst({
+      where: eq(bookings.id, booking.id),
+      with: {
+        bookingServices: { with: { service: true } },
+        customer: true
+      }
+    });
   }
 
   async update(id: number, organizationId: string, data: Partial<NewBooking>) {

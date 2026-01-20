@@ -1,18 +1,20 @@
 <script lang="ts">
-    import { cn } from "$lib/utils";
-    import type { HTMLAttributes } from "svelte/elements";
+	import { cn, type WithElementRef } from "$lib/utils.js";
+	import type { HTMLAttributes } from "svelte/elements";
 
-    let {
-        class: className,
-        children,
-        ...restProps
-    }: HTMLAttributes<HTMLElement> = $props();
+	let {
+		ref = $bindable(null),
+		class: className,
+		children,
+		...restProps
+	}: WithElementRef<HTMLAttributes<HTMLElement>> = $props();
 </script>
 
 <caption
-    class={cn("mt-4 text-sm text-muted-foreground", className)}
-    {...restProps}
+	bind:this={ref}
+	data-slot="table-caption"
+	class={cn("text-muted-foreground mt-4 text-sm", className)}
+	{...restProps}
 >
-    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-    {@render children?.()}
+	{@render children?.()}
 </caption>

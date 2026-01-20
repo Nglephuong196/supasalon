@@ -1,9 +1,7 @@
 <script lang="ts">
-    import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
+	import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
 
-    let { children, ...restProps }: DropdownMenuPrimitive.GroupProps = $props();
+	let { ref = $bindable(null), ...restProps }: DropdownMenuPrimitive.GroupProps = $props();
 </script>
 
-<DropdownMenuPrimitive.Group {...restProps}>
-    {@render children?.()}
-</DropdownMenuPrimitive.Group>
+<DropdownMenuPrimitive.Group bind:ref data-slot="dropdown-menu-group" {...restProps} />

@@ -42,7 +42,7 @@
 
     // Derived
     let filteredServices = $derived(
-        data.services.filter((s) => {
+        data.services.filter((s: any) => {
             const matchesCategory =
                 selectedCategoryId === null ||
                 s.categoryId === selectedCategoryId;
@@ -59,7 +59,7 @@
     }
 
     function getCategoryName(id: number) {
-        return data.categories.find((c) => c.id === id)?.name || "Unknown";
+        return data.categories.find((c: any) => c.id === id)?.name || "Unknown";
     }
 
     // Handlers
@@ -144,18 +144,15 @@
 </svelte:head>
 
 <div class="h-[calc(100vh-6rem)] flex flex-col gap-4">
-    <!-- Header -->
+    <!-- Page Header (Outer) -->
     <div class="flex items-center justify-between flex-none">
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-foreground">
                 Quản lý dịch vụ
             </h1>
             <p class="text-muted-foreground">
-                Quản lý danh mục và các dịch vụ của bạn
+                Quản lý hình thức và giá dịch vụ tại salon
             </p>
-        </div>
-        <div class="flex gap-2">
-            <!-- Mobile Toggle for categories could go here -->
         </div>
     </div>
 
@@ -235,7 +232,10 @@
                                 >
                                     <MoreVertical class="h-3.5 w-3.5" />
                                 </DropdownMenu.Trigger>
-                                <DropdownMenu.Content align="start">
+                                <DropdownMenu.Content
+                                    align="start"
+                                    class="border-gray-100 shadow-sm"
+                                >
                                     <DropdownMenu.Item
                                         onclick={(e) =>
                                             openEditCategory(category, e)}
@@ -268,106 +268,204 @@
             </div>
         </div>
 
-        <!-- Main Area: Services -->
-        <div class="flex-1 flex flex-col gap-4 min-h-0">
-            <!-- Toolbar -->
+        <!-- Main Area: Service Table (No Sidebar anymore inside this part) -->
+        <div class="flex-1 min-w-0">
             <div
-                class="flex items-center gap-4 bg-white p-2 rounded-xl border border-border/60 shadow-sm flex-none"
+                class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm h-full flex flex-col"
             >
-                <div class="relative flex-1">
-                    <Search
-                        class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-                    />
-                    <Input
-                        bind:value={searchQuery}
-                        placeholder="Tìm kiếm dịch vụ..."
-                        class="pl-10 border-0 bg-transparent focus-visible:ring-0 shadow-none"
-                    />
-                </div>
-                <Button onclick={openCreateService} class="shadow-sm">
-                    <Plus class="h-4 w-4 mr-2" />
-                    Thêm dịch vụ
-                </Button>
-            </div>
-
-            <!-- Service Grid/List -->
-            <div class="flex-1 overflow-y-auto pr-2">
-                {#if filteredServices.length === 0}
-                    <div
-                        class="h-full flex flex-col items-center justify-center text-muted-foreground p-8"
-                    >
-                        <div
-                            class="h-16 w-16 bg-gray-50 rounded-full flex items-center justify-center mb-4"
+                <div
+                    class="p-4 flex items-center justify-between gap-4 border-b border-gray-100 flex-none"
+                >
+                    <div>
+                        <h3
+                            class="font-semibold leading-none tracking-tight hidden sm:block"
                         >
-                            <Layers class="h-8 w-8 text-gray-300" />
-                        </div>
-                        <p class="font-medium">Không tìm thấy dịch vụ nào</p>
-                        <p class="text-sm mt-1">
-                            Thử thêm dịch vụ mới hoặc thay đổi bộ lọc
-                        </p>
+                            Danh sách
+                        </h3>
+                        <div class="sm:hidden text-sm font-medium">Dịch vụ</div>
                     </div>
-                {:else}
+
                     <div
-                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-10"
+                        class="flex items-center gap-2 w-full sm:w-auto flex-1 justify-end"
                     >
-                        {#each filteredServices as service (service.id)}
-                            <div
-                                class="group relative bg-white border border-border/60 hover:border-primary/50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all"
-                            >
-                                <div
-                                    class="flex justify-between items-start mb-2"
-                                >
-                                    <div
-                                        class="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600"
-                                    >
-                                        {getCategoryName(service.categoryId)}
-                                    </div>
-                                    <DropdownMenu.Root>
-                                        <DropdownMenu.Trigger
-                                            class="h-6 w-6 flex items-center justify-center rounded-md hover:bg-gray-100 text-muted-foreground"
-                                        >
-                                            <MoreVertical class="h-3.5 w-3.5" />
-                                        </DropdownMenu.Trigger>
-                                        <DropdownMenu.Content align="end">
-                                            <DropdownMenu.Item
-                                                onclick={() =>
-                                                    openEditService(service)}
-                                            >
-                                                Chỉnh sửa
-                                            </DropdownMenu.Item>
-                                            <DropdownMenu.Item
-                                                class="text-red-600"
-                                                onclick={() =>
-                                                    openDeleteService(service)}
-                                            >
-                                                Xóa dịch vụ
-                                            </DropdownMenu.Item>
-                                        </DropdownMenu.Content>
-                                    </DropdownMenu.Root>
-                                </div>
-                                <h3 class="font-semibold text-foreground mb-1">
-                                    {service.name}
-                                </h3>
-                                <p class="text-2xl font-bold text-primary mb-3">
-                                    {formatPrice(service.price)}
-                                </p>
-                                <div
-                                    class="flex items-center text-xs text-muted-foreground gap-1"
-                                >
-                                    <Clock class="h-3 w-3" />
-                                    <span>{service.duration} phút</span>
-                                </div>
-                                {#if service.description}
-                                    <p
-                                        class="text-xs text-gray-500 mt-3 line-clamp-2 border-t pt-2 border-gray-100"
-                                    >
-                                        {service.description}
-                                    </p>
-                                {/if}
-                            </div>
-                        {/each}
+                        <div class="relative max-w-xs w-full sm:w-64">
+                            <Search
+                                class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+                            />
+                            <Input
+                                type="search"
+                                placeholder="Tìm kiếm dịch vụ..."
+                                class="pl-9 h-9"
+                                bind:value={searchQuery}
+                            />
+                        </div>
+
+                        <Button
+                            onclick={openCreateService}
+                            class="bg-purple-600 hover:bg-purple-700 h-9 shrink-0"
+                        >
+                            <Plus class="h-4 w-4 sm:mr-2" />
+                            <span class="hidden sm:inline">Thêm</span>
+                        </Button>
                     </div>
-                {/if}
+                </div>
+
+                <div class="flex-1 overflow-auto">
+                    <table class="w-full text-sm">
+                        <thead
+                            class="border-b border-gray-100 bg-muted/40 sticky top-0 bg-white"
+                        >
+                            <tr>
+                                <th class="h-12 w-[50px] px-4 align-middle">
+                                    <input
+                                        type="checkbox"
+                                        class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    />
+                                </th>
+                                <th
+                                    class="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-nowrap"
+                                    >Tên dịch vụ</th
+                                >
+                                <th
+                                    class="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-nowrap"
+                                    >Danh mục</th
+                                >
+                                <th
+                                    class="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-nowrap"
+                                    >Giá</th
+                                >
+                                <th
+                                    class="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-nowrap"
+                                    >Thời gian</th
+                                >
+                                <th
+                                    class="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-nowrap w-[30%]"
+                                    >Mô tả</th
+                                >
+                                <th
+                                    class="h-12 px-4 text-right align-middle font-medium text-muted-foreground"
+                                ></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            {#each filteredServices as service (service.id)}
+                                <tr class="hover:bg-muted/50 transition-colors">
+                                    <td class="p-4 align-middle">
+                                        <input
+                                            type="checkbox"
+                                            class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                        />
+                                    </td>
+                                    <td class="p-4 align-middle font-medium">
+                                        {service.name}
+                                    </td>
+                                    <td class="p-4 align-middle">
+                                        <span
+                                            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700"
+                                        >
+                                            {getCategoryName(
+                                                service.categoryId,
+                                            )}
+                                        </span>
+                                    </td>
+                                    <td
+                                        class="p-4 align-middle font-medium text-purple-700"
+                                    >
+                                        {formatPrice(service.price)}
+                                    </td>
+                                    <td
+                                        class="p-4 align-middle text-muted-foreground"
+                                    >
+                                        <div class="flex items-center gap-1">
+                                            <Clock class="h-3 w-3" />
+                                            {service.duration} phút
+                                        </div>
+                                    </td>
+                                    <td
+                                        class="p-4 align-middle text-muted-foreground truncate max-w-[200px]"
+                                        title={service.description}
+                                    >
+                                        {service.description || "---"}
+                                    </td>
+                                    <td class="p-4 align-middle text-right">
+                                        <DropdownMenu.Root>
+                                            <DropdownMenu.Trigger>
+                                                {#snippet child({ props })}
+                                                    <Button
+                                                        {...props}
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        class="h-8 w-8 text-muted-foreground"
+                                                    >
+                                                        <MoreVertical
+                                                            class="h-4 w-4"
+                                                        />
+                                                    </Button>
+                                                {/snippet}
+                                            </DropdownMenu.Trigger>
+                                            <DropdownMenu.Content
+                                                align="end"
+                                                class="border-gray-100 shadow-sm"
+                                            >
+                                                <DropdownMenu.Label
+                                                    >Hành động</DropdownMenu.Label
+                                                >
+                                                <DropdownMenu.Item
+                                                    onclick={() =>
+                                                        openEditService(
+                                                            service,
+                                                        )}
+                                                >
+                                                    <Pencil
+                                                        class="mr-2 h-4 w-4"
+                                                    />
+                                                    Sửa dịch vụ
+                                                </DropdownMenu.Item>
+                                                <DropdownMenu.Item
+                                                    class="text-red-600"
+                                                    onclick={() =>
+                                                        openDeleteService(
+                                                            service,
+                                                        )}
+                                                >
+                                                    <Trash2
+                                                        class="mr-2 h-4 w-4"
+                                                    />
+                                                    Xóa
+                                                </DropdownMenu.Item>
+                                            </DropdownMenu.Content>
+                                        </DropdownMenu.Root>
+                                    </td>
+                                </tr>
+                            {/each}
+                            {#if filteredServices.length === 0}
+                                <tr>
+                                    <td colspan="7" class="h-32 text-center">
+                                        <div
+                                            class="flex flex-col items-center justify-center text-muted-foreground p-4"
+                                        >
+                                            <div
+                                                class="h-12 w-12 bg-gray-50 rounded-full flex items-center justify-center mb-3"
+                                            >
+                                                <Layers
+                                                    class="h-6 w-6 text-gray-300"
+                                                />
+                                            </div>
+                                            <p class="font-medium">
+                                                Không tìm thấy dịch vụ nào
+                                            </p>
+                                            {#if searchQuery || selectedCategoryId}
+                                                <p class="text-sm mt-1">
+                                                    Thử thay đổi bộ lọc tìm kiếm
+                                                </p>
+                                            {/if}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {/if}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

@@ -54,9 +54,9 @@
         .map((m: any) => ({
             id: m.id,
             type: "member",
-            name: m.user.name,
-            email: m.user.email,
-            image: m.user.image,
+            name: m.user?.name || "Unknown",
+            email: m.user?.email || "No Email",
+            image: m.user?.image,
             role: m.role,
             phone: "",
             status: "active",
@@ -111,94 +111,127 @@
 
 <div class="flex flex-col gap-6">
     <!-- Header -->
+
+    <!-- Employees Content -->
     <div
-        class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm"
     >
-        <div>
-            <h1 class="text-2xl font-bold tracking-tight">Nhân viên</h1>
-            <p class="text-muted-foreground">Quản lý nhân viên salon</p>
+        <div
+            class="p-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-gray-100"
+        >
+            <div>
+                <h3 class="font-semibold leading-none tracking-tight">
+                    Danh sách nhân viên
+                </h3>
+                <p class="text-sm text-muted-foreground mt-2">
+                    Quản lý {allEmployees.length} nhân viên trong hệ thống
+                </p>
+            </div>
+
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="relative flex-1 sm:w-64">
+                    <Search
+                        class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+                    />
+                    <Input
+                        type="search"
+                        placeholder="Tìm kiếm nhân viên..."
+                        class="pl-9 h-9"
+                        bind:value={searchQuery}
+                    />
+                </div>
+                {#if canManageEmployees}
+                    <Dialog.Root bind:open={isAddOpen}>
+                        <Dialog.Trigger>
+                            <Button
+                                class="bg-purple-600 hover:bg-purple-700 h-9"
+                            >
+                                <Plus class="h-4 w-4 mr-2" />
+                                Thêm
+                            </Button>
+                        </Dialog.Trigger>
+                        <Dialog.Content>
+                            <Dialog.Header>
+                                <Dialog.Title>Thêm nhân viên mới</Dialog.Title>
+                                <Dialog.Description>
+                                    Tạo tài khoản mới cho nhân viên.
+                                </Dialog.Description>
+                            </Dialog.Header>
+                            <form
+                                action="?/createMember"
+                                method="POST"
+                                use:enhance={handleFormSubmit}
+                            >
+                                <div class="grid gap-4 py-4">
+                                    <div class="grid gap-2">
+                                        <Label for="name">Tên hiển thị</Label>
+                                        <Input
+                                            id="name"
+                                            name="name"
+                                            bind:value={name}
+                                            placeholder="Nguyễn Văn A"
+                                            required
+                                        />
+                                    </div>
+                                    <div class="grid gap-2">
+                                        <Label for="email">Email</Label>
+                                        <Input
+                                            id="email"
+                                            name="email"
+                                            type="email"
+                                            bind:value={email}
+                                            placeholder="nhanvien@salon.com"
+                                            required
+                                        />
+                                    </div>
+                                    <div class="grid gap-2">
+                                        <Label for="password">Mật khẩu</Label>
+                                        <Input
+                                            id="password"
+                                            name="password"
+                                            type="password"
+                                            bind:value={password}
+                                            placeholder="••••••••"
+                                            required
+                                        />
+                                    </div>
+                                    <div class="grid gap-2">
+                                        <Label for="role">Vai trò</Label>
+                                        <select
+                                            name="role"
+                                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            bind:value={role}
+                                        >
+                                            <option value="member"
+                                                >Thành viên</option
+                                            >
+                                            <option value="admin"
+                                                >Quản trị viên</option
+                                            >
+                                            <option value="owner"
+                                                >Chủ sở hữu</option
+                                            >
+                                        </select>
+                                    </div>
+                                </div>
+                                <Dialog.Footer>
+                                    <Button
+                                        variant="outline"
+                                        type="button"
+                                        onclick={() => (isAddOpen = false)}
+                                        >Hủy</Button
+                                    >
+                                    <Button type="submit">Thêm nhân viên</Button
+                                    >
+                                </Dialog.Footer>
+                            </form>
+                        </Dialog.Content>
+                    </Dialog.Root>
+                {/if}
+            </div>
         </div>
 
-        {#if canManageEmployees}
-            <Dialog.Root bind:open={isAddOpen}>
-                <Dialog.Trigger>
-                    <Button class="bg-purple-600 hover:bg-purple-700">
-                        <Plus class="h-4 w-4 mr-2" />
-                        Thêm nhân viên
-                    </Button>
-                </Dialog.Trigger>
-                <Dialog.Content>
-                    <Dialog.Header>
-                        <Dialog.Title>Thêm nhân viên mới</Dialog.Title>
-                        <Dialog.Description>
-                            Tạo tài khoản mới cho nhân viên.
-                        </Dialog.Description>
-                    </Dialog.Header>
-                    <form
-                        action="?/createMember"
-                        method="POST"
-                        use:enhance={handleFormSubmit}
-                    >
-                        <div class="grid gap-4 py-4">
-                            <div class="grid gap-2">
-                                <Label for="name">Tên hiển thị</Label>
-                                <Input
-                                    id="name"
-                                    name="name"
-                                    bind:value={name}
-                                    placeholder="Nguyễn Văn A"
-                                    required
-                                />
-                            </div>
-                            <div class="grid gap-2">
-                                <Label for="email">Email</Label>
-                                <Input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    bind:value={email}
-                                    placeholder="nhanvien@salon.com"
-                                    required
-                                />
-                            </div>
-                            <div class="grid gap-2">
-                                <Label for="password">Mật khẩu</Label>
-                                <Input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    bind:value={password}
-                                    placeholder="••••••••"
-                                    required
-                                />
-                            </div>
-                            <div class="grid gap-2">
-                                <Label for="role">Vai trò</Label>
-                                <select
-                                    name="role"
-                                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    bind:value={role}
-                                >
-                                    <option value="member">Thành viên</option>
-                                    <option value="admin">Quản trị viên</option>
-                                    <option value="owner">Chủ sở hữu</option>
-                                </select>
-                            </div>
-                        </div>
-                        <Dialog.Footer>
-                            <Button
-                                variant="outline"
-                                type="button"
-                                onclick={() => (isAddOpen = false)}>Hủy</Button
-                            >
-                            <Button type="submit">Thêm nhân viên</Button>
-                        </Dialog.Footer>
-                    </form>
-                </Dialog.Content>
-            </Dialog.Root>
-        {/if}
-
-        <!-- Edit Role Dialog -->
+        <!-- Edit Role Dialog (Hidden, triggers via state) -->
         <Dialog.Root bind:open={isEditRoleOpen}>
             <Dialog.Content>
                 <Dialog.Header>
@@ -242,141 +275,163 @@
                 </form>
             </Dialog.Content>
         </Dialog.Root>
-    </div>
 
-    <!-- Search -->
-    <div class="flex items-center gap-4">
-        <div class="relative flex-1 max-w-sm">
-            <Search
-                class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
-            />
-            <Input
-                type="search"
-                placeholder="Tìm kiếm nhân viên..."
-                class="pl-9"
-                bind:value={searchQuery}
-            />
-        </div>
-    </div>
-
-    <!-- Employees Grid -->
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {#each allEmployees as employee (employee.id)}
-            <Card class="p-4 hover:shadow-md transition-shadow relative group">
-                <!-- Action Menu (only for owners/admins) -->
-                {#if canManageEmployees}
-                    <div
-                        class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                        <DropdownMenu.Root>
-                            <DropdownMenu.Trigger>
-                                {#snippet child({ props })}
-                                    <Button
-                                        {...props}
-                                        variant="ghost"
-                                        size="icon"
-                                        class="h-8 w-8"
-                                    >
-                                        <MoreVertical class="h-4 w-4" />
-                                    </Button>
-                                {/snippet}
-                            </DropdownMenu.Trigger>
-                            <DropdownMenu.Content align="end">
-                                <DropdownMenu.Label
-                                    >Hành động</DropdownMenu.Label
-                                >
-                                <DropdownMenu.Item
-                                    onclick={() => openEditRole(employee)}
-                                >
-                                    <Pencil class="mr-2 h-4 w-4" />
-                                    Sửa vai trò
-                                </DropdownMenu.Item>
-                                <DropdownMenu.Item
-                                    class="text-red-600"
-                                    onclick={() => openDeleteDialog(employee)}
-                                >
-                                    <Trash class="mr-2 h-4 w-4" />
-                                    Xóa
-                                </DropdownMenu.Item>
-                            </DropdownMenu.Content>
-                        </DropdownMenu.Root>
-                    </div>
-                {/if}
-
-                <div class="flex items-start gap-4">
-                    <div
-                        class={cn(
-                            "h-12 w-12 rounded-full flex items-center justify-center text-lg font-medium shrink-0 overflow-hidden",
-                            employee.status === "active"
-                                ? "bg-primary/10 text-primary"
-                                : "bg-muted text-muted-foreground",
-                        )}
-                    >
-                        {#if employee.image}
-                            <!-- svelte-ignore a11y-img-redundant-alt -->
-                            <img
-                                src={employee.image}
-                                alt="User Avatar"
-                                class="h-full w-full object-cover"
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="border-b border-gray-100 bg-muted/40">
+                    <tr>
+                        <th class="h-12 w-[50px] px-4 align-middle">
+                            <input
+                                type="checkbox"
+                                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                             />
-                        {:else}
-                            {employee.name
-                                .split("@")[0]
-                                .slice(0, 2)
-                                .toUpperCase()}
-                        {/if}
-                    </div>
-                    <div class="flex-1 min-w-0 pr-6">
-                        <div class="flex items-center gap-2">
-                            <h3
-                                class="font-semibold truncate"
-                                title={employee.name}
-                            >
-                                {employee.name}
-                            </h3>
-                        </div>
-
-                        <div class="flex flex-wrap gap-2 mt-1">
-                            <span
-                                class={cn(
-                                    "inline-block px-2 py-0.5 rounded-full text-xs font-medium",
-                                    roleColors[employee.role] ||
-                                        "bg-gray-100 text-gray-700",
-                                )}
-                            >
-                                {employee.role}
-                            </span>
-                        </div>
-
-                        <div class="space-y-1 mt-2">
-                            <div
-                                class="flex items-center gap-2 text-sm text-muted-foreground"
-                            >
-                                <Mail class="h-3 w-3" />
-                                <span class="truncate" title={employee.email}
-                                    >{employee.email}</span
+                        </th>
+                        <th
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-nowrap"
+                            >Nhân viên</th
+                        >
+                        <th
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-nowrap"
+                            >Vai trò</th
+                        >
+                        <th
+                            class="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-nowrap"
+                            >Trạng thái</th
+                        >
+                        <th
+                            class="h-12 px-4 text-right align-middle font-medium text-muted-foreground"
+                        ></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {#each allEmployees as employee (employee.id)}
+                        <tr class="hover:bg-muted/50 transition-colors">
+                            <td class="p-4 align-middle">
+                                <input
+                                    type="checkbox"
+                                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                />
+                            </td>
+                            <td class="p-4 align-middle">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class={cn(
+                                            "h-9 w-9 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden",
+                                            employee.status === "active"
+                                                ? "bg-primary/10 text-primary"
+                                                : "bg-muted text-muted-foreground",
+                                        )}
+                                    >
+                                        {#if employee.image}
+                                            <img
+                                                src={employee.image}
+                                                alt="Avatar"
+                                                class="h-full w-full object-cover"
+                                            />
+                                        {:else}
+                                            {employee.name
+                                                .split("@")[0]
+                                                .slice(0, 2)
+                                                .toUpperCase()}
+                                        {/if}
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span
+                                            class="font-medium text-foreground"
+                                            >{employee.name}</span
+                                        >
+                                        <span
+                                            class="text-xs text-muted-foreground"
+                                            >{employee.email}</span
+                                        >
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="p-4 align-middle">
+                                <span
+                                    class={cn(
+                                        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                                        roleColors[employee.role] ||
+                                            "bg-gray-100 text-gray-700",
+                                    )}
                                 >
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </Card>
-        {/each}
-
-        {#if allEmployees.length === 0}
-            <div
-                class="col-span-full border border-dashed rounded-lg p-12 flex flex-col items-center justify-center text-muted-foreground"
-            >
-                <p>Không tìm thấy nhân viên nào.</p>
-                {#if searchQuery}
-                    <Button
-                        variant="link"
-                        onclick={() => (searchQuery = "")}
-                        class="mt-2">Xóa bộ lọc tìm kiếm</Button
-                    >
-                {/if}
-            </div>
-        {/if}
+                                    {employee.role}
+                                </span>
+                            </td>
+                            <td class="p-4 align-middle">
+                                <span
+                                    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-700"
+                                >
+                                    Active
+                                </span>
+                            </td>
+                            <td class="p-4 align-middle text-right">
+                                {#if canManageEmployees}
+                                    <DropdownMenu.Root>
+                                        <DropdownMenu.Trigger>
+                                            {#snippet child({ props })}
+                                                <Button
+                                                    {...props}
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    class="h-8 w-8 text-muted-foreground"
+                                                >
+                                                    <MoreVertical
+                                                        class="h-4 w-4"
+                                                    />
+                                                </Button>
+                                            {/snippet}
+                                        </DropdownMenu.Trigger>
+                                        <DropdownMenu.Content
+                                            align="end"
+                                            class="border-gray-100 shadow-sm"
+                                        >
+                                            <DropdownMenu.Label
+                                                >Hành động</DropdownMenu.Label
+                                            >
+                                            <DropdownMenu.Item
+                                                onclick={() =>
+                                                    openEditRole(employee)}
+                                            >
+                                                <Pencil class="mr-2 h-4 w-4" />
+                                                Sửa vai trò
+                                            </DropdownMenu.Item>
+                                            <DropdownMenu.Item
+                                                class="text-red-600 focus:text-red-600"
+                                                onclick={() =>
+                                                    openDeleteDialog(employee)}
+                                            >
+                                                <Trash class="mr-2 h-4 w-4" />
+                                                Xóa
+                                            </DropdownMenu.Item>
+                                        </DropdownMenu.Content>
+                                    </DropdownMenu.Root>
+                                {/if}
+                            </td>
+                        </tr>
+                    {/each}
+                    {#if allEmployees.length === 0}
+                        <tr>
+                            <td colspan="5" class="h-24 text-center">
+                                <div
+                                    class="flex flex-col items-center justify-center text-muted-foreground p-4"
+                                >
+                                    <p>Không tìm thấy nhân viên nào.</p>
+                                    {#if searchQuery}
+                                        <Button
+                                            variant="link"
+                                            onclick={() => (searchQuery = "")}
+                                            class="mt-2 text-primary"
+                                            >Xóa bộ lọc tìm kiếm</Button
+                                        >
+                                    {/if}
+                                </div>
+                            </td>
+                        </tr>
+                    {/if}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

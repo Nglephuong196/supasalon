@@ -1,15 +1,20 @@
 <script lang="ts">
-    import { cn } from "$lib/utils";
-    import type { HTMLAttributes } from "svelte/elements";
+	import { cn, type WithElementRef } from "$lib/utils.js";
+	import type { HTMLAttributes } from "svelte/elements";
 
-    let {
-        class: className,
-        children,
-        ...restProps
-    }: HTMLAttributes<HTMLTableSectionElement> = $props();
+	let {
+		ref = $bindable(null),
+		class: className,
+		children,
+		...restProps
+	}: WithElementRef<HTMLAttributes<HTMLTableSectionElement>> = $props();
 </script>
 
-<tbody class={cn("[&_tr:last-child]:border-0", className)} {...restProps}>
-    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-    {@render children?.()}
+<tbody
+	bind:this={ref}
+	data-slot="table-body"
+	class={cn("[&_tr:last-child]:border-0", className)}
+	{...restProps}
+>
+	{@render children?.()}
 </tbody>

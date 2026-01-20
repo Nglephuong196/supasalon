@@ -136,15 +136,26 @@ export const services = sqliteTable("services", {
 });
 
 // Bookings
+// Bookings
 export const bookings = sqliteTable("bookings", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   organizationId: text("organization_id").notNull().references(() => organization.id),
   customerId: integer("customer_id").notNull().references(() => customers.id),
-  serviceId: integer("service_id").notNull().references(() => services.id),
   date: integer("date", { mode: "timestamp" }).notNull(),
   status: text("status", { enum: ["pending", "confirmed", "completed", "cancelled"] }).notNull().default("pending"),
+  guestCount: integer("guest_count").notNull().default(1),
   notes: text("notes"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+// Booking Services
+export const bookingServices = sqliteTable("booking_services", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  bookingId: integer("booking_id").notNull().references(() => bookings.id, { onDelete: 'cascade' }),
+  serviceId: integer("service_id").notNull().references(() => services.id),
+  categoryId: integer("category_id").notNull().references(() => serviceCategories.id),
+  memberId: text("member_id").references(() => member.id), // Staff assigned
+  price: real("price").notNull(), // Snapshot of price at booking time
 });
 
 // Invoices
@@ -238,14 +249,21 @@ export const serviceCategoriesRelations = relations(serviceCategories, ({ one, m
 
 export const servicesRelations = relations(services, ({ one, many }) => ({
   category: one(serviceCategories, { fields: [services.categoryId], references: [serviceCategories.id] }),
-  bookings: many(bookings),
+  bookingServices: many(bookingServices),
 }));
 
-export const bookingsRelations = relations(bookings, ({ one }) => ({
+export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   organization: one(organization, { fields: [bookings.organizationId], references: [organization.id] }),
   customer: one(customers, { fields: [bookings.customerId], references: [customers.id] }),
-  service: one(services, { fields: [bookings.serviceId], references: [services.id] }),
+  bookingServices: many(bookingServices),
   invoice: one(invoices),
+}));
+
+export const bookingServicesRelations = relations(bookingServices, ({ one }) => ({
+  booking: one(bookings, { fields: [bookingServices.bookingId], references: [bookings.id] }),
+  service: one(services, { fields: [bookingServices.serviceId], references: [services.id] }),
+  category: one(serviceCategories, { fields: [bookingServices.categoryId], references: [serviceCategories.id] }),
+  member: one(member, { fields: [bookingServices.memberId], references: [member.id] }),
 }));
 
 export const invoicesRelations = relations(invoices, ({ one }) => ({
@@ -298,3 +316,6 @@ export type NewMembershipTier = typeof membershipTiers.$inferInsert;
 
 export type MemberPermission = typeof memberPermissions.$inferSelect;
 export type NewMemberPermission = typeof memberPermissions.$inferInsert;
+
+export type BookingService = typeof bookingServices.$inferSelect;
+export type NewBookingService = typeof bookingServices.$inferInsert;
