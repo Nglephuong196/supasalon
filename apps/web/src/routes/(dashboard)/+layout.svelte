@@ -71,5 +71,5 @@
             {@render children()}
         </main>
     </div>
-    <Toaster />
+    <Toaster position="top-center" richColors />
 </div>

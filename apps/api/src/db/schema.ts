@@ -142,13 +142,23 @@ export const bookings = sqliteTable("bookings", {
   organizationId: text("organization_id").notNull().references(() => organization.id),
   customerId: integer("customer_id").notNull().references(() => customers.id),
   date: integer("date", { mode: "timestamp" }).notNull(),
-  status: text("status", { enum: ["pending", "confirmed", "completed", "cancelled"] }).notNull().default("pending"),
+  status: text("status", { enum: ["pending", "confirmed", "checkin", "completed", "cancelled"] }).notNull().default("pending"),
   guestCount: integer("guest_count").notNull().default(1),
   notes: text("notes"),
+  guests: text("guests", { mode: "json" }).notNull().$type<{
+    services: {
+      categoryId?: string | number;
+      serviceId: number;
+      memberId?: string;
+      price?: number;
+    }[]
+  }[]>(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
-// Booking Services
+// Booking Services - DEPRECATED / REMOVED from Active Schema
+// Kept commented out for reference or potential migration utilities if needed
+/*
 export const bookingServices = sqliteTable("booking_services", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   bookingId: integer("booking_id").notNull().references(() => bookings.id, { onDelete: 'cascade' }),
@@ -157,6 +167,7 @@ export const bookingServices = sqliteTable("booking_services", {
   memberId: text("member_id").references(() => member.id), // Staff assigned
   price: real("price").notNull(), // Snapshot of price at booking time
 });
+*/
 
 // Invoices
 export const invoices = sqliteTable("invoices", {
@@ -249,22 +260,24 @@ export const serviceCategoriesRelations = relations(serviceCategories, ({ one, m
 
 export const servicesRelations = relations(services, ({ one, many }) => ({
   category: one(serviceCategories, { fields: [services.categoryId], references: [serviceCategories.id] }),
-  bookingServices: many(bookingServices),
+  // bookingServices: many(bookingServices), // Deprecated/Removed
 }));
 
 export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   organization: one(organization, { fields: [bookings.organizationId], references: [organization.id] }),
   customer: one(customers, { fields: [bookings.customerId], references: [customers.id] }),
-  bookingServices: many(bookingServices),
+  // bookingServices: many(bookingServices), // Deprecated
   invoice: one(invoices),
 }));
 
+/*
 export const bookingServicesRelations = relations(bookingServices, ({ one }) => ({
   booking: one(bookings, { fields: [bookingServices.bookingId], references: [bookings.id] }),
   service: one(services, { fields: [bookingServices.serviceId], references: [services.id] }),
   category: one(serviceCategories, { fields: [bookingServices.categoryId], references: [serviceCategories.id] }),
   member: one(member, { fields: [bookingServices.memberId], references: [member.id] }),
 }));
+*/
 
 export const invoicesRelations = relations(invoices, ({ one }) => ({
   booking: one(bookings, { fields: [invoices.bookingId], references: [bookings.id] }),
@@ -317,5 +330,5 @@ export type NewMembershipTier = typeof membershipTiers.$inferInsert;
 export type MemberPermission = typeof memberPermissions.$inferSelect;
 export type NewMemberPermission = typeof memberPermissions.$inferInsert;
 
-export type BookingService = typeof bookingServices.$inferSelect;
-export type NewBookingService = typeof bookingServices.$inferInsert;
+// export type BookingService = typeof bookingServices.$inferSelect;
+// export type NewBookingService = typeof bookingServices.$inferInsert;

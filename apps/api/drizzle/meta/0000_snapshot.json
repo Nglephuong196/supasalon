@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "18c0b667-fdad-41ba-a265-36c513ff9704",
+  "id": "1061c1c5-d35c-4b04-b7ce-e0b4cceed6f1",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "account": {
@@ -143,13 +143,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "service_id": {
-          "name": "service_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "date": {
           "name": "date",
           "type": "integer",
@@ -165,11 +158,26 @@
           "autoincrement": false,
           "default": "'pending'"
         },
+        "guest_count": {
+          "name": "guest_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
         "notes": {
           "name": "notes",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
+          "autoincrement": false
+        },
+        "guests": {
+          "name": "guests",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
           "autoincrement": false
         },
         "created_at": {
@@ -201,19 +209,6 @@
           "tableTo": "customers",
           "columnsFrom": [
             "customer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "bookings_service_id_services_id_fk": {
-          "name": "bookings_service_id_services_id_fk",
-          "tableFrom": "bookings",
-          "tableTo": "services",
-          "columnsFrom": [
-            "service_id"
           ],
           "columnsTo": [
             "id"

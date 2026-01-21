@@ -63,7 +63,7 @@ export const load: PageServerLoad = async ({ fetch, cookies }) => {
 export const actions: Actions = {
     updatePermissions: async ({ request, fetch, cookies }) => {
         const organizationId = cookies.get('organizationId');
-        if (!organizationId) return fail(400, { message: "Organization not selected" });
+        if (!organizationId) return fail(400, { message: "Chưa chọn tổ chức" });
 
         const data = await request.formData();
         const memberId = data.get("memberId") as string;
@@ -91,11 +91,11 @@ export const actions: Actions = {
 
             if (!response.ok) {
                 const res = await response.json();
-                return fail(response.status, { message: res.error || "Failed to update permissions" });
+                return fail(response.status, { message: res.error || "Không thể cập nhật quyền" });
             }
             return { success: true };
         } catch (e) {
-            return fail(500, { message: "Server error" });
+            return fail(500, { message: "Lỗi máy chủ" });
         }
     }
 };

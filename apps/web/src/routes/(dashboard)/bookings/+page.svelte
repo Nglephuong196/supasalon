@@ -24,7 +24,7 @@
         Check,
     } from "@lucide/svelte";
     import { cn } from "$lib/utils";
-    import { goto } from "$app/navigation";
+    import { goto, invalidateAll } from "$app/navigation";
     import { page } from "$app/stores";
     import { get } from "svelte/store";
     import { enhance } from "$app/forms";
@@ -70,6 +70,10 @@
     let customerSearchQuery = $state("");
     let showCustomerResults = $state(false);
 
+    // Quick Create Validation Errors
+    let quickNameError = $state("");
+    let quickPhoneError = $state("");
+
     let customerItems = $derived(
         (data.customers || []).map((c: any) => ({
             value: c.id.toString(),
@@ -95,7 +99,8 @@
         showCustomerResults = false;
     }
 
-    // Form states for create
+    // Form states for create/edit
+    let editingBookingId = $state<number | null>(null);
     let newBooking = $state({
         customerId: "",
         customerPhone: "",
@@ -103,7 +108,32 @@
         guestCount: "1",
         status: "confirmed",
         notes: "",
-        services: [{ categoryId: "", serviceId: "", staffId: "" }],
+        guests: [
+            { services: [{ categoryId: "", serviceId: "", memberId: "" }] },
+        ],
+    });
+
+    // Sync guest count with guests array
+    $effect(() => {
+        const count = parseInt(newBooking.guestCount) || 1;
+        const currentGuests = newBooking.guests.length;
+
+        if (count > currentGuests) {
+            // Add new guest areas
+            for (let i = currentGuests; i < count; i++) {
+                newBooking.guests = [
+                    ...newBooking.guests,
+                    {
+                        services: [
+                            { categoryId: "", serviceId: "", memberId: "" },
+                        ],
+                    },
+                ];
+            }
+        } else if (count < currentGuests) {
+            // Remove extra guest areas
+            newBooking.guests = newBooking.guests.slice(0, count);
+        }
     });
 
     const statusStyles: Record<string, string> = {
@@ -111,6 +141,7 @@
         pending: "bg-amber-100 text-amber-700 border-amber-200",
         completed: "bg-blue-100 text-blue-700 border-blue-200",
         cancelled: "bg-rose-100 text-rose-700 border-rose-200",
+        checkin: "bg-purple-100 text-purple-700 border-purple-200",
     };
 
     const statusLabels: Record<string, string> = {
@@ -118,12 +149,14 @@
         pending: "Chờ xác nhận",
         completed: "Hoàn thành",
         cancelled: "Đã hủy",
+        checkin: "Đã check-in",
     };
 
     const statusOptions = [
         { value: "all", label: "Tất cả" },
         { value: "pending", label: "Chờ xác nhận" },
         { value: "confirmed", label: "Đã xác nhận" },
+        { value: "checkin", label: "Đã check-in" },
         { value: "completed", label: "Hoàn thành" },
         { value: "cancelled", label: "Đã hủy" },
     ];
@@ -249,9 +282,17 @@
     function handleFormResult() {
         return async ({ result, update }: any) => {
             if (result.type === "success") {
-                toast.success("Thao tác thành công");
+                toast.success(
+                    editingBookingId
+                        ? "Đã cập nhật lịch hẹn"
+                        : "Thao tác thành công",
+                );
                 isCreateOpen = false;
                 isDeleteOpen = false;
+                editingBookingId = null;
+                // Force reload
+                await invalidateAll();
+
                 newBooking = {
                     customerId: "",
                     customerPhone: "",
@@ -259,10 +300,21 @@
                     guestCount: "1",
                     status: "confirmed",
                     notes: "",
-                    services: [{ categoryId: "", serviceId: "", staffId: "" }],
+                    guests: [
+                        {
+                            services: [
+                                { categoryId: "", serviceId: "", memberId: "" },
+                            ],
+                        },
+                    ],
                 };
             } else if (result.type === "failure") {
-                toast.error(result.data?.message || "Có lỗi xảy ra");
+                const errorMessage =
+                    typeof result.data?.message === "string"
+                        ? result.data.message
+                        : "Có lỗi xảy ra khi lưu lịch hẹn (Lỗi dữ liệu)";
+                toast.error(errorMessage);
+                console.error("Booking save error:", result);
             }
             await update();
         };
@@ -290,6 +342,40 @@
     function openDeleteDialog(booking: any) {
         deletingBooking = booking;
         isDeleteOpen = true;
+    }
+
+    function openEditDialog(booking: any) {
+        editingBookingId = booking.id;
+
+        let guests = booking.guests || [];
+
+        if (!guests.length || guests.length === 0) {
+            guests = [
+                { services: [{ categoryId: "", serviceId: "", memberId: "" }] },
+            ];
+        } else {
+            // Map JSON structure to Form structure (strings)
+            guests = guests.map((g: any) => ({
+                services: (g.services || []).map((s: any) => ({
+                    categoryId: s.categoryId?.toString() || "",
+                    serviceId: s.serviceId?.toString() || "",
+                    memberId:
+                        s.memberId?.toString() || s.staffId?.toString() || "",
+                })),
+            }));
+        }
+
+        newBooking = {
+            customerId: booking.customerId.toString(),
+            customerPhone: booking.customer?.phone || "",
+            date: booking.date,
+            guestCount: booking.guestCount?.toString() || "1",
+            status: booking.status,
+            notes: booking.notes || "",
+            guests: guests,
+        };
+
+        isCreateOpen = true;
     }
 </script>
 
@@ -729,11 +815,16 @@
                                             </DropdownMenu.Trigger>
                                             <DropdownMenu.Content align="end">
                                                 {#if data.canUpdate}
-                                                    <DropdownMenu.Item>
+                                                    <DropdownMenu.Item
+                                                        onclick={() =>
+                                                            openEditDialog(
+                                                                booking,
+                                                            )}
+                                                    >
                                                         <Pencil
                                                             class="mr-2 h-4 w-4"
                                                         />
-                                                        Ch chỉnh sửa
+                                                        Chỉnh sửa
                                                     </DropdownMenu.Item>
                                                 {/if}
                                                 {#if data.canDelete}
@@ -857,17 +948,43 @@
 
 <!-- Create Booking Dialog -->
 <Dialog.Root bind:open={isCreateOpen}>
-    <Dialog.Content class="sm:max-w-4xl p-0 gap-0">
-        <form action="?/create" method="POST" use:enhance={handleFormResult}>
-            <div class="flex flex-col sm:flex-row">
+    <Dialog.Content
+        class="sm:max-w-4xl !p-0 !gap-0 overflow-hidden flex flex-col"
+    >
+        <Dialog.Header class="p-6 pb-4 border-b border-gray-200">
+            <Dialog.Title class="text-lg font-semibold"
+                >Đặt lịch hẹn</Dialog.Title
+            >
+        </Dialog.Header>
+        <form
+            action={editingBookingId ? "?/update" : "?/create"}
+            method="POST"
+            use:enhance={handleFormResult}
+        >
+            {#if editingBookingId}
+                <input type="hidden" name="id" value={editingBookingId} />
+            {/if}
+            <input
+                type="hidden"
+                name="guests"
+                value={JSON.stringify(newBooking.guests)}
+            />
+            <input
+                type="hidden"
+                name="customerId"
+                bind:value={newBooking.customerId}
+            />
+            <input
+                type="hidden"
+                name="customerPhone"
+                bind:value={newBooking.customerPhone}
+            />
+            <input type="hidden" name="date" bind:value={newBooking.date} />
+            <div class="flex flex-col sm:flex-row max-h-[70vh]">
                 <!-- Left Panel: Customer & Booking Info -->
-                <div class="flex-1 p-6 border-r border-gray-200">
-                    <Dialog.Header class="mb-6">
-                        <Dialog.Title class="text-lg font-semibold"
-                            >Đặt lịch hẹn</Dialog.Title
-                        >
-                    </Dialog.Header>
-
+                <div
+                    class="w-full sm:w-[340px] shrink-0 p-6 border-r border-gray-200 overflow-y-auto"
+                >
                     <!-- Customer Info Section -->
                     <div class="space-y-4 relative">
                         <div class="flex items-center justify-between">
@@ -910,18 +1027,6 @@
                                 </Button>
                             </div>
                         </div>
-
-                        <!-- Hidden inputs for form submission -->
-                        <input
-                            type="hidden"
-                            name="customerId"
-                            bind:value={newBooking.customerId}
-                        />
-                        <input
-                            type="hidden"
-                            name="customerPhone"
-                            bind:value={newBooking.customerPhone}
-                        />
                     </div>
 
                     <!-- Booking Info Section -->
@@ -936,11 +1041,6 @@
                                 class="text-xs text-gray-500">Thời gian:</Label
                             >
                             <DateTimePicker bind:value={newBooking.date} />
-                            <input
-                                type="hidden"
-                                name="date"
-                                bind:value={newBooking.date}
-                            />
                         </div>
 
                         <div class="space-y-1">
@@ -968,11 +1068,8 @@
                             >
                                 <Select.Trigger class="w-full">
                                     {#snippet children()}
-                                        {newBooking.status === "confirmed"
-                                            ? "Đã xác nhận"
-                                            : newBooking.status === "pending"
-                                              ? "Chờ xác nhận"
-                                              : "Chọn trạng thái"}
+                                        {statusLabels[newBooking.status] ||
+                                            "Chọn trạng thái"}
                                     {/snippet}
                                 </Select.Trigger>
                                 <Select.Content>
@@ -985,6 +1082,20 @@
                                         value="pending"
                                         label="Chờ xác nhận"
                                         >Chờ xác nhận</Select.Item
+                                    >
+                                    <Select.Item
+                                        value="checkin"
+                                        label="Đã check-in"
+                                        >Đã check-in</Select.Item
+                                    >
+                                    <Select.Item
+                                        value="completed"
+                                        label="Hoàn thành"
+                                        >Hoàn thành</Select.Item
+                                    >
+                                    <Select.Item
+                                        value="cancelled"
+                                        label="Đã hủy">Đã hủy</Select.Item
                                     >
                                 </Select.Content>
                             </Select.Root>
@@ -1009,163 +1120,141 @@
                 </div>
 
                 <!-- Right Panel: Service Selection -->
-                <div class="flex-1 p-6 bg-gray-50">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-sm font-medium text-gray-700">
-                            Khách #1
-                        </h3>
-                    </div>
+                <div class="flex-1 p-6 bg-gray-50 overflow-y-auto">
+                    {#each newBooking.guests as guest, guestIndex}
+                        <div class="mb-6 last:mb-0">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-sm font-medium text-gray-700">
+                                    Khách #{guestIndex + 1}
+                                </h3>
+                                {#if parseInt(newBooking.guestCount) > 1}
+                                    <span class="text-xs text-gray-400">
+                                        {guest.services.length} dịch vụ
+                                    </span>
+                                {/if}
+                            </div>
 
-                    <!-- Service Row -->
-                    {#each newBooking.services as service, index}
-                        <div
-                            class="flex items-center gap-2 mb-3 p-3 bg-white rounded-lg border border-gray-200"
-                        >
-                            <div class="min-w-[140px]">
-                                <Select.Root
-                                    type="single"
-                                    bind:value={service.categoryId}
+                            <!-- Service Rows for this guest -->
+                            {#each guest.services as service, serviceIndex}
+                                <div
+                                    class="flex items-center gap-2 mb-3 p-3 bg-white rounded-lg border border-gray-200"
                                 >
-                                    <Select.Trigger class="w-full">
-                                        {#snippet children()}
-                                            {(
+                                    <div class="min-w-[140px]">
+                                        <Combobox
+                                            items={(
                                                 data.serviceCategories || []
-                                            ).find(
+                                            ).map(
                                                 (c: {
                                                     id: number;
                                                     name: string;
-                                                }) =>
-                                                    c.id.toString() ===
-                                                    service.categoryId,
-                                            )?.name || "Nhóm dịch vụ"}
-                                        {/snippet}
-                                    </Select.Trigger>
-                                    <Select.Content>
-                                        {#each data.serviceCategories || [] as category}
-                                            <Select.Item
-                                                value={category.id.toString()}
-                                                label={category.name}
-                                                >{category.name}</Select.Item
-                                            >
-                                        {/each}
-                                    </Select.Content>
-                                </Select.Root>
-                            </div>
+                                                }) => ({
+                                                    value: c.id.toString(),
+                                                    label: c.name,
+                                                }),
+                                            )}
+                                            bind:value={service.categoryId}
+                                            placeholder="Nhóm dịch vụ"
+                                            searchPlaceholder="Tìm nhóm dịch vụ..."
+                                            emptyText="Không tìm thấy nhóm dịch vụ."
+                                            onchange={() => {
+                                                // Reset service when category changes
+                                                service.serviceId = "";
+                                            }}
+                                        />
+                                    </div>
 
-                            <div class="min-w-[160px] flex-1">
-                                <Combobox
-                                    class="w-full"
-                                    placeholder="Chọn dịch vụ"
-                                    searchPlaceholder="Tìm dịch vụ..."
-                                    items={(data.services || [])
-                                        .filter(
-                                            (s: any) =>
-                                                !service.categoryId ||
-                                                s.categoryId ===
-                                                    parseInt(
-                                                        service.categoryId,
-                                                    ),
-                                        )
-                                        .map((s: any) => ({
-                                            value: s.id.toString(),
-                                            label: s.name,
-                                        }))}
-                                    bind:value={service.serviceId}
-                                />
-                                <!-- Hidden input for form submission -->
-                                <input
-                                    type="hidden"
-                                    name="serviceId"
-                                    value={service.serviceId}
-                                />
-                            </div>
+                                    <div class="min-w-[160px] flex-1">
+                                        <Combobox
+                                            class="w-full"
+                                            placeholder={service.categoryId
+                                                ? "Chọn dịch vụ"
+                                                : "Vui lòng chọn nhóm dịch vụ trước"}
+                                            searchPlaceholder="Tìm dịch vụ..."
+                                            emptyText="Không tìm thấy dịch vụ."
+                                            disabled={!service.categoryId}
+                                            items={(data.services || [])
+                                                .filter(
+                                                    (s: any) =>
+                                                        service.categoryId &&
+                                                        s.categoryId ===
+                                                            parseInt(
+                                                                service.categoryId,
+                                                            ),
+                                                )
+                                                .map((s: any) => ({
+                                                    value: s.id.toString(),
+                                                    label: s.name,
+                                                }))}
+                                            bind:value={service.serviceId}
+                                        />
+                                    </div>
 
-                            <div class="min-w-[150px]">
-                                <Select.Root
-                                    type="single"
-                                    bind:value={service.staffId}
-                                    name="memberId"
-                                >
-                                    <Select.Trigger
-                                        class="w-full bg-purple-50 text-purple-900 border-purple-200"
-                                    >
-                                        {#snippet children()}
-                                            {(data.members || []).find(
+                                    <div class="min-w-[150px]">
+                                        <Combobox
+                                            items={(data.members || []).map(
                                                 (m: {
                                                     id: string;
                                                     user?: { name: string };
                                                     name?: string;
-                                                }) => m.id === service.staffId,
-                                            )?.user?.name ||
-                                                (data.members || []).find(
-                                                    (m: {
-                                                        id: string;
-                                                        user?: { name: string };
-                                                        name?: string;
-                                                    }) =>
-                                                        m.id ===
-                                                        service.staffId,
-                                                )?.name ||
-                                                "Chọn nhân viên"}
-                                        {/snippet}
-                                    </Select.Trigger>
-                                    <Select.Content>
-                                        {#each data.members || [] as member}
-                                            <Select.Item
-                                                value={member.id}
-                                                label={member.user?.name ||
-                                                    member.name}
-                                                >{member.user?.name ||
-                                                    member.name}</Select.Item
-                                            >
-                                        {/each}
-                                    </Select.Content>
-                                </Select.Root>
-                            </div>
+                                                }) => ({
+                                                    value: m.id,
+                                                    label:
+                                                        m.user?.name ||
+                                                        m.name ||
+                                                        "",
+                                                }),
+                                            )}
+                                            bind:value={service.memberId}
+                                            placeholder="Chọn nhân viên"
+                                            searchPlaceholder="Tìm nhân viên..."
+                                            emptyText="Không tìm thấy nhân viên."
+                                            class="bg-purple-50 text-purple-900 border-purple-200"
+                                        />
+                                    </div>
 
-                            {#if newBooking.services.length > 1}
-                                <button
-                                    type="button"
-                                    class="p-2 text-gray-400 hover:text-red-500"
-                                    onclick={() => {
-                                        newBooking.services =
-                                            newBooking.services.filter(
-                                                (_, i) => i !== index,
-                                            );
-                                    }}
-                                >
-                                    <Trash class="h-4 w-4" />
-                                </button>
-                            {/if}
+                                    {#if guest.services.length > 1}
+                                        <button
+                                            type="button"
+                                            class="p-2 text-gray-400 hover:text-red-500 shrink-0"
+                                            onclick={() => {
+                                                guest.services =
+                                                    guest.services.filter(
+                                                        (_, i) =>
+                                                            i !== serviceIndex,
+                                                    );
+                                            }}
+                                        >
+                                            <Trash class="h-4 w-4" />
+                                        </button>
+                                    {/if}
+                                </div>
+                            {/each}
+
+                            <!-- Add Service Button for this guest -->
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                class="text-blue-600 border-blue-300 hover:bg-blue-50"
+                                onclick={() => {
+                                    guest.services = [
+                                        ...guest.services,
+                                        {
+                                            categoryId: "",
+                                            serviceId: "",
+                                            memberId: "",
+                                        },
+                                    ];
+                                }}
+                            >
+                                + Thêm dịch vụ
+                            </Button>
                         </div>
+
+                        {#if guestIndex < newBooking.guests.length - 1}
+                            <hr class="my-4 border-gray-300" />
+                        {/if}
                     {/each}
-
-                    <!-- Add Service Button -->
-                    <Button
-                        type="button"
-                        variant="outline"
-                        class="text-blue-600 border-blue-300 hover:bg-blue-50"
-                        onclick={() => {
-                            newBooking.services = [
-                                ...newBooking.services,
-                                { categoryId: "", serviceId: "", staffId: "" },
-                            ];
-                        }}
-                    >
-                        + Thêm dịch vụ
-                    </Button>
-
-                    <!-- Summary -->
-                    <div
-                        class="flex items-center justify-end gap-4 mt-6 text-sm text-gray-500"
-                    >
-                        <span>0 đ</span>
-                        <span>0 Phút</span>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <span>Hiện ghi chú</span>
-                            <input type="checkbox" class="rounded" />
-                        </label>
-                    </div>
                 </div>
             </div>
 
@@ -1226,7 +1315,25 @@
         <form
             action="?/createCustomer"
             method="POST"
-            use:enhance={({ formData }) => {
+            novalidate
+            use:enhance={({ formData, cancel }) => {
+                const name = formData.get("name")?.toString().trim();
+                const phone = formData.get("phone")?.toString().trim();
+                quickNameError = "";
+                quickPhoneError = "";
+                let hasError = false;
+                if (!name) {
+                    quickNameError = "Vui lòng nhập tên khách hàng";
+                    hasError = true;
+                }
+                if (!phone) {
+                    quickPhoneError = "Vui lòng nhập số điện thoại";
+                    hasError = true;
+                }
+                if (hasError) {
+                    cancel();
+                    return;
+                }
                 return async ({ result }) => {
                     if (result.type === "success") {
                         const newCustomer = result.data?.customer as {
@@ -1235,10 +1342,9 @@
                             name: string;
                         };
                         if (newCustomer) {
-                            // Select the newly created customer
+                            await invalidateAll();
                             newBooking.customerId = newCustomer.id.toString();
                             newBooking.customerPhone = newCustomer.phone;
-                            customerSearchQuery = `${newCustomer.name} - ${newCustomer.phone}`;
                             isQuickCreateOpen = false;
                             toast.success("Đã thêm khách hàng mới");
                         }
@@ -1258,8 +1364,11 @@
                     id="quickName"
                     name="name"
                     placeholder="Nhập tên khách hàng"
-                    required
+                    oninput={() => (quickNameError = "")}
                 />
+                {#if quickNameError}
+                    <span class="text-red-500 text-xs">{quickNameError}</span>
+                {/if}
             </div>
             <div class="space-y-2">
                 <Label for="quickPhone">Số điện thoại</Label>
@@ -1268,8 +1377,11 @@
                     name="phone"
                     placeholder="Nhập số điện thoại"
                     value={customerSearchQuery}
-                    required
+                    oninput={() => (quickPhoneError = "")}
                 />
+                {#if quickPhoneError}
+                    <span class="text-red-500 text-xs">{quickPhoneError}</span>
+                {/if}
             </div>
             <Dialog.Footer>
                 <Button

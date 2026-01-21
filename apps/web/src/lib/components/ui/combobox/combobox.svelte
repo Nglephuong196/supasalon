@@ -12,6 +12,8 @@
         placeholder = "Select an option...",
         searchPlaceholder = "Search...",
         emptyText = "No results found.",
+        disabled = false,
+        onchange,
         class: className,
     }: {
         items: { value: string; label: string }[];
@@ -19,6 +21,8 @@
         placeholder?: string;
         searchPlaceholder?: string;
         emptyText?: string;
+        disabled?: boolean;
+        onchange?: () => void;
         class?: string;
     } = $props();
 
@@ -40,24 +44,31 @@
     }
 </script>
 
-<Popover.Root bind:open>
+<Popover.Root
+    bind:open
+    onOpenChange={(isOpen) => {
+        if (!disabled) open = isOpen;
+    }}
+>
     <Popover.Trigger bind:ref={triggerRef}>
         {#snippet child({ props })}
             <button
                 {...props}
                 class={cn(
-                    "border-input data-[placeholder]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex w-full items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 h-9",
+                    "border-input data-[placeholder]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex w-full items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted aria-expanded:border-primary aria-expanded:ring-ring/50 h-9",
+                    disabled && "opacity-50 cursor-not-allowed bg-muted",
                     className,
                 )}
                 role="combobox"
                 aria-expanded={open}
+                {disabled}
             >
                 <span class="truncate">{selectedLabel || placeholder}</span>
                 <ChevronsUpDownIcon class="size-4 opacity-50 shrink-0" />
             </button>
         {/snippet}
     </Popover.Trigger>
-    <Popover.Content class="w-[--bits-popover-anchor-width] max-w-[300px] p-0">
+    <Popover.Content class="!w-[var(--bits-popover-anchor-width)] p-0">
         <Command.Root>
             <Command.Input placeholder={searchPlaceholder} />
             <Command.List>
@@ -65,10 +76,11 @@
                 <Command.Group>
                     {#each items as item (item.value)}
                         <Command.Item
-                            value={item.value}
+                            value={item.label}
                             onSelect={() => {
                                 value = item.value;
                                 closeAndFocusTrigger();
+                                onchange?.();
                             }}
                         >
                             <CheckIcon

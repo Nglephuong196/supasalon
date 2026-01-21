@@ -1,31 +1,31 @@
 {
     "mcpServers": {
         "context7": {
-            "command": "npx",
+            "command": "bunx",
             "args": [
-                "-y",
+                "--bun",
                 "@upstash/context7-mcp@latest"
             ]
         },
         "better-auth": {
-            "command": "npx",
+            "command": "bunx",
             "args": [
-                "-y",
+                "--bun",
                 "@better-auth/mcp@latest"
             ]
         },
         "hono-docs": {
-            "command": "npx",
+            "command": "bunx",
             "args": [
-                "-y",
+                "--bun",
                 "@chr33s/mcpdoc",
                 "https://hono.dev/llms-full.txt"
             ]
         },
         "svelte": {
-            "command": "npx",
+            "command": "bunx",
             "args": [
-                "-y",
+                "--bun",
                 "@sveltejs/mcp"
             ]
         }

@@ -63,7 +63,7 @@ export const load: PageServerLoad = async ({ fetch, cookies, parent, url }) => {
             fetch(`${PUBLIC_API_URL}/bookings/stats?${from ? `from=${from}` : ''}${to ? `&to=${to}` : ''}`),
             fetch(`${PUBLIC_API_URL}/customers`),
             fetch(`${PUBLIC_API_URL}/services`),
-            fetch(`${PUBLIC_API_URL}/services/categories`),
+            fetch(`${PUBLIC_API_URL}/service-categories`),
             fetch(`${PUBLIC_API_URL}/members`),
         ]);
 
@@ -123,15 +123,18 @@ export const actions: Actions = {
         const date = data.get('date');
         const notes = data.get('notes') || '';
         const guestCount = parseInt(data.get('guestCount')?.toString() || '1');
+        const guestsStr = data.get('guests');
 
-        if (!customerId || serviceIds.length === 0 || !date) {
-            return fail(400, { message: 'Missing required fields' });
+        if (!customerId || !guestsStr || !date) {
+            return fail(400, { message: 'Vui lòng điền đầy đủ thông tin' });
         }
 
-        const services = serviceIds.map((id, index) => ({
-            serviceId: parseInt(id.toString()),
-            memberId: memberIds[index]?.toString() || undefined
-        }));
+        let guests = [];
+        try {
+            guests = JSON.parse(guestsStr.toString());
+        } catch (e) {
+            return fail(400, { message: 'Invalid guests data' });
+        }
 
         try {
             const res = await fetch(`${PUBLIC_API_URL}/bookings`, {
@@ -139,7 +142,7 @@ export const actions: Actions = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     customerId: parseInt(customerId as string),
-                    services,
+                    guests,
                     guestCount,
                     date: new Date(date as string).toISOString(),
                     notes,
@@ -149,12 +152,63 @@ export const actions: Actions = {
 
             if (!res.ok) {
                 const err = await res.json();
-                return fail(res.status, { message: err.error || 'Failed to create booking' });
+                return fail(res.status, { message: err.error || 'Không thể tạo lịch hẹn' });
             }
             return { success: true };
         } catch (e) {
             console.error('Create booking error:', e);
-            return fail(500, { message: 'Server error' });
+            return fail(500, { message: 'Lỗi máy chủ' });
+        }
+    },
+
+    update: async ({ request, fetch, cookies }) => {
+        const organizationId = cookies.get('organizationId');
+        if (!organizationId) return fail(401, { message: 'Unauthorized' });
+
+        const data = await request.formData();
+        const id = data.get('id');
+        const customerId = data.get('customerId');
+        const serviceIds = data.getAll('serviceId');
+        const memberIds = data.getAll('memberId');
+        const date = data.get('date');
+        const notes = data.get('notes') || '';
+        const guestCount = parseInt(data.get('guestCount')?.toString() || '1');
+        const guestsStr = data.get('guests');
+        const status = data.get('status');
+
+        if (!id || !customerId || !guestsStr || !date) {
+            return fail(400, { message: 'Vui lòng điền đầy đủ thông tin' });
+        }
+
+        let guests = [];
+        try {
+            guests = JSON.parse(guestsStr.toString());
+        } catch (e) {
+            return fail(400, { message: 'Invalid guests data' });
+        }
+
+        try {
+            const res = await fetch(`${PUBLIC_API_URL}/bookings/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    customerId: parseInt(customerId as string),
+                    guests,
+                    guestCount,
+                    date: new Date(date as string).toISOString(),
+                    notes,
+                    status: status ? status.toString() : 'confirmed',
+                }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                return fail(res.status, { message: err.error || 'Không thể cập nhật lịch hẹn' });
+            }
+            return { success: true };
+        } catch (e) {
+            console.error('Update booking error:', e);
+            return fail(500, { message: 'Lỗi máy chủ' });
         }
     },
 
@@ -166,7 +220,7 @@ export const actions: Actions = {
         const id = data.get('id');
         const status = data.get('status');
 
-        if (!id || !status) return fail(400, { message: 'Missing required fields' });
+        if (!id || !status) return fail(400, { message: 'Vui lòng điền đầy đủ thông tin' });
 
         try {
             const res = await fetch(`${PUBLIC_API_URL}/bookings/${id}/status`, {
@@ -177,12 +231,12 @@ export const actions: Actions = {
 
             if (!res.ok) {
                 const err = await res.json();
-                return fail(res.status, { message: err.error || 'Failed to update status' });
+                return fail(res.status, { message: err.error || 'Không thể cập nhật trạng thái' });
             }
             return { success: true };
         } catch (e) {
             console.error('Update status error:', e);
-            return fail(500, { message: 'Server error' });
+            return fail(500, { message: 'Lỗi máy chủ' });
         }
     },
 
@@ -200,12 +254,12 @@ export const actions: Actions = {
 
             if (!res.ok) {
                 const err = await res.json();
-                return fail(res.status, { message: err.error || 'Failed to delete booking' });
+                return fail(res.status, { message: err.error || 'Không thể xóa lịch hẹn' });
             }
             return { success: true };
         } catch (e) {
             console.error('Delete booking error:', e);
-            return fail(500, { message: 'Server error' });
+            return fail(500, { message: 'Lỗi máy chủ' });
         }
     },
 
@@ -217,7 +271,7 @@ export const actions: Actions = {
         const name = data.get('name');
         const phone = data.get('phone');
 
-        if (!name || !phone) return fail(400, { message: 'Missing required fields' });
+        if (!name || !phone) return fail(400, { message: 'Vui lòng điền đầy đủ thông tin' });
 
         try {
             const res = await fetch(`${PUBLIC_API_URL}/customers`, {
@@ -228,14 +282,14 @@ export const actions: Actions = {
 
             if (!res.ok) {
                 const err = await res.json();
-                return fail(res.status, { message: err.error || 'Failed to create customer' });
+                return fail(res.status, { message: err.error || 'Không thể tạo khách hàng' });
             }
 
             const newCustomer = await res.json();
             return { success: true, customer: newCustomer };
         } catch (e) {
             console.error('Create customer error:', e);
-            return fail(500, { message: 'Server error' });
+            return fail(500, { message: 'Lỗi máy chủ' });
         }
     },
 };

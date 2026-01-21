@@ -1,7 +1,6 @@
 import { eq, and, gte, lte, like, or, desc, sql } from "drizzle-orm";
 import type { Database } from "../db";
-import { bookings, customers, type NewBooking, bookingServices, services, serviceCategories } from "../db/schema";
-import type { NewBookingService } from "../db/schema";
+import { bookings, customers, type NewBooking, services, serviceCategories } from "../db/schema";
 
 export interface BookingFilters {
   from?: Date;
@@ -59,14 +58,7 @@ export class BookingsService {
       where: and(...conditions),
       with: {
         customer: true,
-        bookingServices: {
-          with: {
-            service: true,
-            category: true,
-            member: true
-          }
-        },
-        // Legacy support/check if needing service relation directly? No, removed from booking.
+        // bookingServices removed. Guests column is now used.
       },
       orderBy: [desc(bookings.date)],
       limit: limit,
@@ -96,9 +88,7 @@ export class BookingsService {
       where: eq(bookings.organizationId, organizationId),
       with: {
         customer: true,
-        bookingServices: {
-          with: { service: true }
-        },
+        // bookingServices removed
       },
       orderBy: (bookings, { desc }) => [desc(bookings.date)],
     });
@@ -117,53 +107,30 @@ export class BookingsService {
   }
 
   async create(data: any) {
-    // Input normalization: legacy serviceId vs services array
-    const servicesList = data.services || [];
-    if (data.serviceId) {
-      servicesList.push({ serviceId: data.serviceId });
-    }
+    // Input normalization
+    // Data now strictly follows createBookingSchema with guests array
+    const guests = data.guests || [];
 
-    if (servicesList.length === 0) {
-      throw new Error("At least one service is required");
-    }
-
-    // Insert Booking
-    // Extract strictly booking fields to avoid passing 'services' or 'serviceId' to insert
+    // Insert Booking with guests JSON
     const bookingData: NewBooking = {
       organizationId: data.organizationId,
       customerId: data.customerId,
       date: data.date,
       status: data.status,
       guestCount: data.guestCount,
-      notes: data.notes
+      notes: data.notes,
+      guests: guests // Direct JSON insert
     };
 
     const [booking] = await this.db.insert(bookings).values(bookingData).returning();
 
-    // Insert Booking Services
-    for (const s of servicesList) {
-      // Fetch service details for snapshot
-      const service = await this.db.query.services.findFirst({
-        where: eq(services.id, s.serviceId)
-      });
+    // Legacy bookingServices insertion REMOVED.
+    // We rely entirely on the 'guests' JSON column.
 
-      if (service) {
-        const bookingServiceData: NewBookingService = {
-          bookingId: booking.id,
-          serviceId: service.id,
-          categoryId: service.categoryId,
-          memberId: s.memberId,
-          price: service.price // Snapshot
-        };
-        await this.db.insert(bookingServices).values(bookingServiceData);
-      }
-    }
-
-    // Return the full booking with relations
+    // Return the full booking with customer relation
     return this.db.query.bookings.findFirst({
       where: eq(bookings.id, booking.id),
       with: {
-        bookingServices: { with: { service: true } },
         customer: true
       }
     });

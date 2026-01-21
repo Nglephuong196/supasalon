@@ -19,14 +19,14 @@ CREATE TABLE `bookings` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`organization_id` text NOT NULL,
 	`customer_id` integer NOT NULL,
-	`service_id` integer NOT NULL,
 	`date` integer NOT NULL,
 	`status` text DEFAULT 'pending' NOT NULL,
+	`guest_count` integer DEFAULT 1 NOT NULL,
 	`notes` text,
+	`guests` text NOT NULL,
 	`created_at` integer NOT NULL,
 	FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`service_id`) REFERENCES `services`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `customer_memberships` (

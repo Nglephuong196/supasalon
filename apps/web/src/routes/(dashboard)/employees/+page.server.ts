@@ -26,7 +26,7 @@ export const actions: Actions = {
         const role = data.get("role") as string;
 
         if (!name || !email || !password || !role) {
-            return fail(400, { missing: true, message: "Missing required fields" });
+            return fail(400, { missing: true, message: "Vui lòng điền đầy đủ thông tin" });
         }
 
         try {
@@ -38,12 +38,12 @@ export const actions: Actions = {
 
             if (!res.ok) {
                 const err = await res.json();
-                return fail(res.status, { message: err.error || "Failed to create member" });
+                return fail(res.status, { message: err.error || "Không thể thêm nhân viên" });
             }
             return { success: true };
         } catch (e: any) {
             console.error("Create member error:", e);
-            return fail(500, { message: "Server error" });
+            return fail(500, { message: "Lỗi máy chủ" });
         }
     },
 
@@ -62,12 +62,12 @@ export const actions: Actions = {
 
             if (!res.ok) {
                 const err = await res.json();
-                return fail(res.status, { message: err.message || err.error || "Failed to remove member" });
+                return fail(res.status, { message: err.message || err.error || "Không thể xóa nhân viên" });
             }
             return { success: true };
         } catch (e: any) {
             console.error("Remove member error:", e);
-            return fail(500, { message: "Server error" });
+            return fail(500, { message: "Lỗi máy chủ" });
         }
     },
 
@@ -87,12 +87,12 @@ export const actions: Actions = {
 
             if (!res.ok) {
                 const err = await res.json();
-                return fail(res.status, { message: err.message || err.error || "Failed to update role" });
+                return fail(res.status, { message: err.message || err.error || "Không thể cập nhật vai trò" });
             }
             return { success: true };
         } catch (e: any) {
             console.error("Update role error:", e);
-            return fail(500, { message: "Server error" });
+            return fail(500, { message: "Lỗi máy chủ" });
         }
     }
 };

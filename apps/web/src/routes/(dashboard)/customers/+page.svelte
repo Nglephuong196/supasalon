@@ -29,6 +29,12 @@
     let isLoading = $state(false);
     let selectedCustomer = $state<Customer | null>(null);
 
+    // Form Validation Errors
+    let createNameError = $state("");
+    let createPhoneError = $state("");
+    let editNameError = $state("");
+    let editPhoneError = $state("");
+
     let { data } = $props();
 
     // Form data for create
@@ -361,7 +367,25 @@
         <form
             method="POST"
             action="?/createCustomer"
-            use:enhance={handleCreateSubmit}
+            novalidate
+            use:enhance={(e) => {
+                createNameError = "";
+                createPhoneError = "";
+                let hasError = false;
+                if (!createFormData.name.trim()) {
+                    createNameError = "Vui lòng nhập tên khách hàng";
+                    hasError = true;
+                }
+                if (!createFormData.phone.trim()) {
+                    createPhoneError = "Vui lòng nhập số điện thoại";
+                    hasError = true;
+                }
+                if (hasError) {
+                    e.cancel();
+                    return;
+                }
+                return handleCreateSubmit();
+            }}
         >
             <Dialog.Header>
                 <Dialog.Title>Thêm khách hàng mới</Dialog.Title>
@@ -373,25 +397,37 @@
             <div class="grid gap-4 py-4">
                 <div class="grid grid-cols-4 items-center gap-4">
                     <Label for="name" class="text-right">Tên *</Label>
-                    <Input
-                        id="name"
-                        name="name"
-                        bind:value={createFormData.name}
-                        placeholder="Nguyễn Văn A"
-                        class="col-span-3"
-                        required
-                    />
+                    <div class="col-span-3 space-y-1">
+                        <Input
+                            id="name"
+                            name="name"
+                            bind:value={createFormData.name}
+                            placeholder="Nguyễn Văn A"
+                            oninput={() => (createNameError = "")}
+                        />
+                        {#if createNameError}
+                            <span class="text-red-500 text-xs"
+                                >{createNameError}</span
+                            >
+                        {/if}
+                    </div>
                 </div>
                 <div class="grid grid-cols-4 items-center gap-4">
                     <Label for="phone" class="text-right">SĐT *</Label>
-                    <Input
-                        id="phone"
-                        name="phone"
-                        bind:value={createFormData.phone}
-                        placeholder="0901234567"
-                        class="col-span-3"
-                        required
-                    />
+                    <div class="col-span-3 space-y-1">
+                        <Input
+                            id="phone"
+                            name="phone"
+                            bind:value={createFormData.phone}
+                            placeholder="0901234567"
+                            oninput={() => (createPhoneError = "")}
+                        />
+                        {#if createPhoneError}
+                            <span class="text-red-500 text-xs"
+                                >{createPhoneError}</span
+                            >
+                        {/if}
+                    </div>
                 </div>
                 <div class="grid grid-cols-4 items-center gap-4">
                     <Label for="email" class="text-right">Email</Label>
@@ -461,7 +497,25 @@
         <form
             method="POST"
             action="?/updateCustomer"
-            use:enhance={handleEditSubmit}
+            novalidate
+            use:enhance={(e) => {
+                editNameError = "";
+                editPhoneError = "";
+                let hasError = false;
+                if (!editFormData.name.trim()) {
+                    editNameError = "Vui lòng nhập tên khách hàng";
+                    hasError = true;
+                }
+                if (!editFormData.phone.trim()) {
+                    editPhoneError = "Vui lòng nhập số điện thoại";
+                    hasError = true;
+                }
+                if (hasError) {
+                    e.cancel();
+                    return;
+                }
+                return handleEditSubmit();
+            }}
         >
             <input type="hidden" name="id" value={editFormData.id} />
             <Dialog.Header>
@@ -473,25 +527,37 @@
             <div class="grid gap-4 py-4">
                 <div class="grid grid-cols-4 items-center gap-4">
                     <Label for="edit-name" class="text-right">Tên *</Label>
-                    <Input
-                        id="edit-name"
-                        name="name"
-                        bind:value={editFormData.name}
-                        placeholder="Nguyễn Văn A"
-                        class="col-span-3"
-                        required
-                    />
+                    <div class="col-span-3 space-y-1">
+                        <Input
+                            id="edit-name"
+                            name="name"
+                            bind:value={editFormData.name}
+                            placeholder="Nguyễn Văn A"
+                            oninput={() => (editNameError = "")}
+                        />
+                        {#if editNameError}
+                            <span class="text-red-500 text-xs"
+                                >{editNameError}</span
+                            >
+                        {/if}
+                    </div>
                 </div>
                 <div class="grid grid-cols-4 items-center gap-4">
                     <Label for="edit-phone" class="text-right">SĐT *</Label>
-                    <Input
-                        id="edit-phone"
-                        name="phone"
-                        bind:value={editFormData.phone}
-                        placeholder="0901234567"
-                        class="col-span-3"
-                        required
-                    />
+                    <div class="col-span-3 space-y-1">
+                        <Input
+                            id="edit-phone"
+                            name="phone"
+                            bind:value={editFormData.phone}
+                            placeholder="0901234567"
+                            oninput={() => (editPhoneError = "")}
+                        />
+                        {#if editPhoneError}
+                            <span class="text-red-500 text-xs"
+                                >{editPhoneError}</span
+                            >
+                        {/if}
+                    </div>
                 </div>
                 <div class="grid grid-cols-4 items-center gap-4">
                     <Label for="edit-email" class="text-right">Email</Label>

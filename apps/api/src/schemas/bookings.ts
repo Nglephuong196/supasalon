@@ -6,31 +6,41 @@ import { z } from "zod";
  */
 
 export const createBookingSchema = z.object({
-    customerId: z.number().int().positive(),
-    serviceId: z.number().int().positive().optional(),
-    services: z.array(z.object({
-        serviceId: z.number().int().positive(),
-        memberId: z.string().optional(),
-    })).optional(),
-    guestCount: z.number().int().positive().default(1),
+    customerId: z.union([z.number(), z.string().transform(val => parseInt(val, 10))]).pipe(z.number().int().positive()),
+    guests: z.array(z.object({
+        services: z.array(z.object({
+            categoryId: z.union([z.number(), z.string().transform(val => parseInt(val, 10))]).optional(),
+            serviceId: z.union([z.number(), z.string().transform(val => parseInt(val, 10))]).pipe(z.number().int().positive()),
+            memberId: z.string().optional(),
+            price: z.union([z.number(), z.string().transform(val => parseFloat(val))]).optional()
+        }))
+    })).min(1, "At least one guest is required"),
+    guestCount: z.union([z.number(), z.string().transform(val => parseInt(val, 10))]).pipe(z.number().int().positive()).optional().default(1),
     date: z.string().datetime({ message: "Date must be a valid ISO datetime string" }).transform((str) => new Date(str)),
     notes: z.string().max(500).optional().default(""),
-    status: z.enum(["pending", "confirmed", "completed", "cancelled"]).optional().default("pending"),
-}).refine(data => data.serviceId || (data.services && data.services.length > 0), {
-    message: "Either serviceId or services must be provided",
-    path: ["serviceId"]
+    status: z.enum(["pending", "confirmed", "checkin", "completed", "cancelled"]).optional().default("pending"),
 });
+// Removed refine check as guests array min(1) covers it.
 
 export const updateBookingSchema = z.object({
     customerId: z.number().int().positive().optional(),
     serviceId: z.number().int().positive().optional(),
     date: z.string().datetime().transform((str) => new Date(str)).optional(),
     notes: z.string().max(500).optional(),
-    status: z.enum(["pending", "confirmed", "completed", "cancelled"]).optional(),
+    status: z.enum(["pending", "confirmed", "checkin", "completed", "cancelled"]).optional(),
+    guestCount: z.union([z.number(), z.string().transform(val => parseInt(val, 10))]).pipe(z.number().int().positive()).optional(),
+    guests: z.array(z.object({
+        services: z.array(z.object({
+            categoryId: z.union([z.number(), z.string().transform(val => parseInt(val, 10))]).optional(),
+            serviceId: z.union([z.number(), z.string().transform(val => parseInt(val, 10))]).pipe(z.number().int().positive()),
+            memberId: z.string().optional(),
+            price: z.union([z.number(), z.string().transform(val => parseFloat(val))]).optional()
+        }))
+    })).optional(),
 });
 
 export const updateStatusSchema = z.object({
-    status: z.enum(["pending", "confirmed", "completed", "cancelled"]),
+    status: z.enum(["pending", "confirmed", "checkin", "completed", "cancelled"]),
 });
 
 export const bookingQuerySchema = z.object({

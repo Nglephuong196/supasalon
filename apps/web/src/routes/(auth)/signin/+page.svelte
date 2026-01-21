@@ -154,7 +154,7 @@
                             >Mật khẩu</Label
                         >
                         <a
-                            href="#"
+                            href="/forgot-password"
                             class="text-sm font-medium text-purple-600 hover:text-purple-700 hover:underline"
                             >Quên mật khẩu?</a
                         >

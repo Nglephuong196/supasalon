@@ -45,7 +45,7 @@ export const load: PageServerLoad = async ({ fetch, cookies, parent }) => {
 export const actions: Actions = {
     createCategory: async ({ request, fetch, cookies }) => {
         const organizationId = cookies.get('organizationId');
-        if (!organizationId) return fail(400, { message: "Organization not selected" });
+        if (!organizationId) return fail(400, { message: "Chưa chọn tổ chức" });
 
         const data = await request.formData();
         const name = data.get("name") as string;
@@ -60,17 +60,17 @@ export const actions: Actions = {
 
             if (!response.ok) {
                 const res = await response.json();
-                return fail(response.status, { message: res.error || "Failed to create category" });
+                return fail(response.status, { message: res.error || "Không thể tạo danh mục" });
             }
             return { success: true };
         } catch (e) {
-            return fail(500, { message: "Server error" });
+            return fail(500, { message: "Lỗi máy chủ" });
         }
     },
 
     updateCategory: async ({ request, fetch, cookies }) => {
         const organizationId = cookies.get('organizationId');
-        if (!organizationId) return fail(400, { message: "Organization not selected" });
+        if (!organizationId) return fail(400, { message: "Chưa chọn tổ chức" });
 
         const data = await request.formData();
         const id = data.get("id");
@@ -86,17 +86,17 @@ export const actions: Actions = {
 
             if (!response.ok) {
                 const res = await response.json();
-                return fail(response.status, { message: res.error || "Failed to update category" });
+                return fail(response.status, { message: res.error || "Không thể cập nhật danh mục" });
             }
             return { success: true };
         } catch (e) {
-            return fail(500, { message: "Server error" });
+            return fail(500, { message: "Lỗi máy chủ" });
         }
     },
 
     deleteCategory: async ({ request, fetch, cookies }) => {
         const organizationId = cookies.get('organizationId');
-        if (!organizationId) return fail(400, { message: "Organization not selected" });
+        if (!organizationId) return fail(400, { message: "Chưa chọn tổ chức" });
 
         const data = await request.formData();
         const id = data.get("id");
@@ -109,17 +109,17 @@ export const actions: Actions = {
 
             if (!response.ok) {
                 const res = await response.json();
-                return fail(response.status, { message: res.error || "Failed to delete category" });
+                return fail(response.status, { message: res.error || "Không thể xóa danh mục" });
             }
             return { success: true };
         } catch (e) {
-            return fail(500, { message: "Server error" });
+            return fail(500, { message: "Lỗi máy chủ" });
         }
     },
 
     createService: async ({ request, fetch, cookies }) => {
         const organizationId = cookies.get('organizationId');
-        if (!organizationId) return fail(400, { message: "Organization not selected" });
+        if (!organizationId) return fail(400, { message: "Chưa chọn tổ chức" });
 
         const data = await request.formData();
         const name = data.get("name") as string;
@@ -128,8 +128,17 @@ export const actions: Actions = {
         const duration = parseInt(data.get("duration") as string);
         const description = data.get("description") as string;
 
-        if (!name || !categoryId || isNaN(price) || isNaN(duration)) {
-            return fail(400, { missing: true });
+        if (!name || name.trim() === '') {
+            return fail(400, { missingName: true, message: "Vui lòng nhập tên dịch vụ" });
+        }
+        if (!categoryId || isNaN(categoryId)) {
+            return fail(400, { missingCategory: true, val: data.get("categoryId"), message: "Vui lòng chọn danh mục" });
+        }
+        if (isNaN(price)) {
+            return fail(400, { invalidPrice: true, message: "Giá dịch vụ không hợp lệ" });
+        }
+        if (isNaN(duration)) {
+            return fail(400, { invalidDuration: true, message: "Thời gian không hợp lệ" });
         }
 
         try {
@@ -141,17 +150,17 @@ export const actions: Actions = {
 
             if (!response.ok) {
                 const res = await response.json();
-                return fail(response.status, { message: res.error || "Failed to create service" });
+                return fail(response.status, { message: res.error || "Không thể tạo dịch vụ" });
             }
             return { success: true };
         } catch (e) {
-            return fail(500, { message: "Server error" });
+            return fail(500, { message: "Lỗi máy chủ" });
         }
     },
 
     updateService: async ({ request, fetch, cookies }) => {
         const organizationId = cookies.get('organizationId');
-        if (!organizationId) return fail(400, { message: "Organization not selected" });
+        if (!organizationId) return fail(400, { message: "Chưa chọn tổ chức" });
 
         const data = await request.formData();
         const id = data.get("id");
@@ -179,17 +188,17 @@ export const actions: Actions = {
 
             if (!response.ok) {
                 const res = await response.json();
-                return fail(response.status, { message: res.error || "Failed to update service" });
+                return fail(response.status, { message: res.error || "Không thể cập nhật dịch vụ" });
             }
             return { success: true };
         } catch (e) {
-            return fail(500, { message: "Server error" });
+            return fail(500, { message: "Lỗi máy chủ" });
         }
     },
 
     deleteService: async ({ request, fetch, cookies }) => {
         const organizationId = cookies.get('organizationId');
-        if (!organizationId) return fail(400, { message: "Organization not selected" });
+        if (!organizationId) return fail(400, { message: "Chưa chọn tổ chức" });
 
         const data = await request.formData();
         const id = data.get("id");
@@ -202,11 +211,11 @@ export const actions: Actions = {
 
             if (!response.ok) {
                 const res = await response.json();
-                return fail(response.status, { message: res.error || "Failed to delete service" });
+                return fail(response.status, { message: res.error || "Không thể xóa dịch vụ" });
             }
             return { success: true };
         } catch (e) {
-            return fail(500, { message: "Server error" });
+            return fail(500, { message: "Lỗi máy chủ" });
         }
     }
 };

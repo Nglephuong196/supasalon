@@ -46,7 +46,7 @@ export const load: PageServerLoad = async ({ fetch, cookies, parent }) => {
 export const actions: Actions = {
     createCustomer: async ({ request, fetch, cookies }) => {
         const organizationId = cookies.get('organizationId');
-        if (!organizationId) return fail(400, { message: "Organization not selected" });
+        if (!organizationId) return fail(400, { message: "Chưa chọn tổ chức" });
 
         const data = await request.formData();
         const name = data.get("name") as string;
@@ -74,18 +74,18 @@ export const actions: Actions = {
 
             if (!response.ok) {
                 const res = await response.json();
-                return fail(response.status, { message: res.error || "Failed to create customer" });
+                return fail(response.status, { message: res.error || "Không thể tạo khách hàng" });
             }
             return { success: true };
         } catch (e) {
             console.error("Error creating customer", e);
-            return fail(500, { message: "Server error" });
+            return fail(500, { message: "Lỗi máy chủ" });
         }
     },
 
     updateCustomer: async ({ request, fetch, cookies }) => {
         const organizationId = cookies.get('organizationId');
-        if (!organizationId) return fail(400, { message: "Organization not selected" });
+        if (!organizationId) return fail(400, { message: "Chưa chọn tổ chức" });
 
         const data = await request.formData();
         const id = data.get("id") as string;
@@ -114,18 +114,18 @@ export const actions: Actions = {
 
             if (!response.ok) {
                 const res = await response.json();
-                return fail(response.status, { message: res.error || "Failed to update customer" });
+                return fail(response.status, { message: res.error || "Không thể cập nhật khách hàng" });
             }
             return { success: true };
         } catch (e) {
             console.error("Error updating customer", e);
-            return fail(500, { message: "Server error" });
+            return fail(500, { message: "Lỗi máy chủ" });
         }
     },
 
     deleteCustomer: async ({ request, fetch, cookies }) => {
         const organizationId = cookies.get('organizationId');
-        if (!organizationId) return fail(400, { message: "Organization not selected" });
+        if (!organizationId) return fail(400, { message: "Chưa chọn tổ chức" });
 
         const data = await request.formData();
         const id = data.get("id") as string;
@@ -139,12 +139,12 @@ export const actions: Actions = {
 
             if (!response.ok) {
                 const res = await response.json();
-                return fail(response.status, { message: res.error || "Failed to delete customer" });
+                return fail(response.status, { message: res.error || "Không thể xóa khách hàng" });
             }
             return { success: true };
         } catch (e) {
             console.error("Error deleting customer", e);
-            return fail(500, { message: "Server error" });
+            return fail(500, { message: "Lỗi máy chủ" });
         }
     },
 };

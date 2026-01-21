@@ -22,50 +22,58 @@
     import type { PageData } from "./$types";
     import { page } from "$app/stores";
 
-    export let data: PageData;
+    let { data }: { data: PageData } = $props();
 
     // Employee management (create/update/delete) is restricted to owner/admin only
     // since those actions are N/A for regular members in the permission system
-    $: canManageEmployees =
-        $page.data.memberRole === "owner" || $page.data.memberRole === "admin";
+    let canManageEmployees = $derived(
+        $page.data.memberRole === "owner" || $page.data.memberRole === "admin",
+    );
 
-    let searchQuery = "";
-    let isAddOpen = false;
+    let searchQuery = $state("");
+    let isAddOpen = $state(false);
 
     // Add Member Form
     // (We rely on form submission now, so local binding only for UI if needed, or just regular inputs)
     // But keeping bindings is fine for clearing.
-    let name = "";
-    let email = "";
-    let password = "";
-    let role = "member";
+    let name = $state("");
+    let email = $state("");
+    let password = $state("");
+    let role = $state("member");
 
     // Edit Role Form
-    let isEditRoleOpen = false;
-    let editingEmployee: any = null;
-    let editRoleValue = "member";
+    let isEditRoleOpen = $state(false);
+    let editingEmployee = $state<any>(null);
+    let editRoleValue = $state("member");
 
     // Delete State
-    let isDeleteDialogOpen = false;
-    let deletingEmployee: any = null;
+    let isDeleteDialogOpen = $state(false);
+    let deletingEmployee = $state<any>(null);
+
+    // Form Validation Errors
+    let empNameError = $state("");
+    let empEmailError = $state("");
+    let empPasswordError = $state("");
 
     // Map members for display
-    $: allEmployees = data.members
-        .map((m: any) => ({
-            id: m.id,
-            type: "member",
-            name: m.user?.name || "Unknown",
-            email: m.user?.email || "No Email",
-            image: m.user?.image,
-            role: m.role,
-            phone: "",
-            status: "active",
-        }))
-        .filter(
-            (e: any) =>
-                e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                e.email.toLowerCase().includes(searchQuery.toLowerCase()),
-        );
+    let allEmployees = $derived(
+        data.members
+            .map((m: any) => ({
+                id: m.id,
+                type: "member",
+                name: m.user?.name || "Unknown",
+                email: m.user?.email || "No Email",
+                image: m.user?.image,
+                role: m.role,
+                phone: "",
+                status: "active",
+            }))
+            .filter(
+                (e: any) =>
+                    e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    e.email.toLowerCase().includes(searchQuery.toLowerCase()),
+            ),
+    );
 
     const roleColors: Record<string, string> = {
         admin: "bg-purple-100 text-purple-700",
@@ -160,7 +168,43 @@
                             <form
                                 action="?/createMember"
                                 method="POST"
-                                use:enhance={handleFormSubmit}
+                                novalidate
+                                use:enhance={(e) => {
+                                    empNameError = "";
+                                    empEmailError = "";
+                                    empPasswordError = "";
+                                    let hasError = false;
+                                    if (!name.trim()) {
+                                        empNameError =
+                                            "Vui lòng nhập tên hiển thị";
+                                        hasError = true;
+                                    }
+                                    if (!email.trim()) {
+                                        empEmailError = "Vui lòng nhập email";
+                                        hasError = true;
+                                    } else if (
+                                        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+                                            email,
+                                        )
+                                    ) {
+                                        empEmailError = "Email không hợp lệ";
+                                        hasError = true;
+                                    }
+                                    if (!password) {
+                                        empPasswordError =
+                                            "Vui lòng nhập mật khẩu";
+                                        hasError = true;
+                                    } else if (password.length < 6) {
+                                        empPasswordError =
+                                            "Mật khẩu phải có ít nhất 6 ký tự";
+                                        hasError = true;
+                                    }
+                                    if (hasError) {
+                                        e.cancel();
+                                        return;
+                                    }
+                                    return handleFormSubmit();
+                                }}
                             >
                                 <div class="grid gap-4 py-4">
                                     <div class="grid gap-2">
@@ -170,8 +214,13 @@
                                             name="name"
                                             bind:value={name}
                                             placeholder="Nguyễn Văn A"
-                                            required
+                                            oninput={() => (empNameError = "")}
                                         />
+                                        {#if empNameError}
+                                            <span class="text-red-500 text-xs"
+                                                >{empNameError}</span
+                                            >
+                                        {/if}
                                     </div>
                                     <div class="grid gap-2">
                                         <Label for="email">Email</Label>
@@ -181,8 +230,13 @@
                                             type="email"
                                             bind:value={email}
                                             placeholder="nhanvien@salon.com"
-                                            required
+                                            oninput={() => (empEmailError = "")}
                                         />
+                                        {#if empEmailError}
+                                            <span class="text-red-500 text-xs"
+                                                >{empEmailError}</span
+                                            >
+                                        {/if}
                                     </div>
                                     <div class="grid gap-2">
                                         <Label for="password">Mật khẩu</Label>
@@ -192,8 +246,14 @@
                                             type="password"
                                             bind:value={password}
                                             placeholder="••••••••"
-                                            required
+                                            oninput={() =>
+                                                (empPasswordError = "")}
                                         />
+                                        {#if empPasswordError}
+                                            <span class="text-red-500 text-xs"
+                                                >{empPasswordError}</span
+                                            >
+                                        {/if}
                                     </div>
                                     <div class="grid gap-2">
                                         <Label for="role">Vai trò</Label>

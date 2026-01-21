@@ -40,6 +40,21 @@
     let deleteType = $state<"category" | "service">("service");
     let itemToDelete = $state<any>(null);
 
+    // Form Validation Errors
+    let catNameError = $state("");
+    let svcNameError = $state("");
+    let svcPriceError = $state("");
+    let svcDurationError = $state("");
+    let svcCategoryError = $state("");
+
+    function resetErrors() {
+        catNameError = "";
+        svcNameError = "";
+        svcPriceError = "";
+        svcDurationError = "";
+        svcCategoryError = "";
+    }
+
     // Derived
     let filteredServices = $derived(
         data.services.filter((s: any) => {
@@ -484,7 +499,20 @@
         <form
             action={editingCategory ? "?/updateCategory" : "?/createCategory"}
             method="POST"
-            use:enhance={handleFormSubmit}
+            novalidate
+            use:enhance={(e) => {
+                const form = e.formElement;
+                const name = form.querySelector(
+                    'input[name="name"]',
+                ) as HTMLInputElement;
+                resetErrors();
+                if (!name.value.trim()) {
+                    catNameError = "Vui lòng nhập tên danh mục";
+                    e.cancel();
+                    return;
+                }
+                return handleFormSubmit();
+            }}
         >
             {#if editingCategory}
                 <input type="hidden" name="id" value={editingCategory.id} />
@@ -497,8 +525,11 @@
                         name="name"
                         value={editingCategory?.name || ""}
                         placeholder="Ví dụ: Cắt tóc"
-                        required
+                        oninput={() => (catNameError = "")}
                     />
+                    {#if catNameError}
+                        <span class="text-red-500 text-xs">{catNameError}</span>
+                    {/if}
                 </div>
             </div>
             <Dialog.Footer>
@@ -524,7 +555,51 @@
         <form
             action={editingService ? "?/updateService" : "?/createService"}
             method="POST"
-            use:enhance={handleFormSubmit}
+            novalidate
+            use:enhance={(e) => {
+                const form = e.formElement;
+                const name = (
+                    form.querySelector('input[name="name"]') as HTMLInputElement
+                )?.value?.trim();
+                const price = (
+                    form.querySelector(
+                        'input[name="price"]',
+                    ) as HTMLInputElement
+                )?.value;
+                const duration = (
+                    form.querySelector(
+                        'input[name="duration"]',
+                    ) as HTMLInputElement
+                )?.value;
+                const categoryId = (
+                    form.querySelector(
+                        'select[name="categoryId"]',
+                    ) as HTMLSelectElement
+                )?.value;
+                resetErrors();
+                let hasError = false;
+                if (!name) {
+                    svcNameError = "Vui lòng nhập tên dịch vụ";
+                    hasError = true;
+                }
+                if (!price || isNaN(parseFloat(price))) {
+                    svcPriceError = "Vui lòng nhập giá hợp lệ";
+                    hasError = true;
+                }
+                if (!duration || isNaN(parseInt(duration))) {
+                    svcDurationError = "Vui lòng nhập thời gian hợp lệ";
+                    hasError = true;
+                }
+                if (!categoryId) {
+                    svcCategoryError = "Vui lòng chọn danh mục";
+                    hasError = true;
+                }
+                if (hasError) {
+                    e.cancel();
+                    return;
+                }
+                return handleFormSubmit();
+            }}
         >
             {#if editingService?.id}
                 <input type="hidden" name="id" value={editingService.id} />
@@ -537,8 +612,11 @@
                         name="name"
                         value={editingService?.name || ""}
                         placeholder="Ví dụ: Cắt tóc nam"
-                        required
+                        oninput={() => (svcNameError = "")}
                     />
+                    {#if svcNameError}
+                        <span class="text-red-500 text-xs">{svcNameError}</span>
+                    {/if}
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="grid gap-2">
@@ -548,8 +626,13 @@
                             name="price"
                             type="number"
                             value={editingService?.price || 0}
-                            required
+                            oninput={() => (svcPriceError = "")}
                         />
+                        {#if svcPriceError}
+                            <span class="text-red-500 text-xs"
+                                >{svcPriceError}</span
+                            >
+                        {/if}
                     </div>
                     <div class="grid gap-2">
                         <Label for="svc-duration">Thời gian (phút)</Label>
@@ -558,8 +641,13 @@
                             name="duration"
                             type="number"
                             value={editingService?.duration || 30}
-                            required
+                            oninput={() => (svcDurationError = "")}
                         />
+                        {#if svcDurationError}
+                            <span class="text-red-500 text-xs"
+                                >{svcDurationError}</span
+                            >
+                        {/if}
                     </div>
                 </div>
                 <div class="grid gap-2">
@@ -569,13 +657,18 @@
                         name="categoryId"
                         class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         value={editingService?.categoryId || ""}
-                        required
+                        onchange={() => (svcCategoryError = "")}
                     >
                         <option value="" disabled>Chọn danh mục</option>
                         {#each data.categories as cat}
                             <option value={cat.id}>{cat.name}</option>
                         {/each}
                     </select>
+                    {#if svcCategoryError}
+                        <span class="text-red-500 text-xs"
+                            >{svcCategoryError}</span
+                        >
+                    {/if}
                 </div>
                 <div class="grid gap-2">
                     <Label for="svc-desc">Mô tả (tùy chọn)</Label>
