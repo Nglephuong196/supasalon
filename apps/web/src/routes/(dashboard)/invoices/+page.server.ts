@@ -5,7 +5,7 @@ import { RESOURCES, ACTIONS } from '@repo/constants';
 import { checkPermission, getResourcePermissions } from '$lib/permissions';
 import { PUBLIC_API_URL } from '$env/static/public';
 
-export const load: PageServerLoad = async ({ fetch, request, cookies, parent }) => {
+export const load: PageServerLoad = async ({ fetch, cookies, parent }) => {
     const organizationId = cookies.get('organizationId');
     const { memberRole, memberPermissions } = await parent();
 
@@ -21,13 +21,9 @@ export const load: PageServerLoad = async ({ fetch, request, cookies, parent }) 
         return { invoices: [], ...permissions };
     }
 
+    // handleFetch automatically injects cookies and X-Organization-Id
     try {
-        const response = await fetch(`${PUBLIC_API_URL}/invoices`, {
-            headers: {
-                cookie: request.headers.get('cookie') || '',
-                'X-Organization-Id': organizationId
-            }
-        });
+        const response = await fetch(`${PUBLIC_API_URL}/invoices`);
 
         if (response.status === 403) {
             throw redirect(302, '/unauthorized');

@@ -13,7 +13,7 @@ interface BookingFilters {
     limit?: number;
 }
 
-export const load: PageServerLoad = async ({ fetch, request, cookies, parent, url }) => {
+export const load: PageServerLoad = async ({ fetch, cookies, parent, url }) => {
     const organizationId = cookies.get('organizationId');
     const { memberRole, memberPermissions } = await parent();
 
@@ -56,20 +56,15 @@ export const load: PageServerLoad = async ({ fetch, request, cookies, parent, ur
     queryParams.set('page', page.toString());
     queryParams.set('limit', limit.toString());
 
-    const headers = {
-        cookie: request.headers.get('cookie') || '',
-        'X-Organization-Id': organizationId
-    };
-
+    // handleFetch automatically injects cookies and X-Organization-Id
     try {
-        // Fetch bookings with filters
         const [bookingsRes, statsRes, customersRes, servicesRes, categoriesRes, membersRes] = await Promise.all([
-            fetch(`${PUBLIC_API_URL}/bookings?${queryParams.toString()}`, { headers }),
-            fetch(`${PUBLIC_API_URL}/bookings/stats?${from ? `from=${from}` : ''}${to ? `&to=${to}` : ''}`, { headers }),
-            fetch(`${PUBLIC_API_URL}/customers`, { headers }),
-            fetch(`${PUBLIC_API_URL}/services`, { headers }),
-            fetch(`${PUBLIC_API_URL}/services/categories`, { headers }),
-            fetch(`${PUBLIC_API_URL}/members`, { headers }),
+            fetch(`${PUBLIC_API_URL}/bookings?${queryParams.toString()}`),
+            fetch(`${PUBLIC_API_URL}/bookings/stats?${from ? `from=${from}` : ''}${to ? `&to=${to}` : ''}`),
+            fetch(`${PUBLIC_API_URL}/customers`),
+            fetch(`${PUBLIC_API_URL}/services`),
+            fetch(`${PUBLIC_API_URL}/services/categories`),
+            fetch(`${PUBLIC_API_URL}/members`),
         ]);
 
         if (bookingsRes.status === 403) {
@@ -141,11 +136,7 @@ export const actions: Actions = {
         try {
             const res = await fetch(`${PUBLIC_API_URL}/bookings`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    cookie: request.headers.get('cookie') || '',
-                    'X-Organization-Id': organizationId,
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     customerId: parseInt(customerId as string),
                     services,
@@ -160,7 +151,6 @@ export const actions: Actions = {
                 const err = await res.json();
                 return fail(res.status, { message: err.error || 'Failed to create booking' });
             }
-
             return { success: true };
         } catch (e) {
             console.error('Create booking error:', e);
@@ -176,18 +166,12 @@ export const actions: Actions = {
         const id = data.get('id');
         const status = data.get('status');
 
-        if (!id || !status) {
-            return fail(400, { message: 'Missing required fields' });
-        }
+        if (!id || !status) return fail(400, { message: 'Missing required fields' });
 
         try {
             const res = await fetch(`${PUBLIC_API_URL}/bookings/${id}/status`, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    cookie: request.headers.get('cookie') || '',
-                    'X-Organization-Id': organizationId,
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status }),
             });
 
@@ -195,7 +179,6 @@ export const actions: Actions = {
                 const err = await res.json();
                 return fail(res.status, { message: err.error || 'Failed to update status' });
             }
-
             return { success: true };
         } catch (e) {
             console.error('Update status error:', e);
@@ -210,24 +193,15 @@ export const actions: Actions = {
         const data = await request.formData();
         const id = data.get('id');
 
-        if (!id) {
-            return fail(400, { message: 'Missing booking ID' });
-        }
+        if (!id) return fail(400, { message: 'Missing booking ID' });
 
         try {
-            const res = await fetch(`${PUBLIC_API_URL}/bookings/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    cookie: request.headers.get('cookie') || '',
-                    'X-Organization-Id': organizationId,
-                },
-            });
+            const res = await fetch(`${PUBLIC_API_URL}/bookings/${id}`, { method: 'DELETE' });
 
             if (!res.ok) {
                 const err = await res.json();
                 return fail(res.status, { message: err.error || 'Failed to delete booking' });
             }
-
             return { success: true };
         } catch (e) {
             console.error('Delete booking error:', e);
@@ -243,18 +217,12 @@ export const actions: Actions = {
         const name = data.get('name');
         const phone = data.get('phone');
 
-        if (!name || !phone) {
-            return fail(400, { message: 'Missing required fields' });
-        }
+        if (!name || !phone) return fail(400, { message: 'Missing required fields' });
 
         try {
             const res = await fetch(`${PUBLIC_API_URL}/customers`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    cookie: request.headers.get('cookie') || '',
-                    'X-Organization-Id': organizationId,
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, phone }),
             });
 

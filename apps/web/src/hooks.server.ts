@@ -18,6 +18,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 
     if (sessionCookie) {
         try {
+            // DEBUG LOGGING
+            try {
+                const fs = await import('fs');
+                const path = await import('path');
+                const logPath = path.resolve('debug_auth.log');
+                fs.appendFileSync(logPath, `[${new Date().toISOString()}] HOOKS: Received session cookie: ${sessionCookie.substring(0, 10)}...\n`);
+            } catch (err) { }
+
             // Fetch session from your API with timeout
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -31,12 +39,35 @@ export const handle: Handle = async ({ event, resolve }) => {
 
             clearTimeout(timeoutId);
 
+            // DEBUG LOGGING
+            try {
+                const fs = await import('fs');
+                const path = await import('path');
+                const logPath = path.resolve('debug_auth.log');
+                fs.appendFileSync(logPath, `[${new Date().toISOString()}] HOOKS: API Response ${response.status} ${response.statusText}\n`);
+            } catch (err) { }
+
             if (response.ok) {
                 session = await response.json();
             }
         } catch (error) {
             console.error('Failed to fetch session:', error);
+            // DEBUG LOGGING
+            try {
+                const fs = await import('fs');
+                const path = await import('path');
+                const logPath = path.resolve('debug_auth.log');
+                fs.appendFileSync(logPath, `[${new Date().toISOString()}] HOOKS: Error fetching session: ${error}\n`);
+            } catch (err) { }
         }
+    } else {
+        // DEBUG LOGGING
+        try {
+            const fs = await import('fs');
+            const path = await import('path');
+            const logPath = path.resolve('debug_auth.log');
+            fs.appendFileSync(logPath, `[${new Date().toISOString()}] HOOKS: No session cookie found for ${event.url.pathname}\n`);
+        } catch (err) { }
     }
 
     // Store session in locals for use in load functions
@@ -73,11 +104,37 @@ export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
 
     if (isApiRequest) {
         const organizationId = event.cookies.get('organizationId');
+        const sessionToken = event.cookies.get('better-auth.session_token');
 
-        // Create new headers with organization ID
+        // Create new headers with organization ID and Session Token
         const headers = new Headers(request.headers);
+
         if (organizationId) {
             headers.set('X-Organization-Id', organizationId);
+        }
+
+        // Ensure session token is present in cookies
+        if (sessionToken) {
+            const currentCookie = headers.get('cookie') || '';
+            // If cookie header doesn't already contain the token (or to be safe, just ensure it's there)
+            // simplest way: append it or reconstruct.
+            // SvelteKit's event.cookies.get verifies it exists.
+            // Let's explicitly add it to ensure the API sees it.
+            // We'll append it to likely existing cookies or start fresh if empty.
+            // Using ; separator.
+            const newCookie = currentCookie
+                ? `${currentCookie}; better-auth.session_token=${sessionToken}`
+                : `better-auth.session_token=${sessionToken}`;
+
+            headers.set('cookie', newCookie);
+
+            // DEBUG LOGGING - Trace if we are modifying headers
+            try {
+                const fs = await import('fs');
+                const path = await import('path');
+                const logPath = path.resolve('debug_auth.log');
+                fs.appendFileSync(logPath, `[${new Date().toISOString()}] COOKIE INJECT: Injecting token into request to ${request.url}\n`);
+            } catch (err) { }
         }
 
         // Clone request with modified headers

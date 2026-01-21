@@ -37,6 +37,9 @@ export const ensureTenant = createMiddleware<Env>(async (c, next) => {
         headers: c.req.raw.headers
     });
 
+    // DEBUG: Log session result
+    console.log(`[TENANT_MW] Path: ${c.req.path}, Cookie header present: ${!!c.req.header('cookie')}, Session: ${session ? 'found' : 'null'}`);
+
     if (!session) {
         return c.json({ error: "Unauthorized" }, 401);
     }

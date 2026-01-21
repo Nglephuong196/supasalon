@@ -17,7 +17,7 @@ export type MembershipTier = {
 export type MemberPermission = {
     id: number;
     memberId: string;
-    permissions: Record<string, string[]>;  // { "customer": ["read", "create"], "invoice": ["read"] }
+    permissions: Record<string, string[]>;
     createdAt: string;
 };
 
@@ -36,22 +36,18 @@ export type Member = {
     permissions: MemberPermission[];
 };
 
-export const load: PageServerLoad = async ({ fetch, cookies, request }) => {
+export const load: PageServerLoad = async ({ fetch, cookies }) => {
     const organizationId = cookies.get('organizationId');
 
     if (!organizationId) {
         return { tiers: [], members: [] };
     }
 
-    const headers = {
-        cookie: request.headers.get('cookie') || '',
-        'X-Organization-Id': organizationId,
-    };
-
+    // handleFetch automatically injects cookies and X-Organization-Id
     try {
         const [tiersRes, membersRes] = await Promise.all([
-            fetch(`${API_URL}/membership-tiers`, { headers }),
-            fetch(`${API_URL}/members`, { headers })
+            fetch(`${API_URL}/membership-tiers`),
+            fetch(`${API_URL}/members`)
         ]);
 
         const tiers: MembershipTier[] = tiersRes.ok ? await tiersRes.json() : [];
@@ -71,22 +67,16 @@ export const actions: Actions = {
 
         const data = await request.formData();
         const memberId = data.get("memberId") as string;
-
         if (!memberId) return fail(400, { missing: true });
 
         // Parse permissions from form data
-        // Format: permissions[resource][action]
         const permissions: Record<string, string[]> = {};
-
         for (const [key, value] of data.entries()) {
             if (key.startsWith('permissions[')) {
-                // Extract resource and action from key like "permissions[customer][read]"
                 const match = key.match(/permissions\[([^\]]+)\]\[([^\]]+)\]/);
                 if (match && value === 'on') {
                     const [, resource, action] = match;
-                    if (!permissions[resource]) {
-                        permissions[resource] = [];
-                    }
+                    if (!permissions[resource]) permissions[resource] = [];
                     permissions[resource].push(action);
                 }
             }
@@ -95,11 +85,7 @@ export const actions: Actions = {
         try {
             const response = await fetch(`${API_URL}/members/${memberId}/permissions`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    cookie: request.headers.get('cookie') || '',
-                    'X-Organization-Id': organizationId
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ permissions })
             });
 

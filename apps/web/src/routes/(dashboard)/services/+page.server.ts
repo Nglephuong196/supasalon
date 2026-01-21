@@ -1,11 +1,10 @@
 import { fail, redirect } from "@sveltejs/kit";
-import { error } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { RESOURCES, ACTIONS } from '@repo/constants';
 import { checkPermission, getResourcePermissions } from '$lib/permissions';
 import { PUBLIC_API_URL } from '$env/static/public';
 
-export const load: PageServerLoad = async ({ fetch, request, cookies, parent }) => {
+export const load: PageServerLoad = async ({ fetch, cookies, parent }) => {
     const organizationId = cookies.get('organizationId');
     const { memberRole, memberPermissions } = await parent();
 
@@ -21,15 +20,11 @@ export const load: PageServerLoad = async ({ fetch, request, cookies, parent }) 
         return { services: [], categories: [], ...permissions };
     }
 
-    const headers = {
-        cookie: request.headers.get('cookie') || '',
-        'X-Organization-Id': organizationId
-    };
-
+    // handleFetch automatically injects cookies and X-Organization-Id
     try {
         const [servicesRes, categoriesRes] = await Promise.all([
-            fetch(`${PUBLIC_API_URL}/services`, { headers }),
-            fetch(`${PUBLIC_API_URL}/service-categories`, { headers })
+            fetch(`${PUBLIC_API_URL}/services`),
+            fetch(`${PUBLIC_API_URL}/service-categories`)
         ]);
 
         if (servicesRes.status === 403 || categoriesRes.status === 403) {
@@ -54,17 +49,12 @@ export const actions: Actions = {
 
         const data = await request.formData();
         const name = data.get("name") as string;
-
         if (!name) return fail(400, { missing: true });
 
         try {
             const response = await fetch(`${PUBLIC_API_URL}/service-categories`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    cookie: request.headers.get('cookie') || '',
-                    'X-Organization-Id': organizationId
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name })
             });
 
@@ -85,17 +75,12 @@ export const actions: Actions = {
         const data = await request.formData();
         const id = data.get("id");
         const name = data.get("name") as string;
-
         if (!id || !name) return fail(400, { missing: true });
 
         try {
             const response = await fetch(`${PUBLIC_API_URL}/service-categories/${id}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    cookie: request.headers.get('cookie') || '',
-                    'X-Organization-Id': organizationId
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name })
             });
 
@@ -115,16 +100,11 @@ export const actions: Actions = {
 
         const data = await request.formData();
         const id = data.get("id");
-
         if (!id) return fail(400, { missing: true });
 
         try {
             const response = await fetch(`${PUBLIC_API_URL}/service-categories/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    cookie: request.headers.get('cookie') || '',
-                    'X-Organization-Id': organizationId
-                }
+                method: 'DELETE'
             });
 
             if (!response.ok) {
@@ -155,18 +135,8 @@ export const actions: Actions = {
         try {
             const response = await fetch(`${PUBLIC_API_URL}/services`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    cookie: request.headers.get('cookie') || '',
-                    'X-Organization-Id': organizationId
-                },
-                body: JSON.stringify({
-                    name,
-                    categoryId,
-                    price,
-                    duration,
-                    description: description || ''
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, categoryId, price, duration, description: description || '' })
             });
 
             if (!response.ok) {
@@ -203,11 +173,7 @@ export const actions: Actions = {
         try {
             const response = await fetch(`${PUBLIC_API_URL}/services/${id}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    cookie: request.headers.get('cookie') || '',
-                    'X-Organization-Id': organizationId
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
@@ -227,16 +193,11 @@ export const actions: Actions = {
 
         const data = await request.formData();
         const id = data.get("id");
-
         if (!id) return fail(400, { missing: true });
 
         try {
             const response = await fetch(`${PUBLIC_API_URL}/services/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    cookie: request.headers.get('cookie') || '',
-                    'X-Organization-Id': organizationId
-                }
+                method: 'DELETE'
             });
 
             if (!response.ok) {

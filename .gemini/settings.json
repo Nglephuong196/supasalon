@@ -6,6 +6,28 @@
                 "-y",
                 "@upstash/context7-mcp@latest"
             ]
+        },
+        "better-auth": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@better-auth/mcp@latest"
+            ]
+        },
+        "hono-docs": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@chr33s/mcpdoc",
+                "https://hono.dev/llms-full.txt"
+            ]
+        },
+        "svelte": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@sveltejs/mcp"
+            ]
         }
     }
 }

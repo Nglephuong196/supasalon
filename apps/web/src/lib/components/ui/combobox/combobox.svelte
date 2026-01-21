@@ -4,7 +4,6 @@
     import { tick } from "svelte";
     import * as Command from "$lib/components/ui/command/index.js";
     import * as Popover from "$lib/components/ui/popover/index.js";
-    import { Button } from "$lib/components/ui/button/index.js";
     import { cn } from "$lib/utils.js";
 
     let {
@@ -44,19 +43,21 @@
 <Popover.Root bind:open>
     <Popover.Trigger bind:ref={triggerRef}>
         {#snippet child({ props })}
-            <Button
+            <button
                 {...props}
-                variant="outline"
-                class={cn("w-full justify-between", className)}
+                class={cn(
+                    "border-input data-[placeholder]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 flex w-full items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 h-9",
+                    className,
+                )}
                 role="combobox"
                 aria-expanded={open}
             >
-                {selectedLabel || placeholder}
-                <ChevronsUpDownIcon class="opacity-50" />
-            </Button>
+                <span class="truncate">{selectedLabel || placeholder}</span>
+                <ChevronsUpDownIcon class="size-4 opacity-50 shrink-0" />
+            </button>
         {/snippet}
     </Popover.Trigger>
-    <Popover.Content class="w-[--bits-popover-anchor-width] p-0">
+    <Popover.Content class="w-[--bits-popover-anchor-width] max-w-[300px] p-0">
         <Command.Root>
             <Command.Input placeholder={searchPlaceholder} />
             <Command.List>

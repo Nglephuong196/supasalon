@@ -17,6 +17,20 @@ type Variables = {
 
 export const membersController = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
+
+membersController.get("/me", async (c) => {
+    const service = new MembersService(c.get("db"));
+    const organization = c.get("organization");
+    const user = c.get("user");
+
+    const member = await service.findByUserId(organization.id, user.id);
+    if (!member) {
+        return c.json({ error: "Member not found" }, 404);
+    }
+
+    return c.json(member);
+});
+
 membersController.get("/", async (c) => {
     const service = new MembersService(c.get("db"));
     const organization = c.get("organization");

@@ -34,21 +34,13 @@ interface MemberWithPermissions {
     permissions: Array<{ permissions: Permissions }>;
 }
 
-export const load: LayoutServerLoad = async ({ fetch, request, cookies, url }) => {
-    const cookie = request.headers.get('cookie') || '';
+export const load: LayoutServerLoad = async ({ fetch, request, cookies, url, locals }) => {
+    // Use session from locals (populated by hooks)
+    const session = locals.session as unknown as SessionResponse | null;
 
-    // Fetch session from API
-    let session: SessionResponse | null = null;
-    try {
-        const sessionRes = await fetch(`${API_URL}/api/auth/get-session`, {
-            headers: { cookie }
-        });
-        if (sessionRes.ok) {
-            session = await sessionRes.json();
-        }
-    } catch (e) {
-        console.error('Error fetching session:', e);
-    }
+    // Construct cookie header with session token for API calls
+    const sessionToken = cookies.get('better-auth.session_token');
+    const apiCookieHeader = sessionToken ? `better-auth.session_token=${sessionToken}` : request.headers.get('cookie') || '';
 
     // If no session, redirect to login
     if (!session?.session || !session?.user) {
@@ -67,7 +59,7 @@ export const load: LayoutServerLoad = async ({ fetch, request, cookies, url }) =
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    cookie
+                    cookie: apiCookieHeader
                 },
                 body: JSON.stringify({ organizationId })
             });
@@ -88,10 +80,28 @@ export const load: LayoutServerLoad = async ({ fetch, request, cookies, url }) =
     if (!organization) {
         try {
             const orgsRes = await fetch(`${API_URL}/api/auth/organization/list`, {
-                headers: { cookie }
+                headers: { cookie: apiCookieHeader }
             });
+
+            // DEBUG LOGGING
+            try {
+                const fs = await import('fs');
+                const path = await import('path');
+                const logPath = path.resolve('debug_auth.log');
+                fs.appendFileSync(logPath, `[${new Date().toISOString()}] ORG LIST: Session ActiveOrg=${session?.session?.activeOrganizationId}, List Status=${orgsRes.status}\n`);
+            } catch (err) { }
+
             if (orgsRes.ok) {
                 const orgs = await orgsRes.json();
+
+                // DEBUG LOGGING
+                try {
+                    const fs = await import('fs');
+                    const path = await import('path');
+                    const logPath = path.resolve('debug_auth.log');
+                    fs.appendFileSync(logPath, `[${new Date().toISOString()}] ORG LIST: Count=${orgs.length}, IDs=${JSON.stringify(orgs.map((o: any) => o.id))}\n`);
+                } catch (err) { }
+
                 if (orgs.length > 0) {
                     organization = orgs[0];
                     organizationId = orgs[0].id;
@@ -99,6 +109,13 @@ export const load: LayoutServerLoad = async ({ fetch, request, cookies, url }) =
             }
         } catch (e) {
             console.error('Error fetching organizations:', e);
+            // DEBUG LOGGING
+            try {
+                const fs = await import('fs');
+                const path = await import('path');
+                const logPath = path.resolve('debug_auth.log');
+                fs.appendFileSync(logPath, `[${new Date().toISOString()}] ORG LIST ERROR: ${e}\n`);
+            } catch (err) { }
         }
     }
 
@@ -120,29 +137,31 @@ export const load: LayoutServerLoad = async ({ fetch, request, cookies, url }) =
 
     if (organizationId) {
         try {
-            const membersRes = await fetch(`${API_URL}/members`, {
+            const meRes = await fetch(`${API_URL}/members/me`, {
                 headers: {
-                    cookie,
+                    cookie: apiCookieHeader,
                     'X-Organization-Id': organizationId
                 }
             });
-            if (membersRes.ok) {
-                const members: MemberWithPermissions[] = await membersRes.json();
-                // Find current user's member record
-                const currentMember = members.find(m => {
-                    // Member should have a user property with id matching session user
-                    return (m as any).user?.id === session?.user?.id || (m as any).userId === session?.user?.id;
-                });
-                if (currentMember) {
-                    memberRole = currentMember.role;
-                    // permissions is an array (many relation), get first record's permissions
-                    memberPermissions = currentMember.permissions?.[0]?.permissions || null;
-                }
+
+            if (meRes.ok) {
+                const currentMember: MemberWithPermissions = await meRes.json();
+                memberRole = currentMember.role;
+                // permissions is an array (many relation), get first record's permissions
+                memberPermissions = currentMember.permissions?.[0]?.permissions || null;
             }
         } catch (e) {
             console.error('Error fetching member permissions:', e);
         }
     }
+
+    // DEBUG LOGGING
+    try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const logPath = path.resolve('debug_auth.log');
+        fs.appendFileSync(logPath, `[${new Date().toISOString()}] DASHBOARD LOAD: OrgID=${organizationId}, Role=${memberRole}, Permissions=${JSON.stringify(memberPermissions)}\n`);
+    } catch (err) { }
 
     return {
         user: session.user,

@@ -256,7 +256,6 @@
                     customerId: "",
                     customerPhone: "",
                     date: "",
-                    time: "",
                     guestCount: "1",
                     status: "confirmed",
                     notes: "",
@@ -1022,7 +1021,7 @@
                         <div
                             class="flex items-center gap-2 mb-3 p-3 bg-white rounded-lg border border-gray-200"
                         >
-                            <div class="flex-1">
+                            <div class="min-w-[140px]">
                                 <Select.Root
                                     type="single"
                                     bind:value={service.categoryId}
@@ -1032,7 +1031,10 @@
                                             {(
                                                 data.serviceCategories || []
                                             ).find(
-                                                (c) =>
+                                                (c: {
+                                                    id: number;
+                                                    name: string;
+                                                }) =>
                                                     c.id.toString() ===
                                                     service.categoryId,
                                             )?.name || "Nhóm dịch vụ"}
@@ -1050,9 +1052,9 @@
                                 </Select.Root>
                             </div>
 
-                            <div class="flex-1">
+                            <div class="min-w-[160px] flex-1">
                                 <Combobox
-                                    class="flex-1"
+                                    class="w-full"
                                     placeholder="Chọn dịch vụ"
                                     searchPlaceholder="Tìm dịch vụ..."
                                     items={(data.services || [])
@@ -1089,10 +1091,18 @@
                                     >
                                         {#snippet children()}
                                             {(data.members || []).find(
-                                                (m) => m.id === service.staffId,
+                                                (m: {
+                                                    id: string;
+                                                    user?: { name: string };
+                                                    name?: string;
+                                                }) => m.id === service.staffId,
                                             )?.user?.name ||
                                                 (data.members || []).find(
-                                                    (m) =>
+                                                    (m: {
+                                                        id: string;
+                                                        user?: { name: string };
+                                                        name?: string;
+                                                    }) =>
                                                         m.id ===
                                                         service.staffId,
                                                 )?.name ||
@@ -1219,7 +1229,11 @@
             use:enhance={({ formData }) => {
                 return async ({ result }) => {
                     if (result.type === "success") {
-                        const newCustomer = result.data?.customer;
+                        const newCustomer = result.data?.customer as {
+                            id: number;
+                            phone: string;
+                            name: string;
+                        };
                         if (newCustomer) {
                             // Select the newly created customer
                             newBooking.customerId = newCustomer.id.toString();
@@ -1229,7 +1243,10 @@
                             toast.success("Đã thêm khách hàng mới");
                         }
                     } else if (result.type === "failure") {
-                        toast.error(result.data?.message || "Có lỗi xảy ra");
+                        toast.error(
+                            (result.data as { message?: string })?.message ||
+                                "Có lỗi xảy ra",
+                        );
                     }
                 };
             }}

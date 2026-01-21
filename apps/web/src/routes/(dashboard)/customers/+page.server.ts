@@ -7,7 +7,7 @@ import { checkPermission, getResourcePermissions } from '$lib/permissions';
 
 import { PUBLIC_API_URL } from '$env/static/public';
 
-export const load: PageServerLoad = async ({ fetch, request, cookies, parent }) => {
+export const load: PageServerLoad = async ({ fetch, cookies, parent }) => {
     const organizationId = cookies.get('organizationId');
     const { memberRole, memberPermissions } = await parent();
 
@@ -23,16 +23,11 @@ export const load: PageServerLoad = async ({ fetch, request, cookies, parent }) 
         return { customers: [], ...permissions };
     }
 
+    // handleFetch automatically injects cookies and X-Organization-Id
     try {
-        const response = await fetch(`${PUBLIC_API_URL}/customers`, {
-            headers: {
-                cookie: request.headers.get('cookie') || '',
-                'X-Organization-Id': organizationId
-            }
-        });
+        const response = await fetch(`${PUBLIC_API_URL}/customers`);
 
         if (!response.ok) {
-            // If 403, redirect to unauthorized
             if (response.status === 403) {
                 throw redirect(302, '/unauthorized');
             }
@@ -42,7 +37,7 @@ export const load: PageServerLoad = async ({ fetch, request, cookies, parent }) 
         const customers: Customer[] = await response.json();
         return { customers, ...permissions };
     } catch (e) {
-        if ((e as any)?.status === 302) throw e; // Re-throw redirects
+        if ((e as any)?.status === 302) throw e;
         console.error("Error fetching customers", e);
         return { customers: [], ...permissions };
     }
@@ -51,10 +46,7 @@ export const load: PageServerLoad = async ({ fetch, request, cookies, parent }) 
 export const actions: Actions = {
     createCustomer: async ({ request, fetch, cookies }) => {
         const organizationId = cookies.get('organizationId');
-
-        if (!organizationId) {
-            return fail(400, { message: "Organization not selected" });
-        }
+        if (!organizationId) return fail(400, { message: "Organization not selected" });
 
         const data = await request.formData();
         const name = data.get("name") as string;
@@ -64,18 +56,12 @@ export const actions: Actions = {
         const gender = data.get("gender") as string | null;
         const location = data.get("location") as string | null;
 
-        if (!name || !phone) {
-            return fail(400, { missing: true });
-        }
+        if (!name || !phone) return fail(400, { missing: true });
 
         try {
             const response = await fetch(`${PUBLIC_API_URL}/customers`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    cookie: request.headers.get('cookie') || '',
-                    'X-Organization-Id': organizationId
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name,
                     phone,
@@ -90,7 +76,6 @@ export const actions: Actions = {
                 const res = await response.json();
                 return fail(response.status, { message: res.error || "Failed to create customer" });
             }
-
             return { success: true };
         } catch (e) {
             console.error("Error creating customer", e);
@@ -100,10 +85,7 @@ export const actions: Actions = {
 
     updateCustomer: async ({ request, fetch, cookies }) => {
         const organizationId = cookies.get('organizationId');
-
-        if (!organizationId) {
-            return fail(400, { message: "Organization not selected" });
-        }
+        if (!organizationId) return fail(400, { message: "Organization not selected" });
 
         const data = await request.formData();
         const id = data.get("id") as string;
@@ -114,18 +96,12 @@ export const actions: Actions = {
         const gender = data.get("gender") as string | null;
         const location = data.get("location") as string | null;
 
-        if (!id || !name || !phone) {
-            return fail(400, { missing: true });
-        }
+        if (!id || !name || !phone) return fail(400, { missing: true });
 
         try {
             const response = await fetch(`${PUBLIC_API_URL}/customers/${id}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    cookie: request.headers.get('cookie') || '',
-                    'X-Organization-Id': organizationId
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name,
                     phone,
@@ -140,7 +116,6 @@ export const actions: Actions = {
                 const res = await response.json();
                 return fail(response.status, { message: res.error || "Failed to update customer" });
             }
-
             return { success: true };
         } catch (e) {
             console.error("Error updating customer", e);
@@ -150,32 +125,22 @@ export const actions: Actions = {
 
     deleteCustomer: async ({ request, fetch, cookies }) => {
         const organizationId = cookies.get('organizationId');
-
-        if (!organizationId) {
-            return fail(400, { message: "Organization not selected" });
-        }
+        if (!organizationId) return fail(400, { message: "Organization not selected" });
 
         const data = await request.formData();
         const id = data.get("id") as string;
 
-        if (!id) {
-            return fail(400, { missing: true });
-        }
+        if (!id) return fail(400, { missing: true });
 
         try {
             const response = await fetch(`${PUBLIC_API_URL}/customers/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    cookie: request.headers.get('cookie') || '',
-                    'X-Organization-Id': organizationId
-                }
+                method: 'DELETE'
             });
 
             if (!response.ok) {
                 const res = await response.json();
                 return fail(response.status, { message: res.error || "Failed to delete customer" });
             }
-
             return { success: true };
         } catch (e) {
             console.error("Error deleting customer", e);
