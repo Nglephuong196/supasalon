@@ -2993,3 +2993,768 @@ Org Set-Cookie: null
 [2026-01-21T14:42:57.584Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
 [2026-01-21T14:42:57.611Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
 [2026-01-21T14:42:57.615Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/customers
+[2026-01-21T14:51:20.329Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T14:51:20.385Z] HOOKS: API Response 200 OK
+[2026-01-21T14:51:20.395Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-21T14:51:20.417Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-21T14:51:20.453Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-21T14:51:20.462Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-21T14:51:20.466Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-21T14:51:20.500Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-21T14:51:20.504Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-21T14:51:20.508Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-21T14:57:55.105Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T14:57:55.133Z] HOOKS: API Response 200 OK
+[2026-01-21T14:57:55.145Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-21T14:57:55.165Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-21T14:57:55.196Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-21T14:57:55.204Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-21T14:57:55.208Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-21T14:57:55.234Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-21T14:57:55.238Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-21T14:57:55.241Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-21T14:58:06.901Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T14:58:06.964Z] HOOKS: API Response 200 OK
+[2026-01-21T14:58:06.974Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-21T14:58:09.149Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T14:58:09.170Z] HOOKS: API Response 200 OK
+[2026-01-21T14:58:11.419Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T14:58:11.437Z] HOOKS: API Response 200 OK
+[2026-01-21T14:58:11.449Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-21T15:02:30.430Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T15:02:30.485Z] HOOKS: API Response 200 OK
+[2026-01-21T15:02:30.496Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-21T15:02:30.553Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T15:02:30.576Z] HOOKS: API Response 200 OK
+[2026-01-21T15:02:30.587Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-21T15:02:30.602Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-21T15:02:30.635Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-21T15:02:30.651Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-21T15:02:30.655Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-21T15:02:30.688Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-21T15:02:30.692Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-21T15:02:30.696Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-21T15:02:54.403Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T15:02:54.447Z] HOOKS: API Response 200 OK
+[2026-01-21T15:02:58.221Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T15:02:58.241Z] HOOKS: API Response 200 OK
+[2026-01-21T15:02:59.647Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T15:02:59.670Z] HOOKS: API Response 200 OK
+[2026-01-21T15:03:13.982Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T15:03:14.060Z] HOOKS: API Response 200 OK
+[2026-01-21T15:05:33.625Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-21T15:05:33.730Z] HOOKS: API Response 200 OK
+[2026-01-21T15:05:33.746Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-21T15:05:33.772Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-21T15:05:33.811Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-21T15:05:33.821Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-21T15:05:33.826Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-21T15:05:33.854Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-21T15:05:33.859Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-21T15:05:33.865Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-21T15:11:32.410Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-21T15:11:32.520Z] HOOKS: API Response 200 OK
+[2026-01-21T15:11:32.539Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-21T15:11:32.756Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-21T15:11:32.795Z] HOOKS: API Response 200 OK
+[2026-01-21T15:11:32.825Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-21T15:11:32.867Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-21T15:11:32.933Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-21T15:11:32.950Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-21T15:11:32.965Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-21T15:11:33.075Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-21T15:11:33.090Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-21T15:11:33.101Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-21T15:11:59.546Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T15:11:59.638Z] HOOKS: API Response 200 OK
+[2026-01-21T15:11:59.656Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-21T15:11:59.700Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-21T15:11:59.752Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-21T15:11:59.772Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-21T15:11:59.786Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-21T15:11:59.843Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-21T15:11:59.852Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-21T15:11:59.858Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-21T15:12:00.334Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T15:12:00.379Z] HOOKS: API Response 200 OK
+[2026-01-21T15:12:11.992Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T15:12:12.034Z] HOOKS: API Response 200 OK
+[2026-01-21T15:12:12.046Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-21T15:12:12.109Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T15:12:12.135Z] HOOKS: API Response 200 OK
+[2026-01-21T15:12:12.146Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-21T15:12:12.162Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-21T15:12:12.202Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-21T15:12:12.213Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-21T15:12:12.222Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-21T15:12:12.260Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-21T15:12:12.265Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-21T15:12:12.270Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-21T15:12:22.791Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T15:12:22.836Z] HOOKS: API Response 200 OK
+[2026-01-21T15:12:22.844Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products/2
+[2026-01-21T15:12:22.896Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-21T15:12:22.920Z] HOOKS: API Response 200 OK
+[2026-01-21T15:12:22.931Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-21T15:12:22.944Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-21T15:12:22.990Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-21T15:12:23.001Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-21T15:12:23.005Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-21T15:12:23.046Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-21T15:12:23.051Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-21T15:12:23.057Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:03:12.325Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:03:12.472Z] HOOKS: API Response 200 OK
+[2026-01-22T02:03:12.499Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:03:12.546Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:03:12.606Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:03:12.622Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:03:12.627Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:03:12.686Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:04:41.237Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:04:41.519Z] HOOKS: API Response 200 OK
+[2026-01-22T02:04:41.591Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:04:41.724Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:04:42.134Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:04:42.486Z] HOOKS: API Response 200 OK
+[2026-01-22T02:04:42.547Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:04:42.658Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:04:42.697Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:04:42.726Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:04:42.903Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:04:43.061Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:04:43.082Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:04:43.104Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:04:43.223Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:04:43.391Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:04:43.419Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:04:43.590Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:04:43.670Z] HOOKS: API Response 200 OK
+[2026-01-22T02:04:43.746Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:04:43.763Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/services
+[2026-01-22T02:04:43.799Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/service-categories
+[2026-01-22T02:04:43.822Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:04:43.862Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:04:43.952Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:04:44.011Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:04:44.025Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:04:44.099Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:04:44.121Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:04:44.156Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:04:57.330Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:04:57.375Z] HOOKS: API Response 200 OK
+[2026-01-22T02:04:57.387Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:04:57.448Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:04:57.469Z] HOOKS: API Response 200 OK
+[2026-01-22T02:04:57.481Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:04:57.497Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:04:57.531Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:04:57.542Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:04:57.546Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:04:57.580Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:04:57.585Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:04:57.590Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:05:09.878Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:05:09.922Z] HOOKS: API Response 200 OK
+[2026-01-22T02:05:11.457Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:05:11.476Z] HOOKS: API Response 200 OK
+[2026-01-22T02:05:11.654Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:05:11.673Z] HOOKS: API Response 200 OK
+[2026-01-22T02:05:11.858Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:05:11.881Z] HOOKS: API Response 200 OK
+[2026-01-22T02:05:12.060Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:05:12.078Z] HOOKS: API Response 200 OK
+[2026-01-22T02:05:12.263Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:05:12.284Z] HOOKS: API Response 200 OK
+[2026-01-22T02:05:12.446Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:05:12.468Z] HOOKS: API Response 200 OK
+[2026-01-22T02:05:12.632Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:05:12.650Z] HOOKS: API Response 200 OK
+[2026-01-22T02:05:12.861Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:05:12.890Z] HOOKS: API Response 200 OK
+[2026-01-22T02:05:17.656Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:05:17.679Z] HOOKS: API Response 200 OK
+[2026-01-22T02:05:22.542Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:05:22.580Z] HOOKS: API Response 200 OK
+[2026-01-22T02:05:35.096Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:05:35.151Z] HOOKS: API Response 200 OK
+[2026-01-22T02:05:36.064Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:05:36.085Z] HOOKS: API Response 200 OK
+[2026-01-22T02:05:36.292Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:05:36.313Z] HOOKS: API Response 200 OK
+[2026-01-22T02:06:25.456Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:06:25.493Z] HOOKS: API Response 200 OK
+[2026-01-22T02:06:25.525Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products/1
+[2026-01-22T02:06:25.591Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:06:25.640Z] HOOKS: API Response 200 OK
+[2026-01-22T02:06:25.684Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:06:25.715Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:06:25.765Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:06:25.784Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:06:25.795Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:06:25.847Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:06:25.861Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:06:25.877Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:06:32.331Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:06:32.365Z] HOOKS: API Response 200 OK
+[2026-01-22T02:06:45.023Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:06:45.078Z] HOOKS: API Response 200 OK
+[2026-01-22T02:07:11.671Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:07:11.730Z] HOOKS: API Response 200 OK
+[2026-01-22T02:07:11.751Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:07:11.774Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:07:11.811Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:07:11.822Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:07:11.827Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:07:11.857Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:07:11.863Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:07:11.869Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:07:47.792Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:07:47.889Z] HOOKS: API Response 200 OK
+[2026-01-22T02:07:47.929Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:07:48.057Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:07:48.101Z] HOOKS: API Response 200 OK
+[2026-01-22T02:07:48.122Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:07:48.160Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:07:48.233Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:07:48.267Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:07:48.274Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:07:48.339Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:07:48.348Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:07:48.357Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:09:15.155Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:09:15.234Z] HOOKS: API Response 200 OK
+[2026-01-22T02:09:15.267Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:09:15.404Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:09:15.454Z] HOOKS: API Response 200 OK
+[2026-01-22T02:09:15.474Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:09:15.509Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:09:15.580Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:09:15.597Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:09:15.608Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:09:15.676Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:09:15.685Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:09:15.695Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:09:42.793Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:09:42.883Z] HOOKS: API Response 200 OK
+[2026-01-22T02:10:07.047Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:10:07.090Z] HOOKS: API Response 200 OK
+[2026-01-22T02:10:18.293Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:10:18.340Z] HOOKS: API Response 200 OK
+[2026-01-22T02:10:18.354Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:10:18.396Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:10:18.483Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:10:18.498Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:10:18.512Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:10:18.584Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:10:18.592Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:10:18.602Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:10:30.401Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:10:30.443Z] HOOKS: API Response 200 OK
+[2026-01-22T02:10:31.639Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:10:31.660Z] HOOKS: API Response 200 OK
+[2026-01-22T02:10:31.865Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:10:31.885Z] HOOKS: API Response 200 OK
+[2026-01-22T02:10:32.499Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:10:32.521Z] HOOKS: API Response 200 OK
+[2026-01-22T02:10:32.696Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:10:32.718Z] HOOKS: API Response 200 OK
+[2026-01-22T02:10:32.921Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:10:32.949Z] HOOKS: API Response 200 OK
+[2026-01-22T02:10:33.107Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:10:33.127Z] HOOKS: API Response 200 OK
+[2026-01-22T02:10:33.283Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:10:33.301Z] HOOKS: API Response 200 OK
+[2026-01-22T02:10:33.466Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:10:33.487Z] HOOKS: API Response 200 OK
+[2026-01-22T02:10:33.667Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:10:33.685Z] HOOKS: API Response 200 OK
+[2026-01-22T02:10:43.812Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:10:43.852Z] HOOKS: API Response 200 OK
+[2026-01-22T02:12:44.376Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:12:44.411Z] HOOKS: API Response 200 OK
+[2026-01-22T02:12:44.427Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products/3
+[2026-01-22T02:12:44.538Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:12:44.573Z] HOOKS: API Response 200 OK
+[2026-01-22T02:12:44.590Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:12:44.609Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:12:44.664Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:12:44.680Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:12:44.688Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:12:44.722Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:12:44.729Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:12:44.734Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:13:17.564Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:13:17.589Z] HOOKS: API Response 200 OK
+[2026-01-22T02:13:17.599Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:13:17.620Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:13:17.654Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:13:17.664Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:13:17.669Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:13:17.699Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:13:17.705Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:13:17.711Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:13:35.128Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:13:35.178Z] HOOKS: API Response 200 OK
+[2026-01-22T02:13:44.197Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:13:44.220Z] HOOKS: API Response 200 OK
+[2026-01-22T02:13:44.229Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:13:44.280Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:13:44.308Z] HOOKS: API Response 200 OK
+[2026-01-22T02:13:44.321Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:13:44.335Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:13:44.373Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:13:44.381Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:13:44.386Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:13:44.420Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:13:44.424Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:13:44.430Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:13:56.630Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:13:56.694Z] HOOKS: API Response 200 OK
+[2026-01-22T02:14:04.528Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:14:04.555Z] HOOKS: API Response 200 OK
+[2026-01-22T02:14:05.435Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:14:05.452Z] HOOKS: API Response 200 OK
+[2026-01-22T02:14:05.618Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:14:05.640Z] HOOKS: API Response 200 OK
+[2026-01-22T02:14:05.821Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:14:05.841Z] HOOKS: API Response 200 OK
+[2026-01-22T02:14:06.043Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:14:06.066Z] HOOKS: API Response 200 OK
+[2026-01-22T02:15:06.318Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:15:06.387Z] HOOKS: API Response 200 OK
+[2026-01-22T02:15:06.413Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:15:06.452Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:15:06.522Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:15:06.538Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:15:06.549Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:15:06.595Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:15:06.604Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:15:06.616Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:16:42.661Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:16:42.758Z] HOOKS: API Response 200 OK
+[2026-01-22T02:16:42.782Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:16:42.933Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:16:42.986Z] HOOKS: API Response 200 OK
+[2026-01-22T02:16:43.020Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:16:43.053Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:16:43.128Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:16:43.152Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:16:43.160Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:16:43.222Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:16:43.232Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:16:43.239Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:16:55.628Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:16:55.683Z] HOOKS: API Response 200 OK
+[2026-01-22T02:16:55.701Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:16:55.743Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:16:55.813Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:16:55.824Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:16:55.833Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:16:55.887Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:16:55.896Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:16:55.905Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:17:25.787Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:17:25.835Z] HOOKS: API Response 200 OK
+[2026-01-22T02:17:25.847Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:17:25.919Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:17:25.943Z] HOOKS: API Response 200 OK
+[2026-01-22T02:17:25.959Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:17:25.980Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:17:26.029Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:17:26.044Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:17:26.051Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:17:26.093Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:17:26.100Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:17:26.111Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:17:35.971Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:17:36.001Z] HOOKS: API Response 200 OK
+[2026-01-22T02:17:36.013Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:17:36.073Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:17:36.103Z] HOOKS: API Response 200 OK
+[2026-01-22T02:17:36.116Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:17:36.133Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:17:36.185Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:17:36.194Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:17:36.200Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:17:36.238Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:17:36.244Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:17:36.248Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:17:44.049Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:17:44.082Z] HOOKS: API Response 200 OK
+[2026-01-22T02:17:44.098Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products/6
+[2026-01-22T02:17:44.161Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:17:44.184Z] HOOKS: API Response 200 OK
+[2026-01-22T02:17:44.197Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:17:44.212Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:17:44.271Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:17:44.290Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:17:44.298Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:17:44.336Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:17:44.343Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:17:44.348Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:17:45.157Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:17:45.194Z] HOOKS: API Response 200 OK
+[2026-01-22T02:17:45.211Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:17:45.234Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:17:45.279Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:17:45.299Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:17:45.305Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:17:45.350Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:17:45.365Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:17:45.378Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:18:00.776Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:00.868Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:01.980Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:02.011Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:02.204Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:02.231Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:02.402Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:02.442Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:02.599Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:02.642Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:02.811Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:02.860Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:03.012Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:03.071Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:03.204Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:03.261Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:03.405Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:03.467Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:03.613Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:03.655Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:03.813Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:03.869Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:04.031Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:04.082Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:04.234Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:04.272Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:04.436Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:04.479Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:04.646Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:04.684Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:04.838Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:04.881Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:05.043Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:05.088Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:05.269Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:05.320Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:05.464Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:05.508Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:05.679Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:05.751Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:05.875Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:05.900Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:06.091Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:06.129Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:06.306Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:06.333Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:06.510Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:06.576Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:06.728Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:06.768Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:06.945Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:06.973Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:07.153Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:07.199Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:07.347Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:07.424Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:07.561Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:07.620Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:07.750Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:07.790Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:07.970Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:08.011Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:08.180Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:08.220Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:08.384Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:08.434Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:08.601Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:08.658Z] HOOKS: API Response 200 OK
+[2026-01-22T02:18:08.798Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:18:08.851Z] HOOKS: API Response 200 OK
+[2026-01-22T02:19:05.747Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:19:05.795Z] HOOKS: API Response 200 OK
+[2026-01-22T02:19:06.852Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:19:06.870Z] HOOKS: API Response 200 OK
+[2026-01-22T02:19:20.039Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:19:20.097Z] HOOKS: API Response 200 OK
+[2026-01-22T02:19:20.115Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:19:20.358Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:19:20.414Z] HOOKS: API Response 200 OK
+[2026-01-22T02:19:20.439Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:19:20.471Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:19:20.543Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:19:20.569Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:19:20.580Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:19:20.657Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:19:20.672Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:19:20.685Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:19:27.572Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:19:27.614Z] HOOKS: API Response 200 OK
+[2026-01-22T02:19:28.565Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:19:28.618Z] HOOKS: API Response 200 OK
+[2026-01-22T02:19:28.771Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:19:28.808Z] HOOKS: API Response 200 OK
+[2026-01-22T02:19:28.993Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:19:29.036Z] HOOKS: API Response 200 OK
+[2026-01-22T02:19:29.224Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:19:29.260Z] HOOKS: API Response 200 OK
+[2026-01-22T02:19:30.523Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:19:30.570Z] HOOKS: API Response 200 OK
+[2026-01-22T02:19:33.160Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:19:33.205Z] HOOKS: API Response 200 OK
+[2026-01-22T02:22:38.357Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:22:38.403Z] HOOKS: API Response 200 OK
+[2026-01-22T02:22:38.418Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:22:38.525Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:22:38.554Z] HOOKS: API Response 200 OK
+[2026-01-22T02:22:38.566Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:22:38.580Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:22:38.620Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:22:38.632Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:22:38.639Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:22:38.672Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:22:38.677Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:22:38.683Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:24:48.698Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:24:48.794Z] HOOKS: API Response 200 OK
+[2026-01-22T02:24:48.804Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:24:48.826Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:24:48.870Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:24:48.886Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:24:48.890Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:24:48.915Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:24:48.919Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/customers
+[2026-01-22T02:24:49.530Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:24:49.547Z] HOOKS: API Response 200 OK
+[2026-01-22T02:24:49.558Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:24:49.574Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:24:49.605Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:24:49.615Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:24:49.619Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:24:49.646Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:24:49.650Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/services
+[2026-01-22T02:24:49.653Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/service-categories
+[2026-01-22T02:24:58.211Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:24:58.242Z] HOOKS: API Response 200 OK
+[2026-01-22T02:31:51.213Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:31:51.254Z] HOOKS: API Response 200 OK
+[2026-01-22T02:31:51.262Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:31:51.285Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:31:51.315Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:31:51.322Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:31:51.327Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:31:51.350Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:31:51.354Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/services
+[2026-01-22T02:31:51.359Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/service-categories
+[2026-01-22T02:32:12.379Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:32:12.421Z] HOOKS: API Response 200 OK
+[2026-01-22T02:32:12.433Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:32:12.452Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:32:12.487Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:32:12.494Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:32:12.501Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:32:12.527Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:32:12.531Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/services
+[2026-01-22T02:32:12.538Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/service-categories
+[2026-01-22T02:32:22.318Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:32:22.349Z] HOOKS: API Response 200 OK
+[2026-01-22T02:32:22.361Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/services
+[2026-01-22T02:32:22.409Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:32:22.426Z] HOOKS: API Response 200 OK
+[2026-01-22T02:32:22.448Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:32:22.464Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:32:22.499Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:32:22.507Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:32:22.510Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:32:22.534Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:32:22.538Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/services
+[2026-01-22T02:32:22.541Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/service-categories
+[2026-01-22T02:32:30.384Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:32:30.406Z] HOOKS: API Response 200 OK
+[2026-01-22T02:32:30.416Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/services
+[2026-01-22T02:32:30.461Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:32:30.478Z] HOOKS: API Response 200 OK
+[2026-01-22T02:32:30.487Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:32:30.501Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:32:30.531Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:32:30.539Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:32:30.542Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:32:30.566Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:32:30.571Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/services
+[2026-01-22T02:32:30.576Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/service-categories
+[2026-01-22T02:34:31.062Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:34:31.105Z] HOOKS: API Response 200 OK
+[2026-01-22T02:34:31.121Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:34:31.137Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:34:31.178Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:34:31.190Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:34:31.194Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:34:31.221Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:34:31.225Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:34:31.229Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:34:44.146Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:34:44.198Z] HOOKS: API Response 200 OK
+[2026-01-22T02:34:44.212Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:34:44.235Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:34:44.304Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:34:44.315Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:34:44.321Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:34:44.357Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:34:56.896Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:34:56.948Z] HOOKS: API Response 200 OK
+[2026-01-22T02:34:56.960Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:34:56.996Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:34:57.051Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:34:57.068Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:34:57.074Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:34:57.134Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:34:57.144Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:34:57.156Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:35:02.339Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:35:02.377Z] HOOKS: API Response 200 OK
+[2026-01-22T02:35:02.397Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:35:02.430Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:35:02.490Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:35:02.506Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:35:02.513Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:35:02.569Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:38:34.229Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:38:34.296Z] HOOKS: API Response 200 OK
+[2026-01-22T02:38:34.307Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:38:34.328Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:38:34.362Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:38:34.371Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:38:34.376Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:38:34.405Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:38:34.409Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:38:34.414Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:38:53.086Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:38:53.146Z] HOOKS: API Response 200 OK
+[2026-01-22T02:38:53.159Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:38:53.181Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:38:53.216Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:38:53.226Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:38:53.232Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:38:53.261Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:38:53.266Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/services
+[2026-01-22T02:38:53.271Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/service-categories
+[2026-01-22T02:49:13.913Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:49:13.965Z] HOOKS: API Response 200 OK
+[2026-01-22T02:49:34.274Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:49:34.586Z] HOOKS: API Response 200 OK
+[2026-01-22T02:49:34.603Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:49:34.710Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:49:34.900Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:49:35.035Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:49:35.041Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:49:35.317Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:49:35.323Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/bookings?page=1&limit=20
+[2026-01-22T02:49:35.328Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/bookings/stats?
+[2026-01-22T02:49:35.334Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/customers
+[2026-01-22T02:49:35.339Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/services
+[2026-01-22T02:49:35.344Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/service-categories
+[2026-01-22T02:49:35.348Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members
+[2026-01-22T02:49:36.830Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:49:36.907Z] HOOKS: API Response 200 OK
+[2026-01-22T02:49:36.919Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members
+[2026-01-22T02:49:48.902Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:49:48.961Z] HOOKS: API Response 200 OK
+[2026-01-22T02:49:48.978Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/bookings/2/status
+[2026-01-22T02:49:49.032Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:49:49.051Z] HOOKS: API Response 200 OK
+[2026-01-22T02:49:49.063Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:49:49.076Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:49:49.107Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:49:49.117Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:49:49.123Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:49:49.149Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:49:49.153Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/bookings?page=1&limit=20
+[2026-01-22T02:49:49.156Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/bookings/stats?
+[2026-01-22T02:49:49.162Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/customers
+[2026-01-22T02:49:49.167Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/services
+[2026-01-22T02:49:49.170Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/service-categories
+[2026-01-22T02:49:49.175Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members
+[2026-01-22T02:49:51.661Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:49:51.677Z] HOOKS: API Response 200 OK
+[2026-01-22T02:49:51.686Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/bookings/2/status
+[2026-01-22T02:49:51.716Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:49:51.731Z] HOOKS: API Response 200 OK
+[2026-01-22T02:49:51.741Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:49:51.753Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:49:51.783Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:49:51.791Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:49:51.795Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:49:51.819Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:49:51.822Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/bookings?page=1&limit=20
+[2026-01-22T02:49:51.825Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/bookings/stats?
+[2026-01-22T02:49:51.829Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/customers
+[2026-01-22T02:49:51.832Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/services
+[2026-01-22T02:49:51.835Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/service-categories
+[2026-01-22T02:49:51.840Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members
+[2026-01-22T02:50:02.815Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:50:02.843Z] HOOKS: API Response 200 OK
+[2026-01-22T02:50:02.870Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:50:02.893Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:50:02.954Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:50:03.000Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:50:03.012Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:50:03.016Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:50:03.025Z] HOOKS: API Response 200 OK
+[2026-01-22T02:50:03.046Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:50:03.059Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:50:03.072Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/bookings?page=1&limit=20
+[2026-01-22T02:50:03.101Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/bookings/stats?
+[2026-01-22T02:50:03.105Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/customers
+[2026-01-22T02:50:03.109Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/services
+[2026-01-22T02:50:03.113Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/service-categories
+[2026-01-22T02:50:03.117Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members
+[2026-01-22T02:50:03.125Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:50:03.269Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:50:03.279Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:50:03.284Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:50:03.309Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:50:03.312Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/products
+[2026-01-22T02:50:03.316Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/product-categories
+[2026-01-22T02:50:04.012Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:50:04.027Z] HOOKS: API Response 200 OK
+[2026-01-22T02:50:04.062Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:50:04.074Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:50:04.100Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:50:04.110Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:50:04.114Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:50:04.141Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:50:04.145Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/invoices
+[2026-01-22T02:50:06.490Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:50:06.507Z] HOOKS: API Response 200 OK
+[2026-01-22T02:50:06.515Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:50:06.523Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:50:06.543Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:50:06.553Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:50:06.557Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:50:06.579Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:50:06.583Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/bookings?page=1&limit=20
+[2026-01-22T02:50:06.589Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/bookings/stats?
+[2026-01-22T02:50:06.594Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/customers
+[2026-01-22T02:50:06.598Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/services
+[2026-01-22T02:50:06.604Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/service-categories
+[2026-01-22T02:50:06.609Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members
+[2026-01-22T02:50:08.056Z] HOOKS: Received session cookie: vIMe4j13m6...
+[2026-01-22T02:50:08.070Z] HOOKS: API Response 200 OK
+[2026-01-22T02:50:08.083Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:50:08.094Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:50:08.115Z] ORG LIST: Session ActiveOrg=null, List Status=200
+[2026-01-22T02:50:08.122Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:50:08.126Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:50:08.150Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:50:08.154Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/invoices
+[2026-01-22T02:50:14.551Z] HOOKS: Received session cookie: Vhovqjk7rb...
+[2026-01-22T02:50:14.576Z] HOOKS: API Response 200 OK
+[2026-01-22T02:50:14.588Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/get-full-organization
+[2026-01-22T02:50:14.607Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/api/auth/organization/list
+[2026-01-22T02:50:14.637Z] ORG LIST: Session ActiveOrg=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, List Status=200
+[2026-01-22T02:50:14.645Z] ORG LIST: Count=1, IDs=["RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9"]
+[2026-01-22T02:50:14.649Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/members/me
+[2026-01-22T02:50:14.677Z] DASHBOARD LOAD: OrgID=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9, Role=owner, Permissions=null
+[2026-01-22T02:50:14.681Z] COOKIE INJECT: Injecting token into request to http://localhost:8787/customers

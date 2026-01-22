@@ -121,7 +121,7 @@
         return async ({ result, update }: any) => {
             if (result.type === "success") {
                 toast.success(
-                    editingCategory || editingService
+                    editingCategory?.id || editingService?.id
                         ? "Cập nhật thành công!"
                         : "Tạo mới thành công!",
                 );
@@ -172,10 +172,51 @@
     </div>
 
     <!-- Main Content Split View -->
-    <div class="flex-1 flex gap-6 min-h-0">
-        <!-- Sidebar: Categories -->
+    <div class="flex-1 flex flex-col md:flex-row gap-4 md:gap-6 min-h-0">
+        <!-- Mobile Category Filter (visible only on mobile) -->
+        <div class="md:hidden flex-none">
+            <div
+                class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide"
+            >
+                <button
+                    class={cn(
+                        "flex-none px-3 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap",
+                        selectedCategoryId === null
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "bg-white border border-border text-muted-foreground hover:bg-gray-50",
+                    )}
+                    onclick={() => (selectedCategoryId = null)}
+                >
+                    Tất cả ({data.services.length})
+                </button>
+                {#each data.categories as category}
+                    <button
+                        class={cn(
+                            "flex-none px-3 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap",
+                            selectedCategoryId === category.id
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "bg-white border border-border text-muted-foreground hover:bg-gray-50",
+                        )}
+                        onclick={() => (selectedCategoryId = category.id)}
+                    >
+                        {category.name}
+                    </button>
+                {/each}
+                <Button
+                    variant="outline"
+                    size="sm"
+                    class="flex-none rounded-full h-8"
+                    onclick={openCreateCategory}
+                >
+                    <Plus class="h-3 w-3 mr-1" />
+                    Thêm
+                </Button>
+            </div>
+        </div>
+
+        <!-- Sidebar: Categories (hidden on mobile) -->
         <div
-            class="w-64 flex-none flex flex-col gap-4 bg-white rounded-xl border border-border/60 shadow-sm p-4 overflow-hidden"
+            class="hidden md:flex w-64 flex-none flex-col gap-4 bg-white rounded-xl border border-border/60 shadow-sm p-4 overflow-hidden"
         >
             <div class="flex items-center justify-between flex-none">
                 <h2
@@ -283,7 +324,7 @@
             </div>
         </div>
 
-        <!-- Main Area: Service Table (No Sidebar anymore inside this part) -->
+        <!-- Main Area: Service Table -->
         <div class="flex-1 min-w-0">
             <div
                 class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm h-full flex flex-col"
@@ -549,11 +590,13 @@
     <Dialog.Content class="sm:max-w-[500px]">
         <Dialog.Header>
             <Dialog.Title
-                >{editingService ? "Sửa dịch vụ" : "Thêm dịch vụ"}</Dialog.Title
+                >{editingService?.id
+                    ? "Sửa dịch vụ"
+                    : "Thêm dịch vụ"}</Dialog.Title
             >
         </Dialog.Header>
         <form
-            action={editingService ? "?/updateService" : "?/createService"}
+            action={editingService?.id ? "?/updateService" : "?/createService"}
             method="POST"
             novalidate
             use:enhance={(e) => {

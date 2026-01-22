@@ -135,6 +135,27 @@ export const services = sqliteTable("services", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
+// Product Categories
+export const productCategories = sqliteTable("product_categories", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  organizationId: text("organization_id").notNull().references(() => organization.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+// Products
+export const products = sqliteTable("products", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  categoryId: integer("category_id").notNull().references(() => productCategories.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  price: real("price").notNull(),
+  stock: integer("stock").notNull().default(0),
+  sku: text("sku"),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
 // Bookings
 // Bookings
 export const bookings = sqliteTable("bookings", {
@@ -263,6 +284,15 @@ export const servicesRelations = relations(services, ({ one, many }) => ({
   // bookingServices: many(bookingServices), // Deprecated/Removed
 }));
 
+export const productCategoriesRelations = relations(productCategories, ({ one, many }) => ({
+  organization: one(organization, { fields: [productCategories.organizationId], references: [organization.id] }),
+  products: many(products),
+}));
+
+export const productsRelations = relations(products, ({ one }) => ({
+  category: one(productCategories, { fields: [products.categoryId], references: [productCategories.id] }),
+}));
+
 export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   organization: one(organization, { fields: [bookings.organizationId], references: [organization.id] }),
   customer: one(customers, { fields: [bookings.customerId], references: [customers.id] }),
@@ -314,6 +344,12 @@ export type NewServiceCategory = typeof serviceCategories.$inferInsert;
 
 export type Service = typeof services.$inferSelect;
 export type NewService = typeof services.$inferInsert;
+
+export type ProductCategory = typeof productCategories.$inferSelect;
+export type NewProductCategory = typeof productCategories.$inferInsert;
+
+export type Product = typeof products.$inferSelect;
+export type NewProduct = typeof products.$inferInsert;
 
 export type Booking = typeof bookings.$inferSelect;
 export type NewBooking = typeof bookings.$inferInsert;

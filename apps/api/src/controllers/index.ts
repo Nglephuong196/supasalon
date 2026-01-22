@@ -4,7 +4,10 @@ export { customersController } from "./customers";
 export { customerMembershipsController } from "./customer-memberships";
 export { serviceCategoriesController } from "./service-categories";
 export { servicesController } from "./services";
+export { productCategoriesController } from "./product-categories";
+export { productsController } from "./products";
 export { bookingsController } from "./bookings";
 export { invoicesController } from "./invoices";
 export { membershipTiersController } from "./membership-tiers";
 export { membersController } from "./members";
+

@@ -9,6 +9,8 @@ import {
   customerMembershipsController,
   serviceCategoriesController,
   servicesController,
+  productCategoriesController,
+  productsController,
   bookingsController,
   invoicesController,
   membershipTiersController,
@@ -55,6 +57,8 @@ protectedRoutes.route("/customers", customersController);
 protectedRoutes.route("/customer-memberships", customerMembershipsController);
 protectedRoutes.route("/service-categories", serviceCategoriesController);
 protectedRoutes.route("/services", servicesController);
+protectedRoutes.route("/product-categories", productCategoriesController);
+protectedRoutes.route("/products", productsController);
 protectedRoutes.route("/bookings", bookingsController);
 protectedRoutes.route("/invoices", invoicesController);
 protectedRoutes.route("/membership-tiers", membershipTiersController);
