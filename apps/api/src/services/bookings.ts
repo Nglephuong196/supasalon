@@ -33,10 +33,8 @@ export class BookingsService {
       conditions.push(gte(bookings.date, from));
     }
     if (to) {
-      // Add 1 day to include the full "to" date
-      const toEnd = new Date(to);
-      toEnd.setDate(toEnd.getDate() + 1);
-      conditions.push(lte(bookings.date, toEnd));
+      // 'to' is already set to end of day by the controller, use directly
+      conditions.push(lte(bookings.date, to));
     }
 
     // Status filter
@@ -152,9 +150,8 @@ export class BookingsService {
 
     if (from) conditions.push(gte(bookings.date, from));
     if (to) {
-      const toEnd = new Date(to);
-      toEnd.setDate(toEnd.getDate() + 1);
-      conditions.push(lte(bookings.date, toEnd));
+      // 'to' is already set to end of day by the controller
+      conditions.push(lte(bookings.date, to));
     }
 
     const allBookings = await this.db

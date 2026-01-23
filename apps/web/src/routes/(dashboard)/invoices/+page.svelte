@@ -2,6 +2,7 @@
     import { Card } from "$lib/components/ui/card";
     import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input";
+    import { Checkbox } from "$lib/components/ui/checkbox";
     import { Plus, Search, Receipt } from "@lucide/svelte";
     import { cn } from "$lib/utils";
 
@@ -85,7 +86,7 @@
             <p class="text-muted-foreground">Quản lý hóa đơn và thanh toán</p>
         </div>
         <Button class="bg-purple-600 hover:bg-purple-700">
-            <Plus class="h-4 w-4 mr-2" />
+            <Plus class="h-4 w-4 mr-2" aria-hidden="true" />
             Tạo hóa đơn
         </Button>
     </div>
@@ -106,12 +107,17 @@
                 </p>
             </div>
             <div class="relative w-full max-w-sm">
+                <label for="invoice-search" class="sr-only"
+                    >Tìm kiếm hóa đơn</label
+                >
                 <Search
                     class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+                    aria-hidden="true"
                 />
                 <Input
+                    id="invoice-search"
                     type="search"
-                    placeholder="Tìm kiếm hóa đơn..."
+                    placeholder="Tìm kiếm hóa đơn…"
                     class="pl-9 h-9"
                 />
             </div>
@@ -121,9 +127,8 @@
                 <thead class="border-b border-gray-100 bg-muted/40">
                     <tr>
                         <th class="h-12 w-[50px] px-4 align-middle">
-                            <input
-                                type="checkbox"
-                                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            <Checkbox
+                                class="border-gray-300 text-primary focus:ring-primary"
                             />
                         </th>
                         <th
@@ -159,9 +164,8 @@
                     {#each invoices as invoice}
                         <tr class="hover:bg-muted/50 transition-colors">
                             <td class="p-4 align-middle">
-                                <input
-                                    type="checkbox"
-                                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                <Checkbox
+                                    class="border-gray-300 text-primary focus:ring-primary"
                                 />
                             </td>
                             <td class="p-4 align-middle font-medium"
@@ -183,7 +187,10 @@
                             <td class="p-4 align-middle">
                                 {invoice.services.join(", ") || "N/A"}
                             </td>
-                            <td class="p-4 align-middle font-medium">
+                            <td
+                                class="p-4 align-middle font-medium"
+                                style="font-variant-numeric: tabular-nums;"
+                            >
                                 {formatPrice(invoice.total)}
                             </td>
                             <td class="p-4 align-middle">

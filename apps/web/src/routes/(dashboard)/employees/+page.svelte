@@ -4,7 +4,8 @@
     import { Input } from "$lib/components/ui/input";
     import { Label } from "$lib/components/ui/label";
     import * as Dialog from "$lib/components/ui/dialog";
-    import { Select } from "$lib/components/ui/select";
+    import * as Select from "$lib/components/ui/select";
+    import { Checkbox } from "$lib/components/ui/checkbox";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
     import * as AlertDialog from "$lib/components/ui/alert-dialog";
     import {
@@ -15,12 +16,14 @@
         Loader2,
         Trash,
         Pencil,
+        X,
     } from "@lucide/svelte";
     import { cn } from "$lib/utils";
     import { enhance } from "$app/forms";
     import { toast } from "svelte-sonner";
     import type { PageData } from "./$types";
     import { page } from "$app/stores";
+    import { goto } from "$app/navigation";
 
     let { data }: { data: PageData } = $props();
 
@@ -30,7 +33,31 @@
         $page.data.memberRole === "owner" || $page.data.memberRole === "admin",
     );
 
-    let searchQuery = $state("");
+    // Search state with URL sync
+    let searchQuery = $state($page.url.searchParams.get("q") || "");
+    let searchTimeout: ReturnType<typeof setTimeout>;
+
+    function updateSearchUrl() {
+        const url = new URL($page.url);
+        if (searchQuery) {
+            url.searchParams.set("q", searchQuery);
+        } else {
+            url.searchParams.delete("q");
+        }
+        goto(url.toString(), { replaceState: true, keepFocus: true });
+    }
+
+    function handleSearchInput(event: Event) {
+        const target = event.target as HTMLInputElement;
+        searchQuery = target.value;
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(updateSearchUrl, 300);
+    }
+
+    function clearSearch() {
+        searchQuery = "";
+        updateSearchUrl();
+    }
     let isAddOpen = $state(false);
 
     // Add Member Form
@@ -138,15 +165,35 @@
 
             <div class="flex items-center gap-2 w-full sm:w-auto">
                 <div class="relative flex-1 sm:w-64">
+                    <label for="employee-search" class="sr-only"
+                        >Tìm kiếm nhân viên</label
+                    >
                     <Search
                         class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+                        aria-hidden="true"
                     />
                     <Input
+                        id="employee-search"
                         type="search"
-                        placeholder="Tìm kiếm nhân viên..."
-                        class="pl-9 h-9"
-                        bind:value={searchQuery}
+                        placeholder="Tìm kiếm nhân viên…"
+                        class="pl-9 pr-9 h-9"
+                        value={searchQuery}
+                        oninput={handleSearchInput}
                     />
+                    {#if searchQuery}
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            class="absolute right-2.5 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-gray-100 hover:bg-gray-200"
+                            onclick={clearSearch}
+                        >
+                            <X
+                                class="h-3 w-3 text-gray-500"
+                                aria-hidden="true"
+                            />
+                        </Button>
+                    {/if}
                 </div>
                 {#if canManageEmployees}
                     <Dialog.Root bind:open={isAddOpen}>
@@ -154,7 +201,7 @@
                             <Button
                                 class="bg-purple-600 hover:bg-purple-700 h-9"
                             >
-                                <Plus class="h-4 w-4 mr-2" />
+                                <Plus class="h-4 w-4 mr-2" aria-hidden="true" />
                                 Thêm
                             </Button>
                         </Dialog.Trigger>
@@ -214,6 +261,7 @@
                                             name="name"
                                             bind:value={name}
                                             placeholder="Nguyễn Văn A"
+                                            autocomplete="name"
                                             oninput={() => (empNameError = "")}
                                         />
                                         {#if empNameError}
@@ -230,6 +278,7 @@
                                             type="email"
                                             bind:value={email}
                                             placeholder="nhanvien@salon.com"
+                                            autocomplete="email"
                                             oninput={() => (empEmailError = "")}
                                         />
                                         {#if empEmailError}
@@ -246,6 +295,7 @@
                                             type="password"
                                             bind:value={password}
                                             placeholder="••••••••"
+                                            autocomplete="new-password"
                                             oninput={() =>
                                                 (empPasswordError = "")}
                                         />
@@ -257,21 +307,38 @@
                                     </div>
                                     <div class="grid gap-2">
                                         <Label for="role">Vai trò</Label>
-                                        <select
+                                        <Select.Root
+                                            type="single"
                                             name="role"
-                                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                             bind:value={role}
                                         >
-                                            <option value="member"
-                                                >Thành viên</option
-                                            >
-                                            <option value="admin"
-                                                >Quản trị viên</option
-                                            >
-                                            <option value="owner"
-                                                >Chủ sở hữu</option
-                                            >
-                                        </select>
+                                            <Select.Trigger class="w-full">
+                                                {role === "member"
+                                                    ? "Thành viên"
+                                                    : role === "admin"
+                                                      ? "Quản trị viên"
+                                                      : role === "owner"
+                                                        ? "Chủ sở hữu"
+                                                        : "Thành viên"}
+                                            </Select.Trigger>
+                                            <Select.Content>
+                                                <Select.Item
+                                                    value="member"
+                                                    label="Thành viên"
+                                                    >Thành viên</Select.Item
+                                                >
+                                                <Select.Item
+                                                    value="admin"
+                                                    label="Quản trị viên"
+                                                    >Quản trị viên</Select.Item
+                                                >
+                                                <Select.Item
+                                                    value="owner"
+                                                    label="Chủ sở hữu"
+                                                    >Chủ sở hữu</Select.Item
+                                                >
+                                            </Select.Content>
+                                        </Select.Root>
                                     </div>
                                 </div>
                                 <Dialog.Footer>
@@ -313,15 +380,38 @@
                     <div class="grid gap-4 py-4">
                         <div class="grid gap-2">
                             <Label for="edit-role">Vai trò</Label>
-                            <select
+                            <Select.Root
+                                type="single"
                                 name="role"
-                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 bind:value={editRoleValue}
                             >
-                                <option value="member">Thành viên</option>
-                                <option value="admin">Quản trị viên</option>
-                                <option value="owner">Chủ sở hữu</option>
-                            </select>
+                                <Select.Trigger class="w-full">
+                                    {editRoleValue === "member"
+                                        ? "Thành viên"
+                                        : editRoleValue === "admin"
+                                          ? "Quản trị viên"
+                                          : editRoleValue === "owner"
+                                            ? "Chủ sở hữu"
+                                            : "Thành viên"}
+                                </Select.Trigger>
+                                <Select.Content>
+                                    <Select.Item
+                                        value="member"
+                                        label="Thành viên"
+                                        >Thành viên</Select.Item
+                                    >
+                                    <Select.Item
+                                        value="admin"
+                                        label="Quản trị viên"
+                                        >Quản trị viên</Select.Item
+                                    >
+                                    <Select.Item
+                                        value="owner"
+                                        label="Chủ sở hữu"
+                                        >Chủ sở hữu</Select.Item
+                                    >
+                                </Select.Content>
+                            </Select.Root>
                         </div>
                     </div>
                     <Dialog.Footer>
@@ -341,9 +431,8 @@
                 <thead class="border-b border-gray-100 bg-muted/40">
                     <tr>
                         <th class="h-12 w-[50px] px-4 align-middle">
-                            <input
-                                type="checkbox"
-                                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            <Checkbox
+                                class="border-gray-300 text-primary focus:ring-primary"
                             />
                         </th>
                         <th
@@ -367,9 +456,8 @@
                     {#each allEmployees as employee (employee.id)}
                         <tr class="hover:bg-muted/50 transition-colors">
                             <td class="p-4 align-middle">
-                                <input
-                                    type="checkbox"
-                                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                <Checkbox
+                                    class="border-gray-300 text-primary focus:ring-primary"
                                 />
                             </td>
                             <td class="p-4 align-middle">
@@ -438,6 +526,7 @@
                                                 >
                                                     <MoreVertical
                                                         class="h-4 w-4"
+                                                        aria-hidden="true"
                                                     />
                                                 </Button>
                                             {/snippet}
@@ -453,7 +542,10 @@
                                                 onclick={() =>
                                                     openEditRole(employee)}
                                             >
-                                                <Pencil class="mr-2 h-4 w-4" />
+                                                <Pencil
+                                                    class="mr-2 h-4 w-4"
+                                                    aria-hidden="true"
+                                                />
                                                 Sửa vai trò
                                             </DropdownMenu.Item>
                                             <DropdownMenu.Item
@@ -461,7 +553,10 @@
                                                 onclick={() =>
                                                     openDeleteDialog(employee)}
                                             >
-                                                <Trash class="mr-2 h-4 w-4" />
+                                                <Trash
+                                                    class="mr-2 h-4 w-4"
+                                                    aria-hidden="true"
+                                                />
                                                 Xóa
                                             </DropdownMenu.Item>
                                         </DropdownMenu.Content>

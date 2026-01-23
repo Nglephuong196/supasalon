@@ -8,7 +8,9 @@
         TableRow,
     } from "$lib/components/ui/table";
     import { Button } from "$lib/components/ui/button";
+    import * as Select from "$lib/components/ui/select";
     import { Input } from "$lib/components/ui/input";
+    import { Checkbox } from "$lib/components/ui/checkbox";
     import * as Dialog from "$lib/components/ui/dialog";
     import * as AlertDialog from "$lib/components/ui/alert-dialog";
     import {
@@ -246,42 +248,30 @@
         <div
             class="bg-white border border-border/60 rounded-xl p-1 w-fit flex gap-1"
         >
-            <button
+            <Button
+                variant={activeTab === "tiers" ? "default" : "ghost"}
                 onclick={() => (activeTab = "tiers")}
-                class={cn(
-                    "flex items-center rounded-lg px-4 py-2 text-sm font-medium transition-all",
-                    activeTab === "tiers"
-                        ? "bg-primary text-white"
-                        : "text-muted-foreground hover:bg-gray-100",
-                )}
+                class="rounded-lg px-4 py-2 text-sm font-medium"
             >
                 <Crown class="h-4 w-4 mr-2" />
                 Hạng khách hàng
-            </button>
-            <button
+            </Button>
+            <Button
+                variant={activeTab === "general" ? "default" : "ghost"}
                 onclick={() => (activeTab = "general")}
-                class={cn(
-                    "flex items-center rounded-lg px-4 py-2 text-sm font-medium transition-all",
-                    activeTab === "general"
-                        ? "bg-primary text-white"
-                        : "text-muted-foreground hover:bg-gray-100",
-                )}
+                class="rounded-lg px-4 py-2 text-sm font-medium"
             >
                 <Settings2 class="h-4 w-4 mr-2" />
                 Cài đặt chung
-            </button>
-            <button
+            </Button>
+            <Button
+                variant={activeTab === "permissions" ? "default" : "ghost"}
                 onclick={() => (activeTab = "permissions")}
-                class={cn(
-                    "flex items-center rounded-lg px-4 py-2 text-sm font-medium transition-all",
-                    activeTab === "permissions"
-                        ? "bg-primary text-white"
-                        : "text-muted-foreground hover:bg-gray-100",
-                )}
+                class="rounded-lg px-4 py-2 text-sm font-medium"
             >
                 <Users class="h-4 w-4 mr-2" />
                 Phân quyền
-            </button>
+            </Button>
         </div>
 
         {#if activeTab === "tiers"}
@@ -473,13 +463,31 @@
                             >
                                 &gt;
                             </Button>
-                            <select
-                                class="text-sm border border-border rounded px-2 py-1.5 bg-white"
-                            >
-                                <option>20 / trang</option>
-                                <option>50 / trang</option>
-                                <option>100 / trang</option>
-                            </select>
+                            <Select.Root type="single" value="20 / trang">
+                                <Select.Trigger class="h-8 w-[120px]">
+                                    20 / trang
+                                </Select.Trigger>
+                                <Select.Content>
+                                    <Select.Item
+                                        value="20 / trang"
+                                        label="20 / trang"
+                                    >
+                                        20 / trang
+                                    </Select.Item>
+                                    <Select.Item
+                                        value="50 / trang"
+                                        label="50 / trang"
+                                    >
+                                        50 / trang
+                                    </Select.Item>
+                                    <Select.Item
+                                        value="100 / trang"
+                                        label="100 / trang"
+                                    >
+                                        100 / trang
+                                    </Select.Item>
+                                </Select.Content>
+                            </Select.Root>
                         </div>
                     </div>
                 </div>
@@ -722,11 +730,10 @@
                                     <TableCell class="text-center">
                                         {#if group.actions.find((a) => a.id === ACTIONS.READ)}
                                             <div class="flex justify-center">
-                                                <input
-                                                    type="checkbox"
+                                                <Checkbox
                                                     id="{group.resource}-{ACTIONS.READ}"
                                                     name="permissions[{group.resource}][{ACTIONS.READ}]"
-                                                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                                    class="border-gray-300 text-primary focus:ring-primary"
                                                     checked={hasPermission(
                                                         editingMember,
                                                         group.resource,
@@ -745,11 +752,10 @@
                                     <TableCell class="text-center">
                                         {#if group.actions.find((a) => a.id === ACTIONS.CREATE)}
                                             <div class="flex justify-center">
-                                                <input
-                                                    type="checkbox"
+                                                <Checkbox
                                                     id="{group.resource}-{ACTIONS.CREATE}"
                                                     name="permissions[{group.resource}][{ACTIONS.CREATE}]"
-                                                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                                    class="border-gray-300 text-primary focus:ring-primary"
                                                     checked={hasPermission(
                                                         editingMember,
                                                         group.resource,
@@ -768,11 +774,10 @@
                                     <TableCell class="text-center">
                                         {#if group.actions.find((a) => a.id === ACTIONS.UPDATE)}
                                             <div class="flex justify-center">
-                                                <input
-                                                    type="checkbox"
+                                                <Checkbox
                                                     id="{group.resource}-{ACTIONS.UPDATE}"
                                                     name="permissions[{group.resource}][{ACTIONS.UPDATE}]"
-                                                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                                    class="border-gray-300 text-primary focus:ring-primary"
                                                     checked={hasPermission(
                                                         editingMember,
                                                         group.resource,
@@ -791,11 +796,10 @@
                                     <TableCell class="text-center">
                                         {#if group.actions.find((a) => a.id === ACTIONS.DELETE)}
                                             <div class="flex justify-center">
-                                                <input
-                                                    type="checkbox"
+                                                <Checkbox
                                                     id="{group.resource}-{ACTIONS.DELETE}"
                                                     name="permissions[{group.resource}][{ACTIONS.DELETE}]"
-                                                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                                    class="border-gray-300 text-primary focus:ring-primary"
                                                     checked={hasPermission(
                                                         editingMember,
                                                         group.resource,

@@ -48,9 +48,22 @@ bookingsController.get("/", requirePermission(RESOURCES.BOOKING, ACTIONS.READ), 
     return c.json(bookings);
   }
 
-  // Parse dates
-  const from = fromStr ? new Date(fromStr) : undefined;
-  const to = toStr ? new Date(toStr) : undefined;
+  // Parse dates - parse as local timezone, not UTC
+  // Input format: YYYY-MM-DD, we need to create dates at start/end of day in local timezone
+  let from: Date | undefined;
+  let to: Date | undefined;
+
+  if (fromStr) {
+    // Parse YYYY-MM-DD as local date at start of day
+    const [year, month, day] = fromStr.split('-').map(Number);
+    from = new Date(year, month - 1, day, 0, 0, 0, 0);
+  }
+
+  if (toStr) {
+    // Parse YYYY-MM-DD as local date at end of day (23:59:59.999)
+    const [year, month, day] = toStr.split('-').map(Number);
+    to = new Date(year, month - 1, day, 23, 59, 59, 999);
+  }
 
   // Get paginated and filtered results
   const result = await service.findAll(organization.id, {
@@ -73,8 +86,19 @@ bookingsController.get("/stats", requirePermission(RESOURCES.BOOKING, ACTIONS.RE
   const fromStr = c.req.query("from");
   const toStr = c.req.query("to");
 
-  const from = fromStr ? new Date(fromStr) : undefined;
-  const to = toStr ? new Date(toStr) : undefined;
+  // Parse dates - parse as local timezone, not UTC
+  let from: Date | undefined;
+  let to: Date | undefined;
+
+  if (fromStr) {
+    const [year, month, day] = fromStr.split('-').map(Number);
+    from = new Date(year, month - 1, day, 0, 0, 0, 0);
+  }
+
+  if (toStr) {
+    const [year, month, day] = toStr.split('-').map(Number);
+    to = new Date(year, month - 1, day, 23, 59, 59, 999);
+  }
 
   const stats = await service.getStats(organization.id, from, to);
   return c.json(stats);

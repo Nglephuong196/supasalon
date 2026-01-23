@@ -2,6 +2,7 @@
     import { Card, CardContent } from "$lib/components/ui/card";
     import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input";
+    import { Checkbox } from "$lib/components/ui/checkbox";
     import { Label } from "$lib/components/ui/label";
     import * as Dialog from "$lib/components/ui/dialog";
     import * as AlertDialog from "$lib/components/ui/alert-dialog";
@@ -22,6 +23,7 @@
         Trash,
         Filter,
         Check,
+        Calendar as CalendarIcon,
     } from "@lucide/svelte";
     import { cn } from "$lib/utils";
     import { goto, invalidateAll } from "$app/navigation";
@@ -29,15 +31,38 @@
     import { get } from "svelte/store";
     import { enhance } from "$app/forms";
     import DateTimePicker from "$lib/components/ui/date-time-picker/date-time-picker.svelte";
+    import { RangeCalendar } from "$lib/components/ui/range-calendar/index.js";
+    import * as Popover from "$lib/components/ui/popover/index.js";
     import Combobox from "$lib/components/ui/combobox/combobox.svelte";
     import * as Select from "$lib/components/ui/select";
     import { toast } from "svelte-sonner";
     import type { PageData } from "./$types";
+    import {
+        DateFormatter,
+        getLocalTimeZone,
+        today,
+        type DateValue,
+        parseDate,
+    } from "@internationalized/date";
 
     let { data }: { data: PageData } = $props();
 
     // Filter states
     let dateFilter = $state<"today" | "week" | "month" | "custom">("today");
+
+    // Date Range State
+    const df = new DateFormatter("vi-VN", {
+        dateStyle: "medium",
+    });
+
+    let value = $state<{
+        start: DateValue | undefined;
+        end: DateValue | undefined;
+    }>({
+        start: undefined,
+        end: undefined,
+    });
+
     let fromDate = $state("");
     let toDate = $state("");
     let statusFilter = $state("all");
@@ -51,6 +76,22 @@
         if (filters) {
             fromDate = filters.from || "";
             toDate = filters.to || "";
+            // Parse existing dates into RangeCalendar value if present
+            if (fromDate && toDate) {
+                try {
+                    value = {
+                        start: parseDate(fromDate),
+                        end: parseDate(toDate),
+                    };
+                } catch (e) {
+                    // ignore parse error
+                }
+            } else if (!fromDate && !toDate && dateFilter === "today") {
+                // Default to today if nothing set? Or leave undefined?
+                // The original code had init logic maybe?
+                // Let's rely on dateFilter logic or user input.
+            }
+
             statusFilter = filters.status || "all";
             searchQuery = filters.search || "";
         }
@@ -160,6 +201,11 @@
         { value: "completed", label: "Hoàn thành" },
         { value: "cancelled", label: "Đã hủy" },
     ];
+
+    let selectedStatusLabel = $derived(
+        statusOptions.find((o) => o.value === statusFilter)?.label ||
+            "Trạng thái",
+    );
 
     function formatDate(dateStr: string) {
         if (!dateStr) return "";
@@ -503,76 +549,132 @@
                     <div
                         class="inline-flex rounded-lg border border-gray-200 p-1 bg-gray-50"
                     >
-                        <button
+                        <Button
+                            variant="ghost"
                             class={cn(
-                                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors h-auto",
                                 dateFilter === "today"
                                     ? "bg-white shadow-sm text-purple-600"
-                                    : "text-gray-600 hover:text-gray-900",
+                                    : "text-gray-600 hover:text-gray-900 hover:bg-transparent",
                             )}
                             onclick={() => setDateFilter("today")}
                         >
                             Hôm nay
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            variant="ghost"
                             class={cn(
-                                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors h-auto",
                                 dateFilter === "week"
                                     ? "bg-white shadow-sm text-purple-600"
-                                    : "text-gray-600 hover:text-gray-900",
+                                    : "text-gray-600 hover:text-gray-900 hover:bg-transparent",
                             )}
                             onclick={() => setDateFilter("week")}
                         >
                             7 ngày tới
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            variant="ghost"
                             class={cn(
-                                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors h-auto",
                                 dateFilter === "month"
                                     ? "bg-white shadow-sm text-purple-600"
-                                    : "text-gray-600 hover:text-gray-900",
+                                    : "text-gray-600 hover:text-gray-900 hover:bg-transparent",
                             )}
                             onclick={() => setDateFilter("month")}
                         >
                             Tháng này
-                        </button>
+                        </Button>
                     </div>
 
                     <!-- Custom Date Range -->
                     <div class="flex items-center gap-2">
-                        <Input
-                            type="date"
-                            class="w-36 h-9"
-                            bind:value={fromDate}
-                            onchange={() => {
-                                dateFilter = "custom";
-                                if (toDate) applyFilters();
-                            }}
-                        />
-                        <span class="text-muted-foreground">~</span>
-                        <Input
-                            type="date"
-                            class="w-36 h-9"
-                            bind:value={toDate}
-                            onchange={() => {
-                                dateFilter = "custom";
-                                if (fromDate) applyFilters();
-                            }}
-                        />
+                        <Popover.Root>
+                            <Popover.Trigger>
+                                {#snippet child({ props })}
+                                    <Button
+                                        variant="outline"
+                                        class={cn(
+                                            "w-[280px] justify-start text-left font-normal",
+                                            !value && "text-muted-foreground",
+                                        )}
+                                        {...props}
+                                    >
+                                        <CalendarIcon class="mr-2 h-4 w-4" />
+                                        {#if value && value.start}
+                                            {#if value.end}
+                                                {df.format(
+                                                    value.start.toDate(
+                                                        getLocalTimeZone(),
+                                                    ),
+                                                )} - {df.format(
+                                                    value.end.toDate(
+                                                        getLocalTimeZone(),
+                                                    ),
+                                                )}
+                                            {:else}
+                                                {df.format(
+                                                    value.start.toDate(
+                                                        getLocalTimeZone(),
+                                                    ),
+                                                )}
+                                            {/if}
+                                        {:else}
+                                            <span>Chọn khoảng thời gian</span>
+                                        {/if}
+                                    </Button>
+                                {/snippet}
+                            </Popover.Trigger>
+                            <Popover.Content class="w-auto p-0" align="start">
+                                <RangeCalendar
+                                    bind:value
+                                    class="rounded-md border"
+                                />
+                            </Popover.Content>
+                        </Popover.Root>
+
+                        {#if value && value.start && value.end}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                class="h-9"
+                                onclick={() => {
+                                    dateFilter = "custom";
+                                    // Update fromDate and toDate from value
+                                    if (value.start && value.end) {
+                                        fromDate = value.start.toString();
+                                        toDate = value.end.toString();
+                                        applyFilters();
+                                    }
+                                }}
+                            >
+                                Áp dụng
+                            </Button>
+                        {/if}
                     </div>
                 </div>
 
                 <!-- Status Filter -->
                 <div class="flex items-center gap-2">
-                    <select
-                        class="h-9 px-3 rounded-md border border-input bg-background text-sm focus:border-purple-500 focus:ring-purple-500"
+                    <Select.Root
+                        type="single"
                         bind:value={statusFilter}
-                        onchange={() => applyFilters()}
+                        onValueChange={() => applyFilters()}
                     >
-                        {#each statusOptions as option}
-                            <option value={option.value}>{option.label}</option>
-                        {/each}
-                    </select>
+                        <Select.Trigger class="w-[160px] h-9">
+                            {selectedStatusLabel}
+                        </Select.Trigger>
+                        <Select.Content>
+                            {#each statusOptions as option}
+                                <Select.Item
+                                    value={option.value}
+                                    label={option.label}
+                                >
+                                    {option.label}
+                                </Select.Item>
+                            {/each}
+                        </Select.Content>
+                    </Select.Root>
                 </div>
             </div>
 
@@ -607,9 +709,8 @@
                 <thead class="border-b border-gray-100 bg-muted/40">
                     <tr>
                         <th class="h-12 w-[50px] px-4 align-middle">
-                            <input
-                                type="checkbox"
-                                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            <Checkbox
+                                class="border-gray-300 text-primary focus:ring-primary"
                             />
                         </th>
                         <th
@@ -654,9 +755,8 @@
                             >
                                 <!-- Date (show only for first item in group) -->
                                 <td class="p-4 align-top w-[50px]">
-                                    <input
-                                        type="checkbox"
-                                        class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    <Checkbox
+                                        class="border-gray-300 text-primary focus:ring-primary"
                                     />
                                 </td>
                                 <td class="p-4 align-top w-[140px]">
@@ -742,10 +842,11 @@
                                         <DropdownMenu.Root>
                                             <DropdownMenu.Trigger>
                                                 {#snippet child({ props })}
-                                                    <button
+                                                    <Button
                                                         {...props}
+                                                        variant="outline"
                                                         class={cn(
-                                                            "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 gap-1",
+                                                            "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold h-auto",
                                                             statusStyles[
                                                                 booking.status
                                                             ],
@@ -755,9 +856,9 @@
                                                             booking.status
                                                         ] || booking.status}
                                                         <ChevronRight
-                                                            class="h-3 w-3 rotate-90 opacity-50"
+                                                            class="h-3 w-3 rotate-90 opacity-50 ml-1"
                                                         />
-                                                    </button>
+                                                    </Button>
                                                 {/snippet}
                                             </DropdownMenu.Trigger>
                                             <DropdownMenu.Content>
@@ -896,18 +997,32 @@
                     )} / {data.pagination.total} lịch hẹn
                 </div>
                 <div class="flex items-center gap-2">
-                    <select
-                        class="h-8 px-2 rounded border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        bind:value={pageSize}
-                        onchange={() => {
-                            currentPage = 1;
-                            applyFilters();
+                    <Select.Root
+                        type="single"
+                        value={pageSize.toString()}
+                        onValueChange={(v) => {
+                            if (v) {
+                                pageSize = parseInt(v);
+                                currentPage = 1;
+                                applyFilters();
+                            }
                         }}
                     >
-                        <option value={10}>10 / trang</option>
-                        <option value={20}>20 / trang</option>
-                        <option value={50}>50 / trang</option>
-                    </select>
+                        <Select.Trigger class="h-8 w-[120px]">
+                            {pageSize} / trang
+                        </Select.Trigger>
+                        <Select.Content>
+                            <Select.Item value="10" label="10 / trang">
+                                10 / trang
+                            </Select.Item>
+                            <Select.Item value="20" label="20 / trang">
+                                20 / trang
+                            </Select.Item>
+                            <Select.Item value="50" label="50 / trang">
+                                50 / trang
+                            </Select.Item>
+                        </Select.Content>
+                    </Select.Root>
                     <div class="flex items-center gap-1">
                         <Button
                             variant="outline"
@@ -992,9 +1107,10 @@
                                 Thông tin khách hàng
                             </h3>
                             {#if newBooking.customerId}
-                                <button
+                                <Button
                                     type="button"
-                                    class="text-xs text-red-500 hover:underline"
+                                    variant="link"
+                                    class="text-xs text-red-500 hover:text-red-600 hover:underline h-auto p-0"
                                     onclick={() => {
                                         newBooking.customerId = "";
                                         newBooking.customerPhone = "";
@@ -1002,7 +1118,7 @@
                                     }}
                                 >
                                     Xóa chọn
-                                </button>
+                                </Button>
                             {/if}
                         </div>
 
@@ -1213,9 +1329,11 @@
                                     </div>
 
                                     {#if guest.services.length > 1}
-                                        <button
+                                        <Button
                                             type="button"
-                                            class="p-2 text-gray-400 hover:text-red-500 shrink-0"
+                                            variant="ghost"
+                                            size="icon"
+                                            class="h-8 w-8 text-gray-400 hover:text-red-500 shrink-0"
                                             onclick={() => {
                                                 guest.services =
                                                     guest.services.filter(
@@ -1225,7 +1343,7 @@
                                             }}
                                         >
                                             <Trash class="h-4 w-4" />
-                                        </button>
+                                        </Button>
                                     {/if}
                                 </div>
                             {/each}

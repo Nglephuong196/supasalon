@@ -100,7 +100,10 @@
                 </Button>
             {/snippet}
         </Popover.Trigger>
-        <Popover.Content class="w-auto overflow-hidden p-0" align="start">
+        <Popover.Content
+            class="w-auto overflow-hidden p-0 rounded-lg"
+            align="start"
+        >
             <Calendar
                 type="single"
                 bind:value={date}

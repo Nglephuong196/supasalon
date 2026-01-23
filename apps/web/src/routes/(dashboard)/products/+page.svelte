@@ -12,6 +12,7 @@
         Trash2,
         Layers,
         Box,
+        X,
     } from "@lucide/svelte";
     import { cn } from "$lib/utils";
     import { toast } from "svelte-sonner";
@@ -19,13 +20,53 @@
     import { enhance } from "$app/forms";
     import type { PageData } from "./$types";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+    import { page } from "$app/stores";
+    import { goto } from "$app/navigation";
+    import { Checkbox } from "$lib/components/ui/checkbox";
+    import * as Select from "$lib/components/ui/select";
 
     // Props
     let { data } = $props<{ data: PageData }>();
 
-    // State
-    let searchQuery = $state("");
-    let selectedCategoryId = $state<number | null>(null);
+    // State with URL sync
+    let searchQuery = $state($page.url.searchParams.get("q") || "");
+    const categoryParam = $page.url.searchParams.get("category");
+    let selectedCategoryId = $state<number | null>(
+        categoryParam ? parseInt(categoryParam) : null,
+    );
+    let searchTimeout: ReturnType<typeof setTimeout>;
+
+    function updateUrlParams() {
+        const url = new URL($page.url);
+        if (searchQuery) {
+            url.searchParams.set("q", searchQuery);
+        } else {
+            url.searchParams.delete("q");
+        }
+        if (selectedCategoryId !== null) {
+            url.searchParams.set("category", selectedCategoryId.toString());
+        } else {
+            url.searchParams.delete("category");
+        }
+        goto(url.toString(), { replaceState: true, keepFocus: true });
+    }
+
+    function handleSearchInput(event: Event) {
+        const target = event.target as HTMLInputElement;
+        searchQuery = target.value;
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(updateUrlParams, 300);
+    }
+
+    function clearSearch() {
+        searchQuery = "";
+        updateUrlParams();
+    }
+
+    function selectCategory(id: number | null) {
+        selectedCategoryId = id;
+        updateUrlParams();
+    }
 
     // Dialog States
     let isCategoryDialogOpen = $state(false);
@@ -175,29 +216,25 @@
             <div
                 class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide"
             >
-                <button
-                    class={cn(
-                        "flex-none px-3 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap",
-                        selectedCategoryId === null
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "bg-white border border-border text-muted-foreground hover:bg-gray-50",
-                    )}
-                    onclick={() => (selectedCategoryId = null)}
+                <Button
+                    variant={selectedCategoryId === null
+                        ? "default"
+                        : "outline"}
+                    class="flex-none rounded-full h-8 text-sm font-medium transition-all whitespace-nowrap"
+                    onclick={() => selectCategory(null)}
                 >
                     Tất cả ({data.products.length})
-                </button>
+                </Button>
                 {#each data.categories as category}
-                    <button
-                        class={cn(
-                            "flex-none px-3 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap",
-                            selectedCategoryId === category.id
-                                ? "bg-primary text-primary-foreground shadow-sm"
-                                : "bg-white border border-border text-muted-foreground hover:bg-gray-50",
-                        )}
-                        onclick={() => (selectedCategoryId = category.id)}
+                    <Button
+                        variant={selectedCategoryId === category.id
+                            ? "default"
+                            : "outline"}
+                        class="flex-none rounded-full h-8 text-sm font-medium transition-all whitespace-nowrap"
+                        onclick={() => selectCategory(category.id)}
                     >
                         {category.name}
-                    </button>
+                    </Button>
                 {/each}
                 <Button
                     variant="outline"
@@ -205,7 +242,7 @@
                     class="flex-none rounded-full h-8"
                     onclick={openCreateCategory}
                 >
-                    <Plus class="h-3 w-3 mr-1" />
+                    <Plus class="h-3 w-3 mr-1" aria-hidden="true" />
                     Thêm
                 </Button>
             </div>
@@ -219,7 +256,7 @@
                 <h2
                     class="font-semibold text-foreground flex items-center gap-2"
                 >
-                    <Layers class="h-4 w-4 text-primary" />
+                    <Layers class="h-4 w-4 text-primary" aria-hidden="true" />
                     Danh mục
                 </h2>
                 <Button
@@ -227,22 +264,24 @@
                     size="icon"
                     class="h-8 w-8 hover:bg-primary/10 hover:text-primary"
                     onclick={openCreateCategory}
+                    aria-label="Thêm danh mục"
                 >
-                    <Plus class="h-4 w-4" />
+                    <Plus class="h-4 w-4" aria-hidden="true" />
                 </Button>
             </div>
 
             <div class="flex-1 overflow-y-auto space-y-1 pr-2">
-                <button
+                <Button
+                    variant="ghost"
                     class={cn(
-                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left",
+                        "w-full justify-start h-auto px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left",
                         selectedCategoryId === null
-                            ? "bg-primary text-primary-foreground shadow-sm"
+                            ? "bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground"
                             : "text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800",
                     )}
-                    onclick={() => (selectedCategoryId = null)}
+                    onclick={() => selectCategory(null)}
                 >
-                    <Box class="h-4 w-4" />
+                    <Box class="h-4 w-4 mr-3" aria-hidden="true" />
                     <span class="flex-1">Tất cả sản phẩm</span>
                     <span
                         class={cn(
@@ -254,18 +293,19 @@
                     >
                         {data.products.length}
                     </span>
-                </button>
+                </Button>
 
                 {#each data.categories as category}
                     <div class="group relative">
-                        <button
+                        <Button
+                            variant="ghost"
                             class={cn(
-                                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left pr-8",
+                                "w-full justify-start h-auto px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left pr-8",
                                 selectedCategoryId === category.id
-                                    ? "bg-primary/10 text-primary border border-primary/20"
+                                    ? "bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:text-primary"
                                     : "text-foreground hover:bg-gray-100 dark:hover:bg-gray-800",
                             )}
-                            onclick={() => (selectedCategoryId = category.id)}
+                            onclick={() => selectCategory(category.id)}
                         >
                             <span class="truncate flex-1">{category.name}</span>
                             {#if selectedCategoryId === category.id}
@@ -273,7 +313,7 @@
                                     class="h-1.5 w-1.5 rounded-full bg-primary absolute left-1 top-1/2 -translate-y-1/2"
                                 ></span>
                             {/if}
-                        </button>
+                        </Button>
 
                         <!-- Hover Actions for Category -->
                         <div
@@ -283,7 +323,10 @@
                                 <DropdownMenu.Trigger
                                     class="h-7 w-7 flex items-center justify-center rounded-md hover:bg-background/80 text-muted-foreground hover:text-foreground"
                                 >
-                                    <MoreVertical class="h-3.5 w-3.5" />
+                                    <MoreVertical
+                                        class="h-3.5 w-3.5"
+                                        aria-hidden="true"
+                                    />
                                 </DropdownMenu.Trigger>
                                 <DropdownMenu.Content
                                     align="start"
@@ -293,7 +336,10 @@
                                         onclick={(e) =>
                                             openEditCategory(category, e)}
                                     >
-                                        <Pencil class="h-3 w-3 mr-2" />
+                                        <Pencil
+                                            class="h-3 w-3 mr-2"
+                                            aria-hidden="true"
+                                        />
                                         Sửa tên
                                     </DropdownMenu.Item>
                                     <DropdownMenu.Item
@@ -301,7 +347,10 @@
                                         onclick={(e) =>
                                             openDeleteCategory(category, e)}
                                     >
-                                        <Trash2 class="h-3 w-3 mr-2" />
+                                        <Trash2
+                                            class="h-3 w-3 mr-2"
+                                            aria-hidden="true"
+                                        />
                                         Xóa danh mục
                                     </DropdownMenu.Item>
                                 </DropdownMenu.Content>
@@ -344,22 +393,42 @@
                         class="flex items-center gap-2 w-full sm:w-auto flex-1 justify-end"
                     >
                         <div class="relative max-w-xs w-full sm:w-64">
+                            <label for="product-search" class="sr-only"
+                                >Tìm kiếm sản phẩm</label
+                            >
                             <Search
                                 class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+                                aria-hidden="true"
                             />
                             <Input
+                                id="product-search"
                                 type="search"
-                                placeholder="Tìm kiếm sản phẩm..."
-                                class="pl-9 h-9"
-                                bind:value={searchQuery}
+                                placeholder="Tìm kiếm sản phẩm…"
+                                class="pl-9 pr-9 h-9"
+                                value={searchQuery}
+                                oninput={handleSearchInput}
                             />
+                            {#if searchQuery}
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    class="absolute right-2.5 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-gray-100 hover:bg-gray-200"
+                                    onclick={clearSearch}
+                                >
+                                    <X
+                                        class="h-3 w-3 text-gray-500"
+                                        aria-hidden="true"
+                                    />
+                                </Button>
+                            {/if}
                         </div>
 
                         <Button
                             onclick={openCreateProduct}
                             class="bg-purple-600 hover:bg-purple-700 h-9 shrink-0"
                         >
-                            <Plus class="h-4 w-4 sm:mr-2" />
+                            <Plus class="h-4 w-4 sm:mr-2" aria-hidden="true" />
                             <span class="hidden sm:inline">Thêm</span>
                         </Button>
                     </div>
@@ -372,9 +441,8 @@
                         >
                             <tr>
                                 <th class="h-12 w-[50px] px-4 align-middle">
-                                    <input
-                                        type="checkbox"
-                                        class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    <Checkbox
+                                        class="border-gray-300 text-primary focus:ring-primary"
                                     />
                                 </th>
                                 <th
@@ -406,9 +474,8 @@
                             {#each filteredProducts as product (product.id)}
                                 <tr class="hover:bg-muted/50 transition-colors">
                                     <td class="p-4 align-middle">
-                                        <input
-                                            type="checkbox"
-                                            class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                        <Checkbox
+                                            class="border-gray-300 text-primary focus:ring-primary"
                                         />
                                     </td>
                                     <td class="p-4 align-middle font-medium">
@@ -425,6 +492,7 @@
                                     </td>
                                     <td
                                         class="p-4 align-middle font-medium text-purple-700"
+                                        style="font-variant-numeric: tabular-nums;"
                                     >
                                         {formatPrice(product.price)}
                                     </td>
@@ -432,7 +500,10 @@
                                         class="p-4 align-middle text-muted-foreground"
                                     >
                                         <div class="flex items-center gap-1">
-                                            <Package class="h-3 w-3" />
+                                            <Package
+                                                class="h-3 w-3"
+                                                aria-hidden="true"
+                                            />
                                             {product.stock}
                                         </div>
                                     </td>
@@ -453,6 +524,7 @@
                                                     >
                                                         <MoreVertical
                                                             class="h-4 w-4"
+                                                            aria-hidden="true"
                                                         />
                                                     </Button>
                                                 {/snippet}
@@ -472,6 +544,7 @@
                                                 >
                                                     <Pencil
                                                         class="mr-2 h-4 w-4"
+                                                        aria-hidden="true"
                                                     />
                                                     Sửa sản phẩm
                                                 </DropdownMenu.Item>
@@ -484,6 +557,7 @@
                                                 >
                                                     <Trash2
                                                         class="mr-2 h-4 w-4"
+                                                        aria-hidden="true"
                                                     />
                                                     Xóa
                                                 </DropdownMenu.Item>
@@ -503,15 +577,25 @@
                                             >
                                                 <Package
                                                     class="h-6 w-6 text-gray-300"
+                                                    aria-hidden="true"
                                                 />
                                             </div>
                                             <p class="font-medium">
                                                 Không tìm thấy sản phẩm nào
                                             </p>
                                             {#if searchQuery || selectedCategoryId}
-                                                <p class="text-sm mt-1">
-                                                    Thử thay đổi bộ lọc tìm kiếm
-                                                </p>
+                                                <Button
+                                                    variant="link"
+                                                    class="text-sm mt-2 text-purple-600 hover:text-purple-700 underline h-auto p-0"
+                                                    onclick={() => {
+                                                        searchQuery = "";
+                                                        selectedCategoryId =
+                                                            null;
+                                                        updateUrlParams();
+                                                    }}
+                                                >
+                                                    Xóa bộ lọc
+                                                </Button>
                                             {/if}
                                         </div>
                                     </td>
@@ -609,8 +693,8 @@
                 )?.value;
                 const categoryId = (
                     form.querySelector(
-                        'select[name="categoryId"]',
-                    ) as HTMLSelectElement
+                        'input[name="categoryId"]',
+                    ) as HTMLInputElement
                 )?.value;
                 resetErrors();
                 let hasError = false;
@@ -680,18 +764,36 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="grid gap-2">
                         <Label for="prod-category">Danh mục</Label>
-                        <select
-                            id="prod-category"
-                            name="categoryId"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            value={editingProduct?.categoryId || ""}
-                            onchange={() => (prodCategoryError = "")}
-                        >
-                            <option value="" disabled>Chọn danh mục</option>
-                            {#each data.categories as cat}
-                                <option value={cat.id}>{cat.name}</option>
-                            {/each}
-                        </select>
+                        <div class="relative">
+                            <Select.Root
+                                type="single"
+                                name="categoryId"
+                                value={editingProduct?.categoryId?.toString()}
+                                onValueChange={(v) => {
+                                    prodCategoryError = "";
+                                    if (editingProduct)
+                                        editingProduct.categoryId = parseInt(v);
+                                }}
+                            >
+                                <Select.Trigger class="w-full">
+                                    {data.categories.find(
+                                        (c: any) =>
+                                            c.id.toString() ===
+                                            editingProduct?.categoryId?.toString(),
+                                    )?.name || "Chọn danh mục"}
+                                </Select.Trigger>
+                                <Select.Content>
+                                    {#each data.categories as cat}
+                                        <Select.Item
+                                            value={cat.id.toString()}
+                                            label={cat.name}
+                                        >
+                                            {cat.name}
+                                        </Select.Item>
+                                    {/each}
+                                </Select.Content>
+                            </Select.Root>
+                        </div>
                         {#if prodCategoryError}
                             <span class="text-red-500 text-xs"
                                 >{prodCategoryError}</span

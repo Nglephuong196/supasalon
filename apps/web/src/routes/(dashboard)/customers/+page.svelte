@@ -13,6 +13,7 @@
         Trash2,
         MapPin,
         Wallet,
+        X,
     } from "@lucide/svelte";
     import { cn } from "$lib/utils";
     import * as Dialog from "$lib/components/ui/dialog";
@@ -22,6 +23,9 @@
     import type { SubmitFunction } from "./$types";
     import { toast } from "svelte-sonner";
     import type { Customer } from "$lib/types";
+    import { page } from "$app/stores";
+    import { goto } from "$app/navigation";
+    import * as Select from "$lib/components/ui/select";
 
     let isCreateDialogOpen = $state(false);
     let isEditDialogOpen = $state(false);
@@ -34,6 +38,71 @@
     let createPhoneError = $state("");
     let editNameError = $state("");
     let editPhoneError = $state("");
+
+    // Search and filter state (synced with URL)
+    let searchQuery = $state($page.url.searchParams.get("q") || "");
+    let activeFilter = $state<"all" | "vip">(
+        ($page.url.searchParams.get("filter") as "all" | "vip") || "all",
+    );
+
+    // Debounce timer for search
+    let searchTimeout: ReturnType<typeof setTimeout>;
+
+    // Update URL when search/filter changes
+    function updateUrlParams() {
+        const url = new URL($page.url);
+        if (searchQuery) {
+            url.searchParams.set("q", searchQuery);
+        } else {
+            url.searchParams.delete("q");
+        }
+        if (activeFilter !== "all") {
+            url.searchParams.set("filter", activeFilter);
+        } else {
+            url.searchParams.delete("filter");
+        }
+        goto(url.toString(), { replaceState: true, keepFocus: true });
+    }
+
+    function handleSearchInput(event: Event) {
+        const target = event.target as HTMLInputElement;
+        searchQuery = target.value;
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(updateUrlParams, 300);
+    }
+
+    function clearSearch() {
+        searchQuery = "";
+        updateUrlParams();
+    }
+
+    function setFilter(filter: "all" | "vip") {
+        activeFilter = filter;
+        updateUrlParams();
+    }
+
+    // Filtered customers based on search and filter
+    let filteredCustomers = $derived.by(() => {
+        let result = data.customers;
+
+        // Apply search filter
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            result = result.filter(
+                (c: Customer) =>
+                    c.name.toLowerCase().includes(query) ||
+                    c.phone?.toLowerCase().includes(query) ||
+                    c.email?.toLowerCase().includes(query),
+            );
+        }
+
+        // Apply VIP filter
+        if (activeFilter === "vip") {
+            result = result.filter((c: Customer) => c.membershipTier);
+        }
+
+        return result;
+    });
 
     let { data } = $props();
 
@@ -168,7 +237,7 @@
                 onclick={() => (isCreateDialogOpen = true)}
                 class="btn-gradient shadow-lg shadow-purple-200"
             >
-                <Plus class="h-4 w-4 mr-2" />
+                <Plus class="h-4 w-4 mr-2" aria-hidden="true" />
                 Thêm khách hàng
             </Button>
         {/if}
@@ -177,188 +246,283 @@
     <!-- Search and filters -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <div class="relative flex-1 max-w-md w-full">
+            <label for="customer-search" class="sr-only"
+                >Tìm kiếm khách hàng</label
+            >
             <Search
                 class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+                aria-hidden="true"
             />
             <Input
+                id="customer-search"
                 type="search"
-                placeholder="Tìm kiếm khách hàng..."
-                class="pl-10 bg-white border-gray-200 rounded-xl focus:border-purple-300 focus:ring-purple-100"
+                placeholder="Tìm kiếm khách hàng…"
+                class="pl-10 pr-10 bg-white border-gray-200 rounded-xl focus:border-purple-300 focus:ring-purple-100"
+                value={searchQuery}
+                oninput={handleSearchInput}
             />
+            {#if searchQuery}
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full bg-gray-100 hover:bg-gray-200"
+                    onclick={clearSearch}
+                >
+                    <X class="h-3 w-3 text-gray-500" aria-hidden="true" />
+                </Button>
+            {/if}
         </div>
-        <div class="flex gap-2">
-            <button
-                class="px-4 py-2 text-sm font-medium rounded-xl bg-purple-600 text-white"
-                >Tất cả</button
+        <div class="flex gap-2" role="group" aria-label="Bộ lọc khách hàng">
+            <Button
+                variant={activeFilter === "all" ? "default" : "outline"}
+                class="px-4 py-2 text-sm font-medium rounded-xl h-auto"
+                onclick={() => setFilter("all")}
+                aria-pressed={activeFilter === "all"}>Tất cả</Button
             >
-            <button
-                class="px-4 py-2 text-sm font-medium rounded-xl bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 flex items-center gap-1.5"
+            <Button
+                variant={activeFilter === "vip" ? "default" : "outline"}
+                class="px-4 py-2 text-sm font-medium rounded-xl flex items-center gap-1.5 h-auto"
+                onclick={() => setFilter("vip")}
+                aria-pressed={activeFilter === "vip"}
             >
-                <Crown class="h-3.5 w-3.5 text-amber-500" />
+                <Crown
+                    class={cn(
+                        "h-3.5 w-3.5",
+                        activeFilter === "vip"
+                            ? "text-white"
+                            : "text-amber-500",
+                    )}
+                    aria-hidden="true"
+                />
                 VIP
-            </button>
+            </Button>
         </div>
     </div>
 
-    <!-- Customers Grid -->
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {#each data.customers as customer, index}
-            <Card
-                class="p-5 border-0 shadow-sm bg-white hover:shadow-lg transition-all duration-300 group overflow-hidden relative"
-            >
-                <!-- Tier Badge -->
-                {#if customer.membershipTier}
-                    <div class="absolute top-3 right-3">
-                        <div
-                            class="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
+    <!-- Customers Table -->
+    <div
+        class="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden"
+    >
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50/50 border-b border-gray-100">
+                    <tr>
+                        <th
+                            class="h-12 px-4 text-left align-middle font-medium text-gray-500 w-[80px]"
+                            >Avatar</th
                         >
-                            <Crown class="h-3 w-3 text-white" />
-                            <span class="text-xs font-semibold text-white"
-                                >{customer.membershipTier.name}</span
-                            >
-                        </div>
-                    </div>
-                {/if}
-
-                <div class="flex items-start gap-4">
-                    <div
-                        class={cn(
-                            "h-14 w-14 rounded-2xl bg-gradient-to-br text-white flex items-center justify-center text-lg font-bold shrink-0 shadow-lg group-hover:scale-105 transition-transform duration-300",
-                            getAvatarGradient(index),
-                        )}
-                    >
-                        {customer.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .slice(0, 2)}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h3
-                            class="font-semibold text-gray-900 truncate text-lg"
+                        <th
+                            class="h-12 px-4 text-left align-middle font-medium text-gray-500"
+                            >Khách hàng</th
                         >
-                            {customer.name}
-                        </h3>
-                        <div class="space-y-2 mt-3">
-                            <div
-                                class="flex items-center gap-2 text-sm text-gray-500"
-                            >
-                                <Phone class="h-4 w-4" />
-                                <span>{customer.phone || "N/A"}</span>
-                            </div>
-                            <div
-                                class="flex items-center gap-2 text-sm text-gray-500"
-                            >
-                                <Mail class="h-4 w-4" />
-                                <span class="truncate"
-                                    >{customer.email || "N/A"}</span
-                                >
-                            </div>
-                            {#if customer.location}
+                        <th
+                            class="h-12 px-4 text-left align-middle font-medium text-gray-500"
+                            >Liên hệ</th
+                        >
+                        <th
+                            class="h-12 px-4 text-left align-middle font-medium text-gray-500"
+                            >Hạng</th
+                        >
+                        <th
+                            class="h-12 px-4 text-left align-middle font-medium text-gray-500"
+                            >Địa chỉ</th
+                        >
+                        <th
+                            class="h-12 px-4 text-left align-middle font-medium text-gray-500"
+                            >Chi tiêu</th
+                        >
+                        <th
+                            class="h-12 px-4 text-left align-middle font-medium text-gray-500"
+                            >Giới tính</th
+                        >
+                        <th
+                            class="h-12 px-4 text-right align-middle font-medium text-gray-500"
+                            >Thao tác</th
+                        >
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {#each filteredCustomers as customer, index}
+                        <tr class="hover:bg-gray-50/50 transition-colors group">
+                            <!-- Avatar -->
+                            <td class="p-4 align-middle">
                                 <div
-                                    class="flex items-center gap-2 text-sm text-gray-500"
+                                    class={cn(
+                                        "h-10 w-10 rounded-full bg-gradient-to-br text-white flex items-center justify-center text-sm font-bold shadow-sm",
+                                        getAvatarGradient(index),
+                                    )}
                                 >
-                                    <MapPin class="h-4 w-4" />
-                                    <span class="truncate"
-                                        >{customer.location}</span
-                                    >
+                                    {customer.name
+                                        .split(" ")
+                                        .map((n) => n[0])
+                                        .join("")
+                                        .slice(0, 2)}
                                 </div>
-                            {/if}
-                        </div>
+                            </td>
 
-                        <!-- Stats bar -->
-                        <div
-                            class="flex items-center gap-4 mt-4 pt-4 border-t border-gray-100"
-                        >
-                            <div class="flex items-center gap-1.5">
-                                <Wallet class="h-3.5 w-3.5 text-gray-400" />
-                                <span class="text-xs text-gray-500"
-                                    >{formatCurrency(
-                                        customer.totalSpent || 0,
-                                    )}đ</span
+                            <!-- Customer Info -->
+                            <td class="p-4 align-middle">
+                                <div class="font-medium text-gray-900">
+                                    {customer.name}
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    {customer.email || ""}
+                                </div>
+                            </td>
+
+                            <!-- Contact -->
+                            <td class="p-4 align-middle">
+                                <div
+                                    class="flex items-center gap-2 text-gray-600"
                                 >
-                            </div>
-                            {#if customer.gender}
-                                <div class="text-xs text-gray-400">•</div>
-                                <span class="text-xs text-gray-500"
-                                    >{customer.gender === "male"
-                                        ? "Nam"
-                                        : customer.gender === "female"
-                                          ? "Nữ"
-                                          : "Khác"}</span
+                                    <Phone
+                                        class="h-3.5 w-3.5"
+                                        aria-hidden="true"
+                                    />
+                                    <span>{customer.phone || "N/A"}</span>
+                                </div>
+                            </td>
+
+                            <!-- Tier -->
+                            <td class="p-4 align-middle">
+                                {#if customer.membershipTier}
+                                    <div
+                                        class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full text-white text-xs font-medium"
+                                    >
+                                        <Crown
+                                            class="h-3 w-3"
+                                            aria-hidden="true"
+                                        />
+                                        <span
+                                            >{customer.membershipTier
+                                                .name}</span
+                                        >
+                                    </div>
+                                {:else}
+                                    <span class="text-xs text-gray-400">-</span>
+                                {/if}
+                            </td>
+
+                            <!-- Location -->
+                            <td class="p-4 align-middle">
+                                <div
+                                    class="flex items-center gap-1.5 text-gray-600 max-w-[200px] truncate"
                                 >
-                            {/if}
-                        </div>
-                    </div>
-                </div>
+                                    {#if customer.location}
+                                        <MapPin
+                                            class="h-3.5 w-3.5 shrink-0 text-gray-400"
+                                            aria-hidden="true"
+                                        />
+                                        <span class="truncate"
+                                            >{customer.location}</span
+                                        >
+                                    {:else}
+                                        <span class="text-gray-400 text-xs"
+                                            >-</span
+                                        >
+                                    {/if}
+                                </div>
+                            </td>
 
-                <!-- Action Buttons -->
-                {#if data.canUpdate || data.canDelete}
-                    <div
-                        class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        class:hidden={customer.membershipTier}
-                    >
-                        {#if data.canUpdate}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                class="h-8 w-8 bg-white/90 hover:bg-blue-500 hover:text-white shadow-sm"
-                                onclick={() => openEditDialog(customer)}
-                            >
-                                <Pencil class="h-4 w-4" />
-                            </Button>
-                        {/if}
-                        {#if data.canDelete}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                class="h-8 w-8 bg-white/90 hover:bg-red-500 hover:text-white shadow-sm"
-                                onclick={() => openDeleteDialog(customer)}
-                            >
-                                <Trash2 class="h-4 w-4" />
-                            </Button>
-                        {/if}
-                    </div>
-                {/if}
+                            <!-- Spent -->
+                            <td class="p-4 align-middle">
+                                <div
+                                    class="font-medium text-gray-900"
+                                    style="font-variant-numeric: tabular-nums;"
+                                >
+                                    {formatCurrency(customer.totalSpent || 0)}đ
+                                </div>
+                            </td>
 
-                <!-- Also show buttons when there's a tier badge -->
-                {#if customer.membershipTier && (data.canUpdate || data.canDelete)}
-                    <div
-                        class="absolute bottom-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                        {#if data.canUpdate}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                class="h-8 w-8 bg-white/90 hover:bg-blue-500 hover:text-white shadow-sm"
-                                onclick={() => openEditDialog(customer)}
-                            >
-                                <Pencil class="h-4 w-4" />
-                            </Button>
-                        {/if}
-                        {#if data.canDelete}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                class="h-8 w-8 bg-white/90 hover:bg-red-500 hover:text-white shadow-sm"
-                                onclick={() => openDeleteDialog(customer)}
-                            >
-                                <Trash2 class="h-4 w-4" />
-                            </Button>
-                        {/if}
-                    </div>
-                {/if}
-            </Card>
-        {/each}
-    </div>
+                            <!-- Gender -->
+                            <td class="p-4 align-middle">
+                                {#if customer.gender}
+                                    <span
+                                        class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600"
+                                    >
+                                        {customer.gender === "male"
+                                            ? "Nam"
+                                            : customer.gender === "female"
+                                              ? "Nữ"
+                                              : "Khác"}
+                                    </span>
+                                {:else}
+                                    <span class="text-gray-400 text-xs">-</span>
+                                {/if}
+                            </td>
 
-    {#if data.customers.length === 0}
-        <div class="text-center py-12">
-            <p class="text-gray-500">
-                Chưa có khách hàng nào. Hãy thêm khách hàng đầu tiên!
-            </p>
+                            <!-- Actions -->
+                            <td class="p-4 align-middle text-right">
+                                {#if data.canUpdate || data.canDelete}
+                                    <div
+                                        class="flex justify-end gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        {#if data.canUpdate}
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                class="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                                                onclick={() =>
+                                                    openEditDialog(customer)}
+                                                aria-label="Chỉnh sửa {customer.name}"
+                                            >
+                                                <Pencil
+                                                    class="h-4 w-4"
+                                                    aria-hidden="true"
+                                                />
+                                            </Button>
+                                        {/if}
+                                        {#if data.canDelete}
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                class="h-8 w-8 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                                                onclick={() =>
+                                                    openDeleteDialog(customer)}
+                                                aria-label="Xóa {customer.name}"
+                                            >
+                                                <Trash2
+                                                    class="h-4 w-4"
+                                                    aria-hidden="true"
+                                                />
+                                            </Button>
+                                        {/if}
+                                    </div>
+                                {/if}
+                            </td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
         </div>
-    {/if}
+
+        {#if filteredCustomers.length === 0}
+            <div
+                class="flex flex-col items-center justify-center py-12 text-center text-gray-500"
+            >
+                <div class="bg-gray-50 p-4 rounded-full mb-3">
+                    <Search class="h-6 w-6 text-gray-400" aria-hidden="true" />
+                </div>
+                {#if searchQuery || activeFilter !== "all"}
+                    <p>Không tìm thấy khách hàng nào phù hợp.</p>
+                    <Button
+                        variant="link"
+                        class="mt-2 text-sm text-purple-600 hover:text-purple-700 underline h-auto p-0"
+                        onclick={() => {
+                            searchQuery = "";
+                            activeFilter = "all";
+                            updateUrlParams();
+                        }}
+                    >
+                        Xóa bộ lọc
+                    </Button>
+                {:else}
+                    <p>Chưa có khách hàng nào. Hãy thêm khách hàng đầu tiên!</p>
+                {/if}
+            </div>
+        {/if}
+    </div>
 </div>
 
 <!-- Create Dialog -->
@@ -384,7 +548,7 @@
                     e.cancel();
                     return;
                 }
-                return handleCreateSubmit();
+                return handleCreateSubmit(e);
             }}
         >
             <Dialog.Header>
@@ -403,6 +567,7 @@
                             name="name"
                             bind:value={createFormData.name}
                             placeholder="Nguyễn Văn A"
+                            autocomplete="name"
                             oninput={() => (createNameError = "")}
                         />
                         {#if createNameError}
@@ -418,8 +583,11 @@
                         <Input
                             id="phone"
                             name="phone"
+                            type="tel"
+                            inputmode="tel"
                             bind:value={createFormData.phone}
                             placeholder="0901234567"
+                            autocomplete="tel"
                             oninput={() => (createPhoneError = "")}
                         />
                         {#if createPhoneError}
@@ -437,22 +605,38 @@
                         type="email"
                         bind:value={createFormData.email}
                         placeholder="example@gmail.com"
+                        autocomplete="email"
                         class="col-span-3"
                     />
                 </div>
                 <div class="grid grid-cols-4 items-center gap-4">
                     <Label for="gender" class="text-right">Giới tính</Label>
-                    <select
-                        id="gender"
+                    <Select.Root
+                        type="single"
                         name="gender"
                         bind:value={createFormData.gender}
-                        class="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
-                        <option value="">Chọn giới tính</option>
-                        <option value="male">Nam</option>
-                        <option value="female">Nữ</option>
-                        <option value="other">Khác</option>
-                    </select>
+                        <Select.Trigger class="w-full col-span-3">
+                            {createFormData.gender === "male"
+                                ? "Nam"
+                                : createFormData.gender === "female"
+                                  ? "Nữ"
+                                  : createFormData.gender === "other"
+                                    ? "Khác"
+                                    : "Chọn giới tính"}
+                        </Select.Trigger>
+                        <Select.Content>
+                            <Select.Item value="male" label="Nam"
+                                >Nam</Select.Item
+                            >
+                            <Select.Item value="female" label="Nữ"
+                                >Nữ</Select.Item
+                            >
+                            <Select.Item value="other" label="Khác"
+                                >Khác</Select.Item
+                            >
+                        </Select.Content>
+                    </Select.Root>
                 </div>
                 <div class="grid grid-cols-4 items-center gap-4">
                     <Label for="location" class="text-right">Địa chỉ</Label>
@@ -461,6 +645,7 @@
                         name="location"
                         bind:value={createFormData.location}
                         placeholder="123 Đường ABC, Quận 1"
+                        autocomplete="street-address"
                         class="col-span-3"
                     />
                 </div>
@@ -484,7 +669,7 @@
                     Hủy
                 </Button>
                 <Button type="submit" disabled={isLoading}>
-                    {isLoading ? "Đang lưu..." : "Lưu khách hàng"}
+                    {isLoading ? "Đang lưu…" : "Lưu khách hàng"}
                 </Button>
             </Dialog.Footer>
         </form>
@@ -514,7 +699,7 @@
                     e.cancel();
                     return;
                 }
-                return handleEditSubmit();
+                return handleEditSubmit(e);
             }}
         >
             <input type="hidden" name="id" value={editFormData.id} />
@@ -533,6 +718,7 @@
                             name="name"
                             bind:value={editFormData.name}
                             placeholder="Nguyễn Văn A"
+                            autocomplete="name"
                             oninput={() => (editNameError = "")}
                         />
                         {#if editNameError}
@@ -548,8 +734,11 @@
                         <Input
                             id="edit-phone"
                             name="phone"
+                            type="tel"
+                            inputmode="tel"
                             bind:value={editFormData.phone}
                             placeholder="0901234567"
+                            autocomplete="tel"
                             oninput={() => (editPhoneError = "")}
                         />
                         {#if editPhoneError}
@@ -567,23 +756,39 @@
                         type="email"
                         bind:value={editFormData.email}
                         placeholder="example@gmail.com"
+                        autocomplete="email"
                         class="col-span-3"
                     />
                 </div>
                 <div class="grid grid-cols-4 items-center gap-4">
                     <Label for="edit-gender" class="text-right">Giới tính</Label
                     >
-                    <select
-                        id="edit-gender"
+                    <Select.Root
+                        type="single"
                         name="gender"
                         bind:value={editFormData.gender}
-                        class="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     >
-                        <option value="">Chọn giới tính</option>
-                        <option value="male">Nam</option>
-                        <option value="female">Nữ</option>
-                        <option value="other">Khác</option>
-                    </select>
+                        <Select.Trigger class="w-full col-span-3">
+                            {editFormData.gender === "male"
+                                ? "Nam"
+                                : editFormData.gender === "female"
+                                  ? "Nữ"
+                                  : editFormData.gender === "other"
+                                    ? "Khác"
+                                    : "Chọn giới tính"}
+                        </Select.Trigger>
+                        <Select.Content>
+                            <Select.Item value="male" label="Nam"
+                                >Nam</Select.Item
+                            >
+                            <Select.Item value="female" label="Nữ"
+                                >Nữ</Select.Item
+                            >
+                            <Select.Item value="other" label="Khác"
+                                >Khác</Select.Item
+                            >
+                        </Select.Content>
+                    </Select.Root>
                 </div>
                 <div class="grid grid-cols-4 items-center gap-4">
                     <Label for="edit-location" class="text-right">Địa chỉ</Label
@@ -593,6 +798,7 @@
                         name="location"
                         bind:value={editFormData.location}
                         placeholder="123 Đường ABC, Quận 1"
+                        autocomplete="street-address"
                         class="col-span-3"
                     />
                 </div>
@@ -616,7 +822,7 @@
                     Hủy
                 </Button>
                 <Button type="submit" disabled={isLoading}>
-                    {isLoading ? "Đang lưu..." : "Cập nhật"}
+                    {isLoading ? "Đang lưu…" : "Cập nhật"}
                 </Button>
             </Dialog.Footer>
         </form>
@@ -650,7 +856,7 @@
                     disabled={isLoading}
                     class="bg-red-600 text-white hover:bg-red-700"
                 >
-                    {isLoading ? "Đang xóa..." : "Xóa khách hàng"}
+                    {isLoading ? "Đang xóa…" : "Xóa khách hàng"}
                 </Button>
             </form>
         </AlertDialog.Footer>

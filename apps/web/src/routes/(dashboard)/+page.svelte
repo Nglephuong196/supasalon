@@ -109,17 +109,20 @@
                             </h3>
                         </div>
                         <div class="flex gap-1 p-1 bg-muted/50 rounded-lg">
-                            <button
-                                class="text-xs px-3 py-1 rounded-md bg-background shadow-sm text-foreground font-medium transition-all"
-                                >Tuần</button
+                            <Button
+                                variant="ghost"
+                                class="text-xs px-3 py-1 rounded-md bg-background shadow-sm text-foreground font-medium h-auto hover:bg-background"
+                                >Tuần</Button
                             >
-                            <button
-                                class="text-xs px-3 py-1 rounded-md hover:bg-background/50 text-muted-foreground font-medium transition-all"
-                                >Tháng</button
+                            <Button
+                                variant="ghost"
+                                class="text-xs px-3 py-1 rounded-md hover:bg-background/50 text-muted-foreground font-medium h-auto"
+                                >Tháng</Button
                             >
-                            <button
-                                class="text-xs px-3 py-1 rounded-md hover:bg-background/50 text-muted-foreground font-medium transition-all"
-                                >Năm</button
+                            <Button
+                                variant="ghost"
+                                class="text-xs px-3 py-1 rounded-md hover:bg-background/50 text-muted-foreground font-medium h-auto"
+                                >Năm</Button
                             >
                         </div>
                     </div>
