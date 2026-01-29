@@ -238,7 +238,7 @@
                 class="btn-gradient shadow-lg shadow-purple-200"
             >
                 <Plus class="h-4 w-4 mr-2" aria-hidden="true" />
-                Thêm khách hàng
+                Tạo mới khách hàng
             </Button>
         {/if}
     </div>

@@ -1,115 +1,248 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc, gte, lte } from "drizzle-orm";
 import type { Database } from "../db";
-import { invoices, bookings, type NewInvoice } from "../db/schema";
+import { invoices, invoiceItems, invoiceItemStaff, bookings, customers, type NewInvoice, type NewInvoiceItem, type NewInvoiceItemStaff } from "../db/schema";
+
+export type CreateInvoiceRequest = NewInvoice & {
+  items?: (NewInvoiceItem & {
+    staff: NewInvoiceItemStaff[]
+  })[]
+};
 
 export class InvoicesService {
   constructor(private db: Database) { }
 
-  async findAll(organizationId: string) {
-    // We need to filter by organizationId which is on the booking
-    // Drizzle's query builder doesn't support deep filtering easily on the root findMany without where clause on the root table if relying on relation filtering
-    // But we don't have organizationId on invoices table directly.
-    // However, we can filter using the relation if we query bookings instead? No we want invoices.
+  async findAll(organizationId: string, filters?: { isOpenInTab?: boolean; from?: Date; to?: Date }) {
+    const conditions = [eq(invoices.organizationId, organizationId)];
 
-    // We can use the existing select with join, but we want structured data.
-    // Actually, `query.invoices.findMany` filtering by a relation field involves slightly more complex syntax or might not be fully supported for deep where depending on driver/version.
-    // But wait, the schema says:
-    // export const invoices = sqliteTable("invoices", { ... })
-    // It does NOT have organizationId.
+    if (filters?.isOpenInTab !== undefined) {
+      conditions.push(eq(invoices.isOpenInTab, filters.isOpenInTab));
+    }
 
-    // Let's stick to the join, but format the result to match what we want, or fetch more data.
-    // Or, simpler: Query bookings that have invoices?
+    if (filters?.from) {
+      conditions.push(gte(invoices.createdAt, filters.from));
+    }
 
-    // Let's try to keep using query builder if possible. 
-    // `where: (invoices, { exists, select, eq }) => exists(select().from(bookings).where(and(eq(bookings.id, invoices.bookingId), eq(bookings.organizationId, organizationId))))`
-    // This is getting complicated.
-
-    // Let's use the DB query builder but fetch necessary fields via join and map them?
-    // Or just use the manual join I had, but add selection for customer/service?
+    if (filters?.to) {
+      conditions.push(lte(invoices.createdAt, filters.to));
+    }
 
     return this.db.query.invoices.findMany({
+      where: and(...conditions),
       with: {
-        booking: {
+        customer: true,
+        booking: true,
+        items: {
           with: {
-            customer: true,
-            service: true
+            staffCommissions: {
+              with: {
+                staff: true // Include staff details
+              }
+            }
           }
         }
       },
-      where: (invoices, { exists, eq, and }) => exists(
-        this.db.select().from(bookings).where(
-          and(
-            eq(bookings.id, invoices.bookingId),
-            eq(bookings.organizationId, organizationId)
-          )
-        )
-      )
+      orderBy: [desc(invoices.createdAt)]
     });
   }
 
   async findById(id: number, organizationId: string) {
-    const result = await this.db
-      .select({
-        id: invoices.id,
-        bookingId: invoices.bookingId,
-        amount: invoices.amount,
-        status: invoices.status,
-        paidAt: invoices.paidAt,
-        createdAt: invoices.createdAt,
-      })
-      .from(invoices)
-      .innerJoin(bookings, eq(invoices.bookingId, bookings.id))
-      .where(and(eq(invoices.id, id), eq(bookings.organizationId, organizationId)))
-      .get();
-
-    return result;
+    return this.db.query.invoices.findFirst({
+      where: and(eq(invoices.id, id), eq(invoices.organizationId, organizationId)),
+      with: {
+        customer: true,
+        booking: true,
+        items: {
+          with: {
+            staffCommissions: {
+              with: {
+                staff: true
+              }
+            }
+          }
+        }
+      }
+    });
   }
 
   async findByBookingId(bookingId: number, organizationId: string) {
-    const result = await this.db
-      .select({
-        id: invoices.id,
-        bookingId: invoices.bookingId,
-        amount: invoices.amount,
-        status: invoices.status,
-        paidAt: invoices.paidAt,
-        createdAt: invoices.createdAt,
-      })
-      .from(invoices)
-      .innerJoin(bookings, eq(invoices.bookingId, bookings.id))
-      .where(and(eq(invoices.bookingId, bookingId), eq(bookings.organizationId, organizationId)))
-      .get();
-
-    return result;
+    return this.db.query.invoices.findFirst({
+      where: and(eq(invoices.bookingId, bookingId), eq(invoices.organizationId, organizationId)),
+      with: {
+        customer: true,
+        items: {
+          with: {
+            staffCommissions: {
+              with: {
+                staff: true
+              }
+            }
+          }
+        }
+      }
+    });
   }
 
-  async create(data: NewInvoice, organizationId: string) {
-    // Verify booking belongs to salon
-    const booking = await this.db.select().from(bookings).where(and(eq(bookings.id, data.bookingId), eq(bookings.organizationId, organizationId))).get();
+  async create(data: CreateInvoiceRequest, organizationId: string) {
+    const { items, id, ...cleanInvoiceData } = data;
 
-    if (!booking) {
-      throw new Error("Booking not found or access denied");
+    // Explicitly construct insert data to avoid any weirdness with partial spread
+    const insertData: any = {
+      organizationId,
+      subtotal: cleanInvoiceData.subtotal || 0,
+      discountValue: cleanInvoiceData.discountValue || 0,
+      discountType: cleanInvoiceData.discountType || 'percent',
+      total: cleanInvoiceData.total || 0,
+      amountPaid: cleanInvoiceData.amountPaid || 0,
+      change: cleanInvoiceData.change || 0,
+      status: cleanInvoiceData.status || 'pending',
+      paymentMethod: cleanInvoiceData.paymentMethod,
+      notes: cleanInvoiceData.notes,
+      customerId: cleanInvoiceData.customerId,
+      bookingId: cleanInvoiceData.bookingId,
+      createdAt: cleanInvoiceData.createdAt instanceof Date ? cleanInvoiceData.createdAt : (cleanInvoiceData.createdAt ? new Date(cleanInvoiceData.createdAt) : new Date()),
+      paidAt: cleanInvoiceData.paidAt ? new Date(cleanInvoiceData.paidAt) : null,
+      isOpenInTab: cleanInvoiceData.isOpenInTab ?? true,
+      deletedAt: cleanInvoiceData.deletedAt ? new Date(cleanInvoiceData.deletedAt) : null
+    };
+
+    // Filter undefined values
+    Object.keys(insertData).forEach(key => insertData[key] === undefined && delete insertData[key]);
+
+    // D1/SQLite handles NULL in AUTOINCREMENT columns by using the next sequence value.
+    // Drizzle's insert should now work since the 'deleted_at' column exists in the DB.
+    const [newInvoice] = await this.db.insert(invoices).values(insertData).returning();
+
+    // Handle items and commissions
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const { staff, ...rest } = item;
+
+        // Explicitly map only the fields the DB expects
+        const itemData = {
+          invoiceId: newInvoice.id,
+          type: item.type,
+          referenceId: item.referenceId || null,
+          name: item.name,
+          quantity: Number(item.quantity) || 1,
+          unitPrice: Number(item.unitPrice) || 0,
+          discountValue: Number(item.discountValue) || 0,
+          discountType: item.discountType || 'percent',
+          total: Number(item.total) || 0,
+        };
+
+        // Create Invoice Item
+        const [newItem] = await this.db.insert(invoiceItems).values(itemData).returning();
+
+        // Create Staff Commissions
+        if (staff && staff.length > 0) {
+          const staffData = staff.map((s: any) => ({
+            invoiceItemId: newItem.id,
+            staffId: s.staffId,
+            role: s.role || 'technician',
+            commissionValue: Number(s.commissionValue) || 0,
+            commissionType: s.commissionType || 'percent',
+            bonus: Number(s.bonus) || 0,
+          }));
+          await this.db.insert(invoiceItemStaff).values(staffData);
+        }
+      }
     }
 
-    const result = await this.db.insert(invoices).values(data).returning();
-    return result[0];
+    return newInvoice;
   }
 
-  async update(id: number, organizationId: string, data: Partial<NewInvoice>) {
-    // First verify access
-    const existing = await this.findById(id, organizationId);
-    if (!existing) return undefined;
+  async update(id: number, organizationId: string, data: Partial<CreateInvoiceRequest>) {
+    // Handling completion logic
+    // If status is becoming 'paid', set paidAt and close tab
+    const updates: Partial<NewInvoice> = { ...data };
 
-    const result = await this.db.update(invoices).set(data).where(eq(invoices.id, id)).returning();
-    return result[0];
+    // Convert date strings to Date objects
+    if (updates.createdAt && typeof updates.createdAt === 'string') {
+      updates.createdAt = new Date(updates.createdAt);
+    }
+    if (updates.paidAt && typeof updates.paidAt === 'string') {
+      updates.paidAt = new Date(updates.paidAt);
+    }
+    if (updates.deletedAt && typeof updates.deletedAt === 'string') {
+      updates.deletedAt = new Date(updates.deletedAt);
+    }
+
+    // Explicit completion logic
+    if (data.status === 'paid') {
+      updates.paidAt = new Date();
+      updates.isOpenInTab = false; // Close tab on complete
+    }
+
+    // Keep isOpenInTab logic if explicitly passed (e.g. closing tab without completing)
+    if (data.isOpenInTab !== undefined) {
+      updates.isOpenInTab = data.isOpenInTab;
+    }
+
+    const { items, ...invoiceFields } = updates as CreateInvoiceRequest;
+
+    const [updated] = await this.db.update(invoices)
+      .set(invoiceFields)
+      .where(and(eq(invoices.id, id), eq(invoices.organizationId, organizationId)))
+      .returning();
+
+    // Handle items update if provided
+    if (items) {
+      // 1. Delete existing items (and cascade deletes staff commissions)
+      await this.db.delete(invoiceItems).where(eq(invoiceItems.invoiceId, id));
+
+      // 2. Insert new items
+      if (items.length > 0) {
+        for (const item of items) {
+          const { staff, ...rest } = item;
+
+          // Explicitly map only the fields the DB expects
+          const itemData = {
+            invoiceId: id,
+            type: item.type,
+            referenceId: item.referenceId || null,
+            name: item.name,
+            quantity: Number(item.quantity) || 1,
+            unitPrice: Number(item.unitPrice) || 0,
+            discountValue: Number(item.discountValue) || 0,
+            discountType: item.discountType || 'percent',
+            total: Number(item.total) || 0,
+          };
+
+          // Create Invoice Item
+          const [newItem] = await this.db.insert(invoiceItems).values(itemData).returning();
+
+          // Create Staff Commissions
+          if (staff && staff.length > 0) {
+            const staffData = staff.map((s: any) => ({
+              invoiceItemId: newItem.id,
+              staffId: s.staffId,
+              role: s.role || 'technician',
+              commissionValue: Number(s.commissionValue) || 0,
+              commissionType: s.commissionType || 'percent',
+              bonus: Number(s.bonus) || 0,
+            }));
+            await this.db.insert(invoiceItemStaff).values(staffData);
+          }
+        }
+      }
+    }
+
+    return updated;
   }
 
   async delete(id: number, organizationId: string) {
-    // First verify access
-    const existing = await this.findById(id, organizationId);
-    if (!existing) return undefined;
+    // Soft delete: status -> cancelled, deletedAt -> now, close tab
+    // Instead of deleting the record, we mark it.
+    const [cancelled] = await this.db.update(invoices)
+      .set({
+        status: 'cancelled',
+        deletedAt: new Date(),
+        isOpenInTab: false
+      })
+      .where(and(eq(invoices.id, id), eq(invoices.organizationId, organizationId)))
+      .returning();
 
-    const result = await this.db.delete(invoices).where(eq(invoices.id, id)).returning();
-    return result[0];
+    // Optionally we can still return it as if it was "deleted" or just the cancelled record
+    return cancelled;
   }
 }

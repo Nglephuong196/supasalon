@@ -27,7 +27,7 @@
     } = $props();
 
     let open = $state(false);
-    let triggerRef = $state<HTMLButtonElement>(null!);
+    let triggerRef = $state<HTMLButtonElement | null>(null);
 
     const selectedLabel = $derived(
         items.find((item) => item.value === value)?.label,
@@ -39,7 +39,7 @@
     function closeAndFocusTrigger() {
         open = false;
         tick().then(() => {
-            triggerRef.focus();
+            triggerRef?.focus();
         });
     }
 </script>

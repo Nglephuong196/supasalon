@@ -193,11 +193,47 @@ export const bookingServices = sqliteTable("booking_services", {
 // Invoices
 export const invoices = sqliteTable("invoices", {
   id: integer("id").primaryKey({ autoIncrement: true }),
-  bookingId: integer("booking_id").notNull().references(() => bookings.id).unique(),
-  amount: real("amount").notNull(),
-  status: text("status", { enum: ["pending", "paid", "cancelled"] }).notNull().default("pending"),
+  organizationId: text("organization_id").notNull().references(() => organization.id),
+  customerId: integer("customer_id").references(() => customers.id),
+  bookingId: integer("booking_id").references(() => bookings.id),
+  subtotal: real("subtotal").notNull().default(0),
+  discountValue: real("discount_value").default(0),
+  discountType: text("discount_type", { enum: ["percent", "fixed"] }).default("percent"),
+  total: real("total").notNull().default(0),
+  amountPaid: real("amount_paid").default(0),
+  change: real("change").default(0),
+  status: text("status", { enum: ["pending", "paid", "cancelled", "refunded"] }).notNull().default("pending"),
+  paymentMethod: text("payment_method", { enum: ["cash", "card", "transfer"] }),
+  notes: text("notes"),
   paidAt: integer("paid_at", { mode: "timestamp" }),
+  isOpenInTab: integer("is_open_in_tab", { mode: "boolean" }).default(true),
+  deletedAt: integer("deleted_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+// Invoice Items
+export const invoiceItems = sqliteTable("invoice_items", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  invoiceId: integer("invoice_id").notNull().references(() => invoices.id, { onDelete: 'cascade' }),
+  type: text("type", { enum: ["service", "product", "package", "other"] }).notNull(),
+  referenceId: integer("reference_id"),
+  name: text("name").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  unitPrice: real("unit_price").notNull(),
+  discountValue: real("discount_value").default(0),
+  discountType: text("discount_type", { enum: ["percent", "fixed"] }).default("percent"),
+  total: real("total").notNull(),
+});
+
+// Invoice Item Staff (Commissions)
+export const invoiceItemStaff = sqliteTable("invoice_item_staff", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  invoiceItemId: integer("invoice_item_id").notNull().references(() => invoiceItems.id, { onDelete: 'cascade' }),
+  staffId: text("staff_id").notNull().references(() => member.id),
+  role: text("role", { enum: ["technician", "seller"] }).notNull().default("technician"),
+  commissionValue: real("commission_value").default(0),
+  commissionType: text("commission_type", { enum: ["percent", "fixed"] }).default("percent"),
+  bonus: real("bonus").default(0),
 });
 
 // Customer Memberships
@@ -309,8 +345,22 @@ export const bookingServicesRelations = relations(bookingServices, ({ one }) => 
 }));
 */
 
-export const invoicesRelations = relations(invoices, ({ one }) => ({
+// Invoices Relations
+export const invoicesRelations = relations(invoices, ({ one, many }) => ({
+  organization: one(organization, { fields: [invoices.organizationId], references: [organization.id] }),
+  customer: one(customers, { fields: [invoices.customerId], references: [customers.id] }),
   booking: one(bookings, { fields: [invoices.bookingId], references: [bookings.id] }),
+  items: many(invoiceItems),
+}));
+
+export const invoiceItemsRelations = relations(invoiceItems, ({ one, many }) => ({
+  invoice: one(invoices, { fields: [invoiceItems.invoiceId], references: [invoices.id] }),
+  staffCommissions: many(invoiceItemStaff),
+}));
+
+export const invoiceItemStaffRelations = relations(invoiceItemStaff, ({ one }) => ({
+  item: one(invoiceItems, { fields: [invoiceItemStaff.invoiceItemId], references: [invoiceItems.id] }),
+  staff: one(member, { fields: [invoiceItemStaff.staffId], references: [member.id] }),
 }));
 
 export const memberPermissionsRelations = relations(memberPermissions, ({ one }) => ({
@@ -356,6 +406,12 @@ export type NewBooking = typeof bookings.$inferInsert;
 
 export type Invoice = typeof invoices.$inferSelect;
 export type NewInvoice = typeof invoices.$inferInsert;
+
+export type InvoiceItem = typeof invoiceItems.$inferSelect;
+export type NewInvoiceItem = typeof invoiceItems.$inferInsert;
+
+export type InvoiceItemStaff = typeof invoiceItemStaff.$inferSelect;
+export type NewInvoiceItemStaff = typeof invoiceItemStaff.$inferInsert;
 
 export type CustomerMembership = typeof customerMemberships.$inferSelect;
 export type NewCustomerMembership = typeof customerMemberships.$inferInsert;

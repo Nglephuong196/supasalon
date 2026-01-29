@@ -15,6 +15,27 @@
       "when": 1769007328962,
       "tag": "0001_chemical_princess_powerful",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1769266403529,
+      "tag": "0002_advanced_invoicing",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1769442713987,
+      "tag": "0003_absurd_ender_wiggin",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1769503691411,
+      "tag": "0004_gorgeous_scorpion",
+      "breakpoints": true
     }
   ]
 }

@@ -13,35 +13,26 @@
     import Combobox from "$lib/components/ui/combobox/combobox.svelte";
     import { Store, Loader } from "@lucide/svelte";
     import { VIETNAM_PROVINCES, VIETNAM_PHONE_REGEX } from "@repo/constants";
-    import { enhance } from "$app/forms";
-    import type { ActionData } from "./$types";
+    import { signUp, organization } from "$lib/auth-client";
+    import { goto } from "$app/navigation";
 
-    let { form }: { form: ActionData } = $props();
+    // Initialize state
+    let formData = $state({
+        ownerName: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        salonName: "",
+        province: "",
+        address: "",
+        phone: "",
+    });
 
-    // Initialize state from form data if available (keep values on error)
-    let ownerName = $state(form?.data?.ownerName || "");
-    let email = $state(form?.data?.email || "");
-    let password = $state("");
-    let confirmPassword = $state("");
-    let salonName = $state(form?.data?.salonName || "");
-    let province = $state(form?.data?.province || "");
-    let address = $state(form?.data?.address || "");
-    let phone = $state(form?.data?.ownerPhone || ""); // Renaming to match server expectation if needed, server expects ownerPhone
-
-    // Server errors take precedence
-    let error = $derived(form?.errors?.form || null);
+    let error = $state<string | null>(null);
     let isLoading = $state(false);
 
-    // Initial validation errors from server, plus client-side updates
+    // Validation errors
     let errors = $state<Record<string, string | null>>({});
-
-    // Sync server errors to client state
-    $effect(() => {
-        if (form?.errors) {
-            errors = { ...errors, ...form.errors };
-            isLoading = false;
-        }
-    });
 
     function validateOwnerName(value: string): boolean {
         if (!value || value.length < 2) {
@@ -67,7 +58,6 @@
     }
 
     function validatePassword(value: string): boolean {
-        // Only validate if user is typing a password (don't validate emptiness too aggressively on initial load unless submitting)
         if (!value || value.length < 8) {
             errors = {
                 ...errors,
@@ -80,7 +70,7 @@
     }
 
     function validateConfirmPassword(value: string): boolean {
-        if (value !== password) {
+        if (value !== formData.password) {
             errors = { ...errors, confirmPassword: "Mật khẩu không khớp" };
             return false;
         }
@@ -110,7 +100,6 @@
     }
 
     function validateAddress(value: string): boolean {
-        // Optional logic adjustment, keep it consistent with previous
         if (!value || value.length < 5) {
             errors = { ...errors, address: "Vui lòng nhập địa chỉ đầy đủ" };
             return false;
@@ -133,6 +122,82 @@
         }
         errors = { ...errors, ownerPhone: null };
         return true;
+    }
+
+    async function handleSubmit(e: SubmitEvent) {
+        e.preventDefault();
+
+        // Validate all fields
+        const isOwnerNameValid = validateOwnerName(formData.ownerName);
+        const isEmailValid = validateEmail(formData.email);
+        const isPasswordValid = validatePassword(formData.password);
+        const isConfirmPasswordValid = validateConfirmPassword(
+            formData.confirmPassword,
+        );
+        const isSalonNameValid = validateSalonName(formData.salonName);
+        const isProvinceValid = validateProvince(formData.province);
+        const isAddressValid = validateAddress(formData.address);
+        const isPhoneValid = validatePhone(formData.phone);
+
+        if (
+            !isOwnerNameValid ||
+            !isEmailValid ||
+            !isPasswordValid ||
+            !isConfirmPasswordValid ||
+            !isSalonNameValid ||
+            !isProvinceValid ||
+            !isAddressValid ||
+            !isPhoneValid
+        ) {
+            return;
+        }
+
+        isLoading = true;
+        error = null;
+
+        try {
+            // 1. Sign Up User
+            const signUpRes = await signUp.email({
+                email: formData.email,
+                password: formData.password,
+                name: formData.ownerName,
+            });
+
+            if (signUpRes.error) {
+                error = signUpRes.error.message || "Đăng ký thất bại";
+                isLoading = false;
+                return;
+            }
+
+            // 2. Create Organization
+            const slug = formData.salonName
+                .toLowerCase()
+                .replace(/\s+/g, "-")
+                .replace(/[^a-z0-9-]/g, "");
+
+            const orgRes = await organization.create({
+                name: formData.salonName,
+                slug,
+            });
+
+            if (orgRes.error) {
+                // Note: User is created but org failed.
+                // Ideally backend handles transaction or we explicitly handle this state.
+                // For now, show error.
+                error =
+                    orgRes.error.message ||
+                    "Không thể tạo Salon. Vui lòng thử lại.";
+                isLoading = false;
+                return;
+            }
+
+            // Success
+            goto("/");
+        } catch (err: any) {
+            console.error(err);
+            error = err.message || "Đã có lỗi xảy ra. Vui lòng thử lại sau.";
+            isLoading = false;
+        }
     }
 </script>
 
@@ -173,17 +238,7 @@
                     {error}
                 </div>
             {/if}
-            <form
-                method="POST"
-                use:enhance={() => {
-                    isLoading = true;
-                    return async ({ update }) => {
-                        await update();
-                        isLoading = false;
-                    };
-                }}
-                class="space-y-4"
-            >
+            <form onsubmit={handleSubmit} class="space-y-4">
                 <!-- Account Section -->
                 <div class="space-y-3">
                     <div
@@ -199,8 +254,8 @@
                             placeholder="Nguyễn Văn A"
                             autocomplete="name"
                             disabled={isLoading}
-                            bind:value={ownerName}
-                            onblur={() => validateOwnerName(ownerName)}
+                            bind:value={formData.ownerName}
+                            onblur={() => validateOwnerName(formData.ownerName)}
                         />
                         {#if errors.ownerName}
                             <p class="text-sm text-destructive">
@@ -217,8 +272,8 @@
                             placeholder="email@example.com"
                             autocomplete="email"
                             disabled={isLoading}
-                            bind:value={email}
-                            onblur={() => validateEmail(email)}
+                            bind:value={formData.email}
+                            onblur={() => validateEmail(formData.email)}
                         />
                         {#if errors.email}
                             <p class="text-sm text-destructive">
@@ -236,8 +291,9 @@
                                 placeholder="••••••••"
                                 autocomplete="new-password"
                                 disabled={isLoading}
-                                bind:value={password}
-                                onblur={() => validatePassword(password)}
+                                bind:value={formData.password}
+                                onblur={() =>
+                                    validatePassword(formData.password)}
                             />
                             {#if errors.password}
                                 <p class="text-sm text-destructive">
@@ -254,9 +310,11 @@
                                 placeholder="••••••••"
                                 autocomplete="new-password"
                                 disabled={isLoading}
-                                bind:value={confirmPassword}
+                                bind:value={formData.confirmPassword}
                                 onblur={() =>
-                                    validateConfirmPassword(confirmPassword)}
+                                    validateConfirmPassword(
+                                        formData.confirmPassword,
+                                    )}
                             />
                             {#if errors.confirmPassword}
                                 <p class="text-sm text-destructive">
@@ -281,8 +339,8 @@
                             name="salonName"
                             placeholder="VD: Beauty Spa & Nail"
                             disabled={isLoading}
-                            bind:value={salonName}
-                            onblur={() => validateSalonName(salonName)}
+                            bind:value={formData.salonName}
+                            onblur={() => validateSalonName(formData.salonName)}
                         />
                         {#if errors.salonName}
                             <p class="text-sm text-destructive">
@@ -293,12 +351,6 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div class="space-y-2">
                             <Label for="province">Tỉnh/Thành phố</Label>
-                            <!-- Hidden input to submit combobox value -->
-                            <input
-                                type="hidden"
-                                name="province"
-                                value={province}
-                            />
                             <Combobox
                                 placeholder="Chọn tỉnh/thành"
                                 searchPlaceholder="Tìm tỉnh/thành phố..."
@@ -306,7 +358,7 @@
                                     value: prov,
                                     label: prov,
                                 }))}
-                                bind:value={province}
+                                bind:value={formData.province}
                             />
                             {#if errors.province}
                                 <p class="text-sm text-destructive">
@@ -322,8 +374,8 @@
                                 type="tel"
                                 placeholder="0901234567"
                                 disabled={isLoading}
-                                bind:value={phone}
-                                onblur={() => validatePhone(phone)}
+                                bind:value={formData.phone}
+                                onblur={() => validatePhone(formData.phone)}
                             />
                             {#if errors.ownerPhone}
                                 <p class="text-sm text-destructive">
@@ -339,8 +391,8 @@
                             name="address"
                             placeholder="Số nhà, đường, phường/xã, quận/huyện"
                             disabled={isLoading}
-                            bind:value={address}
-                            onblur={() => validateAddress(address)}
+                            bind:value={formData.address}
+                            onblur={() => validateAddress(formData.address)}
                         />
                         {#if errors.address}
                             <p class="text-sm text-destructive">

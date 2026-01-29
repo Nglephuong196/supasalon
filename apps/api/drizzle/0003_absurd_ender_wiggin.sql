@@ -1,0 +1,1 @@
+ALTER TABLE `invoices` ADD `is_open_in_tab` integer DEFAULT true;

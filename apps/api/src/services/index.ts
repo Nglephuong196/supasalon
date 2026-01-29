@@ -6,7 +6,7 @@ export { ServicesService } from "./services";
 export { ProductCategoriesService } from "./product-categories";
 export { ProductsService } from "./products";
 export { BookingsService } from "./bookings";
-export { InvoicesService } from "./invoices";
+export * from "./invoices";
 export { MembersService } from "./members";
 export { MembershipTiersService } from "./membership-tiers";
 

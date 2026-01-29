@@ -198,11 +198,9 @@
                 {#if canManageEmployees}
                     <Dialog.Root bind:open={isAddOpen}>
                         <Dialog.Trigger>
-                            <Button
-                                class="bg-purple-600 hover:bg-purple-700 h-9"
-                            >
+                            <Button class="btn-gradient h-9">
                                 <Plus class="h-4 w-4 mr-2" aria-hidden="true" />
-                                Thêm
+                                Tạo mới nhân viên
                             </Button>
                         </Dialog.Trigger>
                         <Dialog.Content>
@@ -348,7 +346,8 @@
                                         onclick={() => (isAddOpen = false)}
                                         >Hủy</Button
                                     >
-                                    <Button type="submit">Thêm nhân viên</Button
+                                    <Button type="submit"
+                                        >Tạo mới nhân viên</Button
                                     >
                                 </Dialog.Footer>
                             </form>

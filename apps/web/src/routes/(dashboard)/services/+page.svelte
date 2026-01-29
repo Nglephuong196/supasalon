@@ -246,7 +246,7 @@
                     onclick={openCreateCategory}
                 >
                     <Plus class="h-3 w-3 mr-1" aria-hidden="true" />
-                    Thêm
+                    Tạo mới
                 </Button>
             </div>
         </div>
@@ -267,7 +267,7 @@
                     size="icon"
                     class="h-8 w-8 hover:bg-primary/10 hover:text-primary"
                     onclick={openCreateCategory}
-                    aria-label="Thêm danh mục"
+                    aria-label="Tạo mới danh mục"
                 >
                     <Plus class="h-4 w-4" aria-hidden="true" />
                 </Button>
@@ -427,10 +427,11 @@
 
                         <Button
                             onclick={openCreateService}
-                            class="bg-purple-600 hover:bg-purple-700 h-9 shrink-0"
+                            class="btn-gradient h-9 shrink-0"
                         >
                             <Plus class="h-4 w-4 sm:mr-2" aria-hidden="true" />
-                            <span class="hidden sm:inline">Thêm</span>
+                            <span class="hidden sm:inline">Tạo mới dịch vụ</span
+                            >
                         </Button>
                     </div>
                 </div>
@@ -618,7 +619,7 @@
             <Dialog.Title
                 >{editingCategory
                     ? "Sửa danh mục"
-                    : "Thêm danh mục"}</Dialog.Title
+                    : "Tạo mới danh mục"}</Dialog.Title
             >
         </Dialog.Header>
         <form
@@ -676,7 +677,7 @@
             <Dialog.Title
                 >{editingService?.id
                     ? "Sửa dịch vụ"
-                    : "Thêm dịch vụ"}</Dialog.Title
+                    : "Tạo mới dịch vụ"}</Dialog.Title
             >
         </Dialog.Header>
         <form

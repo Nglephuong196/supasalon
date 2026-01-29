@@ -25,7 +25,7 @@
         nếu bạn cho rằng đây là lỗi.
     </p>
 
-    <Button variant="link" href="/" class="btn-gradient">
+    <Button href="/" class="btn-gradient">
         <Home class="h-4 w-4 mr-2" />
         Về trang chủ
     </Button>

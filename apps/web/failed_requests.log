@@ -1,0 +1,816 @@
+[2026-01-27T02:22:40.638Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: begin\nparams: "}
+----------------------------------------
+[2026-01-27T02:25:22.970Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T02:25:23.418Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T02:25:24.811Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T02:29:47.598Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T02:30:09.337Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T02:41:23.470Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:09:43.359Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:48:16.617Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:48:47.513Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:49:17.185Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:51:26.439Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:51:35.351Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:53:46.281Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:53:57.773Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:55:07.049Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:56:00.973Z] PUT http://localhost:8787/invoices/1 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T03:56:02.805Z] PUT http://localhost:8787/invoices/1 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T03:56:22.472Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:56:25.320Z] PUT http://localhost:8787/invoices/1 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T03:56:32.240Z] PUT http://localhost:8787/invoices/1 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T03:56:35.407Z] PUT http://localhost:8787/invoices/1 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T03:56:56.909Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:57:13.276Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:57:13.538Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:57:13.861Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:57:15.436Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:57:16.280Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T03:57:20.447Z] PUT http://localhost:8787/invoices/1 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T07:25:12.324Z] PUT http://localhost:8787/invoices/1 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T07:29:30.059Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769498970"}
+----------------------------------------
+[2026-01-27T07:31:41.246Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769499101"}
+----------------------------------------
+[2026-01-27T07:31:56.990Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T07:32:01.915Z] PUT http://localhost:8787/invoices/1 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T07:32:02.724Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769499122"}
+----------------------------------------
+[2026-01-27T07:34:31.933Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T07:34:34.333Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769499274"}
+----------------------------------------
+[2026-01-27T07:34:40.508Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769499280"}
+----------------------------------------
+[2026-01-27T07:36:54.104Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T07:37:20.800Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769499440"}
+----------------------------------------
+[2026-01-27T07:37:56.363Z] PUT http://localhost:8787/invoices/1 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T07:38:01.147Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769499481"}
+----------------------------------------
+[2026-01-27T07:40:38.224Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769499638"}
+----------------------------------------
+[2026-01-27T07:43:23.514Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769499803"}
+----------------------------------------
+[2026-01-27T07:43:40.700Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769499820"}
+----------------------------------------
+[2026-01-27T07:44:00.622Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T07:44:34.823Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769499874"}
+----------------------------------------
+[2026-01-27T07:46:42.264Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769500002"}
+----------------------------------------
+[2026-01-27T07:46:43.466Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769500003"}
+----------------------------------------
+[2026-01-27T07:47:28.856Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T07:47:32.135Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769500052"}
+----------------------------------------
+[2026-01-27T07:50:41.817Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T07:50:50.943Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769500250"}
+----------------------------------------
+[2026-01-27T07:50:53.341Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769500253"}
+----------------------------------------
+[2026-01-27T07:50:54.452Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769500254"}
+----------------------------------------
+[2026-01-27T07:55:24.177Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:01:14.171Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, null, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,pending,1,1769500874"}
+----------------------------------------
+[2026-01-27T08:23:59.906Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:32:22.212Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:32:32.809Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:41:00.650Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:41:01.256Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:41:05.164Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, ?, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,paid,cash,1,1769503265"}
+----------------------------------------
+[2026-01-27T08:42:39.341Z] POST http://localhost:8787/invoices - 400 Bad Request
+Response Body: {"error":"Failed query: insert into \"invoices\" (\"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\") values (null, ?, null, null, ?, ?, ?, ?, ?, ?, ?, ?, null, null, ?, null, ?) returning \"id\", \"organization_id\", \"customer_id\", \"booking_id\", \"subtotal\", \"discount_value\", \"discount_type\", \"total\", \"amount_paid\", \"change\", \"status\", \"payment_method\", \"notes\", \"paid_at\", \"is_open_in_tab\", \"deleted_at\", \"created_at\"\nparams: RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9,0,0,percent,0,0,0,paid,cash,1,1769503359"}
+----------------------------------------
+[2026-01-27T08:49:29.526Z] PUT http://localhost:8787/invoices/1 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T08:49:29.529Z] PUT http://localhost:8787/invoices/2 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T08:49:36.982Z] PUT http://localhost:8787/invoices/3 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T08:49:45.055Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:54:50.213Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:54:51.580Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:55:17.177Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:56:16.791Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:56:18.000Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:59:06.386Z] PUT http://localhost:8787/invoices/4 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T08:59:10.017Z] PUT http://localhost:8787/invoices/5 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T08:59:14.595Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:59:18.318Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:59:19.358Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:59:19.916Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:59:21.512Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:59:22.693Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:59:24.710Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:59:31.621Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T08:59:32.110Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:00:07.156Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:00:07.156Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:01:42.472Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:03:59.621Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:04:12.447Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:04:20.765Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:04:25.714Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:04:27.064Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:05:45.266Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:06:02.698Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:06:07.876Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:07:55.340Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:08:00.852Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:08:11.697Z] PUT http://localhost:8787/invoices/5 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:08:11.718Z] PUT http://localhost:8787/invoices/4 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:08:11.744Z] PUT http://localhost:8787/invoices/3 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:08:11.764Z] PUT http://localhost:8787/invoices/2 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:08:11.784Z] PUT http://localhost:8787/invoices/1 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:08:14.079Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:08:16.969Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:08:18.907Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:08:20.528Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:08:22.912Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:08:26.937Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:08:30.743Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:08:31.864Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:08:32.819Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:10:21.259Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:10:22.835Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:10:33.125Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:10:39.969Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:10:44.036Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:10:46.915Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:10:48.035Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:10:50.423Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:10:53.599Z] PUT http://localhost:8787/invoices/5 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:10:53.579Z] PUT http://localhost:8787/invoices/2 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:10:53.601Z] PUT http://localhost:8787/invoices/4 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:10:53.596Z] PUT http://localhost:8787/invoices/1 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:11:03.197Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:11:05.906Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:11:07.573Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:11:09.777Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:15:15.209Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:15:21.203Z] PUT http://localhost:8787/invoices/5 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:15:21.239Z] PUT http://localhost:8787/invoices/3 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:15:21.242Z] PUT http://localhost:8787/invoices/4 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:15:21.261Z] PUT http://localhost:8787/invoices/2 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:15:21.285Z] PUT http://localhost:8787/invoices/1 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:18:19.043Z] PUT http://localhost:8787/invoices/5 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:18:19.061Z] PUT http://localhost:8787/invoices/4 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:18:19.080Z] PUT http://localhost:8787/invoices/3 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:18:19.100Z] PUT http://localhost:8787/invoices/2 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:18:19.120Z] PUT http://localhost:8787/invoices/1 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:19:55.608Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:19:59.131Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:01.510Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:08.259Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:10.618Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:13.123Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:14.720Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:18.893Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:20.343Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:21.986Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:24.487Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:26.252Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:29.187Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:30.466Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:33.849Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:36.791Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:41.714Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:20:41.932Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:22:52.964Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:27:10.225Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:55:54.559Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:55:55.072Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:55:56.248Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:55:58.812Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:56:01.559Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:56:01.740Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:56:03.118Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:58:19.528Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:58:27.376Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:58:28.235Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:58:28.991Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:58:31.097Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:58:43.770Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:58:51.789Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:58:53.788Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:58:57.132Z] PUT http://localhost:8787/invoices/5 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:59:00.540Z] PUT http://localhost:8787/invoices/5 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:59:02.234Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:59:05.273Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:59:11.064Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:59:13.568Z] PUT http://localhost:8787/invoices/5 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:59:16.802Z] PUT http://localhost:8787/invoices/5 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:59:20.865Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:59:23.694Z] PUT http://localhost:8787/invoices/5 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:59:27.443Z] PUT http://localhost:8787/invoices/5 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:59:31.995Z] PUT http://localhost:8787/invoices/5 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:59:35.942Z] PUT http://localhost:8787/invoices/5 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-27T09:59:36.973Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-27T09:59:39.659Z] PUT http://localhost:8787/invoices/5 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T02:08:45.279Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T04:27:58.257Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T04:27:58.892Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T04:28:21.272Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T04:28:26.049Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T04:32:52.553Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T04:33:07.287Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T04:33:19.997Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T04:33:22.087Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:25:48.085Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T06:25:53.470Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:26:02.740Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:26:05.038Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:27:57.300Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:28:19.680Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:28:25.468Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:31:35.107Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:31:42.611Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:31:43.152Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T06:31:46.939Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:31:50.913Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:32:02.260Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:32:18.300Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:32:20.322Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:36:23.070Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:40:32.427Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T06:40:36.186Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:40:38.388Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:40:41.196Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T06:40:43.554Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:55:29.887Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T06:55:33.231Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:55:34.734Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:55:38.842Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:55:55.612Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T06:55:58.091Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:58:40.021Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T06:59:02.007Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: Internal Server Error
+----------------------------------------
+[2026-01-28T07:00:16.141Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:00:19.887Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: {"error":"value.getTime is not a function"}
+----------------------------------------
+[2026-01-28T07:00:27.697Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: {"error":"value.getTime is not a function"}
+----------------------------------------
+[2026-01-28T07:02:59.240Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:03:06.072Z] PUT http://localhost:8787/invoices/6 - 500 Internal Server Error
+Response Body: {"error":"value.getTime is not a function"}
+----------------------------------------
+[2026-01-28T07:04:49.874Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:04:58.205Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:07:19.052Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:07:54.244Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:08:28.027Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:11:52.295Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:13:59.085Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:14:44.430Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:14:45.350Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:34:23.867Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:34:23.867Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:41:30.620Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:48:51.718Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:49:58.181Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:51:04.038Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:51:42.137Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:54:21.598Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T07:55:28.767Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T08:23:53.405Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T08:26:09.926Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T10:18:24.218Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T10:18:25.707Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T10:18:29.246Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T10:18:30.471Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T10:20:48.202Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T10:21:01.668Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T10:21:01.918Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T10:21:04.536Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T10:21:10.218Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T10:21:13.147Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T10:21:20.627Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T10:21:23.908Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T10:21:28.296Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T14:53:37.203Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T14:53:42.701Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T14:53:44.400Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T14:53:51.797Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T14:53:54.939Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T14:54:03.980Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T14:54:08.146Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T14:54:10.980Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-01-28T14:54:12.049Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------

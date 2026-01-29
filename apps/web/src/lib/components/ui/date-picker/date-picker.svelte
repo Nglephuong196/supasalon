@@ -16,10 +16,12 @@
         value = $bindable(""),
         placeholder = "Chọn ngày",
         class: className,
+        disabled = false,
     } = $props<{
         value?: string;
         placeholder?: string;
         class?: string;
+        disabled?: boolean;
     }>();
 
     let date = $state<CalendarDate | undefined>(undefined);
@@ -79,6 +81,7 @@
         {#snippet child({ props })}
             <Button
                 {...props}
+                {disabled}
                 variant="outline"
                 class={cn(
                     "w-[140px] justify-start font-normal h-9 border-gray-200",

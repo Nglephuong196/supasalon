@@ -445,11 +445,11 @@
             </Button>
             {#if data.canCreate}
                 <Button
-                    class="bg-purple-600 hover:bg-purple-700 gap-2"
+                    class="btn-gradient gap-2"
                     onclick={() => (isCreateOpen = true)}
                 >
                     <Plus class="h-4 w-4" />
-                    Tạo mới
+                    Tạo mới lịch hẹn
                 </Button>
             {/if}
         </div>

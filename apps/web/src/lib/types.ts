@@ -61,12 +61,37 @@ export interface Booking {
 
 export type NewBooking = Omit<Booking, "id" | "createdAt" | "organizationId">;
 
+export interface InvoiceItem {
+    id: number;
+    invoiceId: number;
+    type: "service" | "product" | "package" | "other";
+    referenceId?: number | null;
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    discountValue?: number | null;
+    discountType?: "percent" | "fixed" | null;
+    total: number;
+}
+
 export interface Invoice {
     id: number;
-    bookingId: number;
-    amount: number;
-    status: "pending" | "paid" | "cancelled";
-    paidAt: string | null;
+    organizationId: string;
+    customerId?: number | null;
+    bookingId?: number | null;
+    subtotal: number;
+    discountValue?: number | null;
+    discountType?: "percent" | "fixed" | null;
+    total: number;
+    amountPaid?: number | null;
+    change?: number | null;
+    status: "pending" | "paid" | "cancelled" | "refunded";
+    paymentMethod?: "cash" | "card" | "transfer" | null;
+    notes?: string | null;
+    paidAt?: string | null;
+    isOpenInTab?: boolean;
     createdAt: string;
     booking?: Booking;
+    customer?: Customer;
+    items?: InvoiceItem[];
 }

@@ -140,7 +140,14 @@ export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
         // Clone request with modified headers
         const modifiedRequest = new Request(request, { headers });
 
-        return fetch(modifiedRequest);
+        const response = await fetch(modifiedRequest);
+
+        if (!response.ok) {
+            const { LoggerService } = await import('$lib/server/logger');
+            await LoggerService.logError(modifiedRequest, response);
+        }
+
+        return response;
     }
 
     return fetch(request);
