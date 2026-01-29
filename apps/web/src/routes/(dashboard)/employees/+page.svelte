@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Card } from "$lib/components/ui/card";
+    import * as Card from "$lib/components/ui/card";
     import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input";
     import { Label } from "$lib/components/ui/label";
@@ -198,10 +198,15 @@
                 {#if canManageEmployees}
                     <Dialog.Root bind:open={isAddOpen}>
                         <Dialog.Trigger>
-                            <Button class="btn-gradient h-9">
-                                <Plus class="h-4 w-4 mr-2" aria-hidden="true" />
-                                Tạo mới nhân viên
-                            </Button>
+                            {#snippet child({ props })}
+                                <Button {...props} class="btn-gradient h-9">
+                                    <Plus
+                                        class="h-4 w-4 mr-2"
+                                        aria-hidden="true"
+                                    />
+                                    Tạo mới nhân viên
+                                </Button>
+                            {/snippet}
                         </Dialog.Trigger>
                         <Dialog.Content>
                             <Dialog.Header>
@@ -425,7 +430,7 @@
             </Dialog.Content>
         </Dialog.Root>
 
-        <div class="overflow-x-auto">
+        <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="border-b border-gray-100 bg-muted/40">
                     <tr>
@@ -585,6 +590,115 @@
                     {/if}
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Card View -->
+        <div class="md:hidden flex flex-col gap-4 p-4">
+            {#if allEmployees.length === 0}
+                <div
+                    class="flex flex-col items-center justify-center text-muted-foreground p-8 border border-dashed rounded-lg bg-muted/50"
+                >
+                    <p>Không tìm thấy nhân viên nào.</p>
+                    {#if searchQuery}
+                        <Button
+                            variant="link"
+                            onclick={() => (searchQuery = "")}
+                            class="mt-2 text-primary"
+                            >Xóa bộ lọc tìm kiếm</Button
+                        >
+                    {/if}
+                </div>
+            {:else}
+                {#each allEmployees as employee (employee.id)}
+                    <Card.Root>
+                        <Card.Header
+                            class="flex flex-row items-center gap-3 p-4 pb-2 space-y-0"
+                        >
+                            <div
+                                class={cn(
+                                    "h-10 w-10 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden",
+                                    employee.status === "active"
+                                        ? "bg-primary/10 text-primary"
+                                        : "bg-muted text-muted-foreground",
+                                )}
+                            >
+                                {#if employee.image}
+                                    <img
+                                        src={employee.image}
+                                        alt="Avatar"
+                                        class="h-full w-full object-cover"
+                                    />
+                                {:else}
+                                    {employee.name
+                                        .split("@")[0]
+                                        .slice(0, 2)
+                                        .toUpperCase()}
+                                {/if}
+                            </div>
+                            <div class="flex flex-col overflow-hidden">
+                                <Card.Title class="text-base truncate"
+                                    >{employee.name}</Card.Title
+                                >
+                                <Card.Description class="truncate text-xs"
+                                    >{employee.email}</Card.Description
+                                >
+                            </div>
+                        </Card.Header>
+                        <Card.Content class="p-4 pt-2 grid gap-2 text-sm">
+                            <div
+                                class="flex justify-between py-1 border-b border-gray-50 last:border-0"
+                            >
+                                <span class="text-muted-foreground"
+                                    >Vai trò:</span
+                                >
+                                <span
+                                    class={cn(
+                                        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold",
+                                        roleColors[employee.role] ||
+                                            "bg-gray-100 text-gray-700",
+                                    )}
+                                >
+                                    {employee.role}
+                                </span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-muted-foreground"
+                                    >Trạng thái:</span
+                                >
+                                <span
+                                    class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-700"
+                                >
+                                    Active
+                                </span>
+                            </div>
+                        </Card.Content>
+                        {#if canManageEmployees}
+                            <Card.Footer
+                                class="p-3 bg-muted/30 flex justify-end gap-2 border-t"
+                            >
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    class="h-8 text-xs"
+                                    onclick={() => openEditRole(employee)}
+                                >
+                                    <Pencil class="mr-1.5 h-3 w-3" />
+                                    Sửa
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    class="h-8 text-xs"
+                                    onclick={() => openDeleteDialog(employee)}
+                                >
+                                    <Trash class="mr-1.5 h-3 w-3" />
+                                    Xóa
+                                </Button>
+                            </Card.Footer>
+                        {/if}
+                    </Card.Root>
+                {/each}
+            {/if}
         </div>
     </div>
 </div>

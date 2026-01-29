@@ -1,0 +1,11 @@
+Scope: all 6 workspace projects
+Progress: resolved 1, reused 0, downloaded 0, added 0
+E:\projects\supasalon\apps\mobile:
+ ERR_PNPM_FETCH_404  GET https://registry.npmjs.org/@repo%2Fdatabase: Not Found - 404
+
+This error happened while installing a direct dependency of E:\projects\supasalon\apps\mobile
+
+@repo/database is not in the npm registry, or you have no permission to fetch it.
+
+No authorization header was set for the request.
+Progress: resolved 25, reused 19, downloaded 0, added 0

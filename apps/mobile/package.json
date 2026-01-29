@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
-    "@repo/database": "*",
+    "@repo/database": "workspace:*",
     "expo": "~54.0.30",
     "expo-status-bar": "~3.0.9",
     "react": "19.2.3",

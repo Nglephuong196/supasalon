@@ -1,31 +1,22 @@
 {
   "name": "supasalon",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@10.28.2",
   "scripts": {
-    "dev": "bun run --filter web --filter api dev",
-    "dev:web": "bun run --filter web dev",
-    "dev:api": "bun run --filter api dev",
-    "dev:mobile": "bun run --filter mobile dev",
-    "dev:mobile:web": "bun run --filter mobile dev:web",
-    "dev:mobile:ios": "bun run --filter mobile dev:ios",
-    "dev:mobile:android": "bun run --filter mobile dev:android",
-    "build:web": "bun run --filter web build",
-    "build:mobile:web": "bun run --filter mobile build:web",
-    "build:mobile:ios": "bun run --filter mobile build:ios",
-    "build:mobile:android": "bun run --filter mobile build:android",
-    "lint": "bun run --filter '*' lint",
-    "lint:web": "bun run --filter web lint",
-    "db:generate": "bun run --filter api db:generate",
-    "db:migrate:local": "bun run --filter api db:migrate:local",
-    "db:migrate:prod": "bun run --filter api db:migrate:prod",
-    "db:studio": "bun run --filter api db:studio"
+    "dev": "turbo dev --filter=web --filter=api",
+    "dev:all": "turbo dev",
+    "dev:web": "turbo dev --filter=web",
+    "dev:api": "turbo dev --filter=api",
+    "dev:mobile": "turbo dev --filter=mobile",
+    "build": "turbo build",
+    "build:web": "turbo build --filter=web",
+    "lint": "turbo lint",
+    "db:generate": "turbo db:generate --filter=api",
+    "db:migrate:local": "turbo db:migrate:local --filter=api",
+    "db:studio": "turbo db:studio --filter=api"
   },
   "devDependencies": {
-    "api": "workspace:*"
+    "turbo": "^2.8.0"
   },
   "dependencies": {
     "wangler": "^0.0.8",
