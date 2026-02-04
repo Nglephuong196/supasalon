@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "expo start",
     "dev:android": "expo start --android",
+    "dev:android:offline": "expo start --android --offline",
     "dev:ios": "expo start --ios",
     "dev:web": "expo start --web",
     "build:web": "expo export --platform web",
@@ -14,8 +15,10 @@
   "dependencies": {
     "@better-auth/expo": "^1.4.18",
     "@expo/metro-runtime": "~6.1.2",
+    "@react-navigation/native": "^7.1.28",
     "@repo/constants": "workspace:*",
     "@repo/database": "workspace:*",
+    "@tanstack/react-query": "^5.90.20",
     "better-auth": "^1.4.18",
     "expo": "~54.0.32",
     "expo-constants": "~18.0.13",
@@ -25,6 +28,7 @@
     "expo-secure-store": "~15.0.8",
     "expo-status-bar": "~3.0.9",
     "expo-web-browser": "~15.0.10",
+    "lucide-react-native": "^0.563.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
@@ -32,6 +36,7 @@
     "react-native-reanimated": "~4.1.6",
     "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.16.0",
+    "react-native-svg": "^15.15.1",
     "react-native-web": "^0.21.2",
     "react-native-worklets": "0.5.1"
   },

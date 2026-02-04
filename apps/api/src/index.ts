@@ -30,12 +30,26 @@ type Variables = {
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 // Middleware
-app.use("*", cors({
-  origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
-  credentials: true,
-  allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowHeaders: ["Content-Type", "Authorization", "Cookie", "X-Organization-Id"],
-}));
+app.use(
+  "*",
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "http://localhost:8081",
+      "http://10.0.2.2:8081",
+      "supasalon://",
+    ],
+    credentials: true,
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Cookie",
+      "X-Organization-Id",
+    ],
+  }),
+);
 app.use("*", initDb);
 
 // Health check
@@ -49,7 +63,10 @@ app.route("/api/auth", authController);
 // Protected routes (require tenancy)
 import { ensureTenant } from "./middleware/tenant";
 
-const protectedRoutes = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+const protectedRoutes = new Hono<{
+  Bindings: Bindings;
+  Variables: Variables;
+}>();
 protectedRoutes.use("*", ensureTenant);
 
 protectedRoutes.route("/users", usersController);

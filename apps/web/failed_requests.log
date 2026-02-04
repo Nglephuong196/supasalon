@@ -940,3 +940,60 @@ Response Body:
 [2026-01-29T04:19:47.461Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
 Response Body: 
 ----------------------------------------
+[2026-02-03T14:49:23.331Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T14:50:51.089Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T14:50:51.106Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T14:51:07.427Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T14:51:09.872Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T14:51:25.944Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T14:51:50.897Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T14:51:50.906Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T14:51:57.896Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T14:51:57.897Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T15:04:08.928Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T15:11:34.555Z] GET http://localhost:8787/api/auth/organization/get?organizationId=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9 - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T15:11:39.668Z] GET http://localhost:8787/api/auth/organization/get?organizationId=RsP10dDdn9TGnEuhmYNms7ZvyT0iI6h9 - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T15:14:50.201Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T15:14:51.069Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T15:14:54.868Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T15:14:56.790Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T15:14:58.736Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------
+[2026-02-03T15:15:02.312Z] POST http://localhost:8787/api/auth/organization/get-full-organization - 404 Not Found
+Response Body: 
+----------------------------------------

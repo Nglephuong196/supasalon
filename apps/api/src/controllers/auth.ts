@@ -12,7 +12,10 @@ type Variables = {
   db: Database;
 };
 
-export const authController = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+export const authController = new Hono<{
+  Bindings: Bindings;
+  Variables: Variables;
+}>();
 
 // Handle all auth routes (login, register, logout, etc.)
 authController.all("/*", async (c) => {

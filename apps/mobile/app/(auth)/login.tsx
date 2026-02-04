@@ -34,7 +34,7 @@ export default function LoginScreen() {
             if (error) {
                 Alert.alert('Đăng nhập thất bại', error.message || 'Vui lòng thử lại');
             } else {
-                router.replace('/(app)/dashboard');
+                router.replace('/(app)/(tabs)');
             }
         } catch (err: any) {
             Alert.alert('Lỗi', err.message || 'Đã có lỗi xảy ra');
