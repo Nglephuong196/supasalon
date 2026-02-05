@@ -18,13 +18,13 @@ A multi-tenant salon management SaaS with web and mobile apps.
 
 ```
 supasalon/
-├── apps/
-│   ├── api/              # Hono API (Cloudflare Workers)
-│   ├── web/              # SvelteKit web app
-│   └── mobile/           # Expo mobile app
-└── packages/
-    ├── constants/        # Shared constants (Vietnam provinces, phone validation)
-    └── database/         # Shared database types
+|-- apps/
+|   |-- api/              # Hono API (Cloudflare Workers)
+|   |-- web/              # SvelteKit web app
+|   `-- mobile/           # Expo mobile app
+`-- packages/
+    |-- constants/        # Shared constants (Vietnam provinces, phone validation)
+    `-- database/         # Shared database types
 ```
 
 ## Architecture Overview
@@ -36,7 +36,7 @@ Hono serverless API deployed to Cloudflare Workers with D1 database.
 **Entry point:** `src/index.ts`
 
 **Structure:**
-- `src/controllers/` - Route handlers (auth, users, salons, customers, services, bookings, invoices)
+- `src/controllers/` - Route handlers (auth, users, customers, memberships, services, products, bookings, invoices, dashboard)
 - `src/services/` - Business logic layer
 - `src/db/` - Database connection and schema
 - `src/lib/auth.ts` - Better Auth configuration
@@ -53,32 +53,45 @@ BETTER_AUTH_URL=http://localhost:8787
 | `GET /` | Health check |
 | `/api/auth/*` | Better Auth endpoints (signup, signin, session, etc.) |
 | `/users` | User management |
-| `/salons` | Salon CRUD |
 | `/customers` | Customer management |
+| `/customer-memberships` | Customer membership CRUD |
 | `/service-categories` | Service category CRUD |
 | `/services` | Service CRUD |
+| `/product-categories` | Product category CRUD |
+| `/products` | Product CRUD |
 | `/bookings` | Booking management |
 | `/invoices` | Invoice management |
+| `/membership-tiers` | Membership tier CRUD |
+| `/members` | Membership member CRUD |
+| `/dashboard` | Dashboard summary data |
 
-**CORS:** Configured for `localhost:5173` (SvelteKit dev server)
+**CORS:** Configured for local web + Expo dev servers and the custom scheme:
+`http://localhost:5173`, `http://127.0.0.1:5173`, `http://localhost:8081`,
+`http://10.0.2.2:8081`, and `supasalon://`.
 
 ### Database Schema (`apps/api/src/db/schema.ts`)
 
 **Better Auth tables:**
-- `user` - Users with role (admin/owner/staff)
+- `user` - Users
 - `session` - Auth sessions (7-day expiry)
 - `account` - OAuth accounts
 - `verification` - Email verification tokens
+- `organization` - Organizations (tenant units)
+- `member` - Organization members
+- `invitation` - Organization invitations
 
 **Business tables:**
-- `salons` - Linked to owner (user)
-- `customers` - Linked to salon
-- `serviceCategories` - Linked to salon
+- `customers` - Linked to organization
+- `customerMemberships` - Customer membership history
+- `membershipTiers` - Membership tier definitions
+- `serviceCategories` - Linked to organization
 - `services` - Linked to category
-- `bookings` - Links salon, customer, service
+- `productCategories` - Linked to organization
+- `products` - Linked to category
+- `bookings` - Links organization, customer, services
 - `invoices` - Linked to booking
 
-**Auto-create salon on signup:** When a user signs up with `salonName`, a salon is automatically created via Better Auth database hooks.
+**Signup flow:** The web signup creates an organization using the salon name (slugged) via the Better Auth organization plugin.
 
 ### Web App (`apps/web`)
 
@@ -95,8 +108,8 @@ SvelteKit 2 with Svelte 5, deployed to Cloudflare Pages.
 import { signIn, signUp, signOut, useSession } from '$lib/auth-client';
 ```
 
-**Custom user fields in auth:**
-- `salonName` - Salon name (used to auto-create salon)
+**Signup form fields:**
+- `salonName` - Salon name (used to create organization)
 - `province` - Vietnamese province
 - `address` - Street address
 - `phone` - Phone number
@@ -128,6 +141,7 @@ VITE_AUTH_BASE_URL=http://localhost:8787
 
 - [Node.js](https://nodejs.org/) (Latest LTS recommended)
 - [pnpm](https://pnpm.io/) (Package manager)
+- [Bun](https://bun.sh/) (Only required for the web deploy script)
 
 ### Install Dependencies
 
@@ -147,8 +161,11 @@ pnpm run db:migrate:local       # Apply to local D1
 ### Development
 
 ```bash
-# Start all apps (web, api, mobile) or filtered
+# Start web + api
 pnpm run dev
+
+# Start all apps (web, api, mobile)
+pnpm run dev:all
 
 # Or individually via turbo filters (defined in package.json):
 pnpm run dev:web          # Web on http://localhost:5173

@@ -11,6 +11,7 @@
     "dev:mobile:android": "turbo dev:android --filter=mobile",
     "dev:mobile:android:offline": "pnpm --filter mobile dev:android:offline",
     "dev:mobile:ios": "turbo dev:ios --filter=mobile",
+    "android:emulator": "powershell -NoProfile -Command \"& \\\"$env:ANDROID_HOME\\\\emulator\\\\emulator\\\" -avd Medium_Phone_API_36.1\"",
     "build": "turbo build",
     "build:web": "turbo build --filter=web",
     "lint": "turbo lint",

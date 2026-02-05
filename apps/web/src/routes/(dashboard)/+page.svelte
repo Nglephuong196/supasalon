@@ -9,14 +9,24 @@
         Plus,
         BarChart3,
     } from "@lucide/svelte";
+    import { cn } from "$lib/utils";
     import StatsCard from "$lib/components/dashboard/StatsCard.svelte";
     import TodaySchedule from "$lib/components/dashboard/TodaySchedule.svelte";
     import TopStylists from "$lib/components/dashboard/TopStylists.svelte";
     import LowStockAlerts from "$lib/components/dashboard/LowStockAlerts.svelte";
+    import { goto } from "$app/navigation";
+    import { page, navigating } from "$app/stores";
+    import type { PageData } from "./$types";
+
+    let { data }: { data: PageData } = $props();
 
     let formattedDate = $state("");
+    let lastUpdated = $state("");
+    type RangeKey = "today" | "week" | "month" | "year";
+    let selectedRange = $state<RangeKey>(data.range || "week");
 
     $effect(() => {
+        selectedRange = data.range || "week";
         const today = new Date();
         formattedDate = today.toLocaleDateString("vi-VN", {
             weekday: "long",
@@ -24,7 +34,34 @@
             month: "long",
             year: "numeric",
         });
+        lastUpdated = today.toLocaleTimeString("vi-VN", {
+            hour: "2-digit",
+            minute: "2-digit",
+        });
     });
+
+    let chartData = $derived(data.chart?.data || []);
+    let chartLabels = $derived(data.chart?.labels || []);
+    let chartMax = $derived(Math.max(...((data.chart?.data || [1]) as number[])));
+    let chartTitle = $derived(data.chart?.title || "Doanh thu");
+    let chartUnit = $derived(data.chart?.unit || "₫");
+    let chartContext = $derived(data.chart?.context || "");
+    let chartCompare = $derived(data.chart?.compare || "");
+    let isLoading = $derived(!!$navigating);
+    let placeholderBars = $derived(
+        Array(Math.max(chartLabels.length, 7)).fill(0),
+    );
+
+    function formatCurrency(value: number) {
+        return value.toLocaleString("vi-VN");
+    }
+
+    function setRange(range: RangeKey) {
+        selectedRange = range;
+        const params = new URLSearchParams($page.url.searchParams);
+        params.set("range", range);
+        goto(`${$page.url.pathname}?${params.toString()}`);
+    }
 </script>
 
 <svelte:head>
@@ -50,6 +87,12 @@
             >
                 {formattedDate}
             </span>
+            <div class="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
+                <span class="px-2 py-1 rounded-full border border-border bg-muted/40">
+                    Dữ liệu: {chartContext}
+                </span>
+                <span>Cập nhật lúc {lastUpdated}</span>
+            </div>
             <Button class="btn-clean shadow-sm">
                 <Plus class="h-4 w-4 mr-2" />
                 Đặt lịch mới
@@ -57,39 +100,78 @@
         </div>
     </div>
 
+    <!-- Range Filter -->
+    <div
+        class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white border border-border/60 rounded-xl px-4 py-3 shadow-sm"
+    >
+        <div class="flex items-center gap-2 flex-wrap">
+            {#each (["today", "week", "month", "year"] as RangeKey[]) as range}
+                <Button
+                    variant="ghost"
+                    class={cn(
+                        "text-xs px-3 py-1.5 rounded-full font-medium h-auto border",
+                        selectedRange === range
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background text-muted-foreground border-border hover:text-foreground",
+                    )}
+                    onclick={() => setRange(range)}
+                >
+                    {range === "today"
+                        ? "Hôm nay"
+                        : range === "week"
+                        ? "7 ngày"
+                        : range === "month"
+                        ? "Tháng"
+                        : "Năm"}
+                </Button>
+            {/each}
+        </div>
+        <div class="text-xs text-muted-foreground">
+            So sánh: <span class="font-medium text-foreground">{chartCompare}</span>
+        </div>
+    </div>
+
     <!-- Stats Cards -->
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
             title="Tổng doanh thu"
-            value="12.450.000 ₫"
-            description="so với tháng trước"
+            value={`${formatCurrency(data.stats?.revenue || 0)} ₫`}
+            description={chartCompare}
+            context={chartContext}
             icon={DollarSign}
-            trend="up"
-            trendValue="+12%"
+            trend={data.stats?.trend?.revenue >= 0 ? "up" : "down"}
+            trendValue={`${data.stats?.trend?.revenue ?? 0}%`}
+            loading={isLoading}
         />
         <StatsCard
             title="Cuộc hẹn"
-            value="45"
-            description="so với hôm qua"
+            value={`${data.stats?.appointments || 0}`}
+            description={chartCompare}
+            context={chartContext}
             icon={CalendarDays}
-            trend="up"
-            trendValue="+5%"
+            trend={data.stats?.trend?.appointments >= 0 ? "up" : "down"}
+            trendValue={`${data.stats?.trend?.appointments ?? 0}%`}
+            loading={isLoading}
         />
         <StatsCard
             title="Khách hàng mới"
-            value="8"
-            description="so với tuần trước"
+            value={`${data.stats?.newCustomers || 0}`}
+            description={chartCompare}
+            context={chartContext}
             icon={Users}
-            trend="up"
-            trendValue="+2%"
+            trend={data.stats?.trend?.newCustomers >= 0 ? "up" : "down"}
+            trendValue={`${data.stats?.trend?.newCustomers ?? 0}%`}
+            loading={isLoading}
         />
         <StatsCard
             title="Hóa đơn trung bình"
-            value="850.000 ₫"
-            description="so với tháng trước"
+            value={`${formatCurrency(data.stats?.avgInvoice || 0)} ₫`}
+            description={chartCompare}
+            context={chartContext}
             icon={TrendingUp}
-            trend="up"
-            trendValue="+1.5%"
+            trend={data.stats?.trend?.avgInvoice >= 0 ? "up" : "down"}
+            trendValue={`${data.stats?.trend?.avgInvoice ?? 0}%`}
+            loading={isLoading}
         />
     </div>
 
@@ -105,51 +187,74 @@
                         <div class="flex items-center gap-2">
                             <BarChart3 class="h-4 w-4 text-muted-foreground" />
                             <h3 class="text-sm font-semibold text-foreground">
-                                Biểu đồ doanh thu
+                                {chartTitle} · {chartContext}
                             </h3>
                         </div>
                         <div class="flex gap-1 p-1 bg-muted/50 rounded-lg">
                             <Button
                                 variant="ghost"
                                 class="text-xs px-3 py-1 rounded-md bg-background shadow-sm text-foreground font-medium h-auto hover:bg-background"
-                                >Tuần</Button
+                                >{selectedRange === "today"
+                                    ? "Hôm nay"
+                                    : selectedRange === "week"
+                                    ? "7 ngày"
+                                    : selectedRange === "month"
+                                    ? "Tháng"
+                                    : "Năm"}</Button
                             >
-                            <Button
-                                variant="ghost"
-                                class="text-xs px-3 py-1 rounded-md hover:bg-background/50 text-muted-foreground font-medium h-auto"
-                                >Tháng</Button
-                            >
-                            <Button
-                                variant="ghost"
-                                class="text-xs px-3 py-1 rounded-md hover:bg-background/50 text-muted-foreground font-medium h-auto"
-                                >Năm</Button
-                            >
+                            <span class="text-[11px] text-muted-foreground px-2 py-1">
+                                Đơn vị: {chartUnit}
+                            </span>
                         </div>
                     </div>
 
-                    <!-- Clean Minimalist Chart Placeholder -->
-                    <div
-                        class="h-64 flex items-end justify-between gap-2 px-2 pb-4"
-                    >
-                        {#each [40, 65, 45, 80, 55, 90, 75] as height}
-                            <div
-                                class="w-full bg-secondary hover:bg-primary/80 transition-colors rounded-t-sm relative group"
-                                style="height: {height}%"
-                            >
-                                <div
-                                    class="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs py-1 px-2 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity border border-border pointer-events-none"
-                                >
-                                    {height * 10}.000 ₫
-                                </div>
+                    <!-- Chart -->
+                    <div class="grid grid-cols-[42px_1fr] gap-3">
+                        <div class="flex flex-col justify-between text-[10px] text-muted-foreground">
+                            <span>{formatCurrency(chartMax)} {chartUnit}</span>
+                            <span>{formatCurrency(Math.round(chartMax * 0.75))} {chartUnit}</span>
+                            <span>{formatCurrency(Math.round(chartMax * 0.5))} {chartUnit}</span>
+                            <span>{formatCurrency(Math.round(chartMax * 0.25))} {chartUnit}</span>
+                            <span>0</span>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <div class="h-64 flex items-end justify-between gap-2 px-2 pb-4">
+                                {#if isLoading}
+                                    {#each placeholderBars as _}
+                                        <div class="w-full bg-muted/50 rounded-t-sm animate-pulse h-[40%]"></div>
+                                    {/each}
+                                {:else}
+                                    {#each chartData as value}
+                                        <div
+                                            class="w-full bg-secondary hover:bg-primary/80 transition-colors rounded-t-sm relative group"
+                                            style="height: {Math.max(
+                                                6,
+                                                Math.round((value / chartMax) * 100),
+                                            )}%"
+                                        >
+                                            <div
+                                                class="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-xs py-1 px-2 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity border border-border pointer-events-none"
+                                            >
+                                                {formatCurrency(value)} {chartUnit}
+                                            </div>
+                                        </div>
+                                    {/each}
+                                {/if}
                             </div>
-                        {/each}
-                    </div>
-                    <div
-                        class="flex justify-between px-2 pt-2 border-t border-border/40 text-xs text-muted-foreground font-medium"
-                    >
-                        <span>T2</span><span>T3</span><span>T4</span><span
-                            >T5</span
-                        ><span>T6</span><span>T7</span><span>CN</span>
+                            <div
+                                class="flex justify-between px-2 pt-2 border-t border-border/40 text-xs text-muted-foreground font-medium"
+                            >
+                                {#if isLoading}
+                                    {#each placeholderBars as _}
+                                        <span class="inline-block w-6 h-3 bg-muted/40 rounded animate-pulse"></span>
+                                    {/each}
+                                {:else}
+                                    {#each chartLabels as label}
+                                        <span>{label}</span>
+                                    {/each}
+                                {/if}
+                            </div>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
@@ -157,13 +262,21 @@
 
         <!-- Today's Schedule - Takes 1 column -->
         <div class="lg:col-span-1">
-            <TodaySchedule />
+            <TodaySchedule
+                contextLabel={chartContext}
+                items={data.schedule}
+                loading={isLoading}
+            />
         </div>
     </div>
 
     <!-- Bottom Section -->
     <div class="grid gap-6 md:grid-cols-2">
-        <TopStylists />
-        <LowStockAlerts />
+        <TopStylists
+            contextLabel={chartContext}
+            items={data.topStylists}
+            loading={isLoading}
+        />
+        <LowStockAlerts items={data.lowStock} loading={isLoading} />
     </div>
 </div>

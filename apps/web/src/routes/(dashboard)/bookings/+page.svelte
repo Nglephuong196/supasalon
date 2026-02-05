@@ -2,7 +2,6 @@
     import { Card, CardContent } from "$lib/components/ui/card";
     import { Button } from "$lib/components/ui/button";
     import { Input } from "$lib/components/ui/input";
-    import { Checkbox } from "$lib/components/ui/checkbox";
     import { Label } from "$lib/components/ui/label";
     import * as Dialog from "$lib/components/ui/dialog";
     import * as AlertDialog from "$lib/components/ui/alert-dialog";
@@ -274,6 +273,36 @@
 
     let groupedBookings = $derived(groupByDate(data.bookings || []));
 
+    function getNowLocalDateTimeString() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        const d = String(now.getDate()).padStart(2, "0");
+        const h = String(now.getHours()).padStart(2, "0");
+        const min = String(now.getMinutes()).padStart(2, "0");
+        return `${y}-${m}-${d}T${h}:${min}`;
+    }
+
+    function openCreateDialog() {
+        editingBookingId = null;
+        newBooking = {
+            customerId: "",
+            customerPhone: "",
+            date: getNowLocalDateTimeString(),
+            guestCount: "1",
+            status: "confirmed",
+            notes: "",
+            guests: [
+                {
+                    services: [
+                        { categoryId: "", serviceId: "", memberId: "" },
+                    ],
+                },
+            ],
+        };
+        isCreateOpen = true;
+    }
+
     // Apply filters
     function applyFilters() {
         const params = new URLSearchParams();
@@ -342,7 +371,7 @@
                 newBooking = {
                     customerId: "",
                     customerPhone: "",
-                    date: "",
+                    date: getNowLocalDateTimeString(),
                     guestCount: "1",
                     status: "confirmed",
                     notes: "",
@@ -444,10 +473,7 @@
                 Xuất Excel
             </Button>
             {#if data.canCreate}
-                <Button
-                    class="btn-gradient gap-2"
-                    onclick={() => (isCreateOpen = true)}
-                >
+                <Button class="btn-gradient gap-2" onclick={openCreateDialog}>
                     <Plus class="h-4 w-4" />
                     Tạo mới lịch hẹn
                 </Button>
@@ -457,7 +483,7 @@
 
     <!-- Stats Cards -->
     <div class="grid gap-4 grid-cols-2 sm:grid-cols-4">
-        <Card class="border border-gray-100 shadow-sm">
+        <Card class="border border-gray-100 shadow-sm card-hover">
             <CardContent class="p-4">
                 <div class="flex items-center justify-between">
                     <div class="space-y-1">
@@ -476,7 +502,7 @@
                 </div>
             </CardContent>
         </Card>
-        <Card class="border border-gray-100 shadow-sm">
+        <Card class="border border-gray-100 shadow-sm card-hover">
             <CardContent class="p-4">
                 <div class="flex items-center justify-between">
                     <div class="space-y-1">
@@ -495,7 +521,7 @@
                 </div>
             </CardContent>
         </Card>
-        <Card class="border border-gray-100 shadow-sm">
+        <Card class="border border-gray-100 shadow-sm card-hover">
             <CardContent class="p-4">
                 <div class="flex items-center justify-between">
                     <div class="space-y-1">
@@ -514,7 +540,7 @@
                 </div>
             </CardContent>
         </Card>
-        <Card class="border border-gray-100 shadow-sm">
+        <Card class="border border-gray-100 shadow-sm card-hover">
             <CardContent class="p-4">
                 <div class="flex items-center justify-between">
                     <div class="space-y-1">
@@ -708,11 +734,6 @@
             <table class="w-full text-sm">
                 <thead class="border-b border-gray-100 bg-muted/40">
                     <tr>
-                        <th class="h-12 w-[50px] px-4 align-middle">
-                            <Checkbox
-                                class="border-gray-300 text-primary focus:ring-primary"
-                            />
-                        </th>
                         <th
                             class="h-12 px-4 text-left align-middle font-medium text-muted-foreground whitespace-nowrap"
                             >Ngày đặt</th
@@ -754,11 +775,6 @@
                                 )}
                             >
                                 <!-- Date (show only for first item in group) -->
-                                <td class="p-4 align-top w-[50px]">
-                                    <Checkbox
-                                        class="border-gray-300 text-primary focus:ring-primary"
-                                    />
-                                </td>
                                 <td class="p-4 align-top w-[140px]">
                                     {#if bookingIndex === 0}
                                         <div class="flex flex-col">

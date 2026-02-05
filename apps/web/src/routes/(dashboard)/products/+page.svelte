@@ -22,7 +22,6 @@
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
-    import { Checkbox } from "$lib/components/ui/checkbox";
     import * as Select from "$lib/components/ui/select";
 
     // Props
@@ -30,6 +29,7 @@
 
     // State with URL sync
     let searchQuery = $state($page.url.searchParams.get("q") || "");
+    let categorySearchQuery = $state("");
     const categoryParam = $page.url.searchParams.get("category");
     let selectedCategoryId = $state<number | null>(
         categoryParam ? parseInt(categoryParam) : null,
@@ -106,6 +106,11 @@
             return matchesCategory && matchesSearch;
         }),
     );
+    let filteredCategories = $derived(
+        data.categories.filter((c: any) =>
+            c.name.toLowerCase().includes(categorySearchQuery.toLowerCase()),
+        ),
+    );
 
     // Helpers
     function formatPrice(price: number) {
@@ -114,6 +119,10 @@
 
     function getCategoryName(id: number) {
         return data.categories.find((c: any) => c.id === id)?.name || "Unknown";
+    }
+
+    function categoryCount(id: number) {
+        return data.products.filter((p: any) => p.categoryId === id).length;
     }
 
     // Handlers
@@ -207,6 +216,14 @@
                 Quản lý danh mục và sản phẩm bán tại salon
             </p>
         </div>
+        <div class="hidden md:flex items-center gap-2">
+            <span class="px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                {filteredProducts.length} / {data.products.length} sản phẩm
+            </span>
+            <span class="px-3 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
+                {data.categories.length} danh mục
+            </span>
+        </div>
     </div>
 
     <!-- Main Content Split View -->
@@ -270,6 +287,34 @@
                 </Button>
             </div>
 
+            <div class="space-y-2">
+                <div class="relative">
+                    <Search
+                        class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+                        aria-hidden="true"
+                    />
+                    <Input
+                        type="search"
+                        placeholder="Tìm danh mục..."
+                        class="pl-9 h-9"
+                        bind:value={categorySearchQuery}
+                    />
+                </div>
+                <div class="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{data.categories.length} danh mục</span>
+                    <button
+                        class="hover:text-foreground underline"
+                        on:click={() => {
+                            selectedCategoryId = null;
+                            categorySearchQuery = "";
+                            updateUrlParams();
+                        }}
+                    >
+                        Xóa bộ lọc
+                    </button>
+                </div>
+            </div>
+
             <div class="flex-1 overflow-y-auto space-y-1 pr-2">
                 <Button
                     variant="ghost"
@@ -295,7 +340,7 @@
                     </span>
                 </Button>
 
-                {#each data.categories as category}
+                {#each filteredCategories as category}
                     <div class="group relative">
                         <Button
                             variant="ghost"
@@ -308,6 +353,16 @@
                             onclick={() => selectCategory(category.id)}
                         >
                             <span class="truncate flex-1">{category.name}</span>
+                            <span
+                                class={cn(
+                                    "text-[10px] py-0.5 px-2 rounded-full",
+                                    selectedCategoryId === category.id
+                                        ? "bg-primary/10 text-primary"
+                                        : "bg-gray-100 text-gray-600",
+                                )}
+                            >
+                                {categoryCount(category.id)}
+                            </span>
                             {#if selectedCategoryId === category.id}
                                 <span
                                     class="h-1.5 w-1.5 rounded-full bg-primary absolute left-1 top-1/2 -translate-y-1/2"
@@ -359,12 +414,16 @@
                     </div>
                 {/each}
 
-                {#if data.categories.length === 0}
+                {#if filteredCategories.length === 0}
                     <div
                         class="text-center py-8 px-4 text-xs text-muted-foreground border-2 border-dashed border-gray-100 rounded-lg"
                     >
-                        Chưa có danh mục nào. <br />
-                        Nhấn dấu + để thêm.
+                        {#if categorySearchQuery}
+                            Không tìm thấy danh mục phù hợp.
+                        {:else}
+                            Chưa có danh mục nào. <br />
+                            Nhấn dấu + để thêm.
+                        {/if}
                     </div>
                 {/if}
             </div>
@@ -376,7 +435,7 @@
                 class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm h-full flex flex-col"
             >
                 <div
-                    class="p-4 flex items-center justify-between gap-4 border-b border-gray-100 flex-none"
+                    class="p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-gray-100 flex-none"
                 >
                     <div>
                         <h3
@@ -436,17 +495,42 @@
                     </div>
                 </div>
 
+                <!-- Quick Filters -->
+                <div class="px-4 pb-3 border-b border-gray-100">
+                    <div class="flex items-center gap-2 flex-wrap text-xs">
+                        <button
+                            class={cn(
+                                "px-3 py-1 rounded-full border transition-all",
+                                selectedCategoryId === null
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-white text-muted-foreground border-border hover:text-foreground",
+                            )}
+                            on:click={() => selectCategory(null)}
+                        >
+                            Tất cả
+                        </button>
+                        {#each data.categories as category}
+                            <button
+                                class={cn(
+                                    "px-3 py-1 rounded-full border transition-all",
+                                    selectedCategoryId === category.id
+                                        ? "bg-primary text-primary-foreground border-primary"
+                                        : "bg-white text-muted-foreground border-border hover:text-foreground",
+                                )}
+                                on:click={() => selectCategory(category.id)}
+                            >
+                                {category.name}
+                            </button>
+                        {/each}
+                    </div>
+                </div>
+
                 <div class="flex-1 overflow-auto">
                     <table class="w-full text-sm">
                         <thead
                             class="border-b border-gray-100 bg-muted/40 sticky top-0 bg-white"
                         >
                             <tr>
-                                <th class="h-12 w-[50px] px-4 align-middle">
-                                    <Checkbox
-                                        class="border-gray-300 text-primary focus:ring-primary"
-                                    />
-                                </th>
                                 <th
                                     class="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-nowrap"
                                     >Tên sản phẩm</th
@@ -465,6 +549,10 @@
                                 >
                                 <th
                                     class="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-nowrap"
+                                    >Tối thiểu</th
+                                >
+                                <th
+                                    class="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-nowrap"
                                     >SKU</th
                                 >
                                 <th
@@ -475,11 +563,6 @@
                         <tbody class="divide-y divide-gray-100">
                             {#each filteredProducts as product (product.id)}
                                 <tr class="hover:bg-muted/50 transition-colors">
-                                    <td class="p-4 align-middle">
-                                        <Checkbox
-                                            class="border-gray-300 text-primary focus:ring-primary"
-                                        />
-                                    </td>
                                     <td class="p-4 align-middle font-medium">
                                         {product.name}
                                     </td>
@@ -506,8 +589,31 @@
                                                 class="h-3 w-3"
                                                 aria-hidden="true"
                                             />
-                                            {product.stock}
+                                            <span
+                                                class={cn(
+                                                    "font-medium",
+                                                    product.stock <= (product.minStock ?? 10)
+                                                        ? "text-rose-600"
+                                                        : "text-foreground",
+                                                )}
+                                            >
+                                                {product.stock}
+                                            </span>
                                         </div>
+                                    </td>
+                                    <td
+                                        class="p-4 align-middle text-muted-foreground"
+                                    >
+                                        <span
+                                            class={cn(
+                                                "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                                                product.stock <= (product.minStock ?? 10)
+                                                    ? "bg-rose-100 text-rose-700"
+                                                    : "bg-emerald-100 text-emerald-700",
+                                            )}
+                                        >
+                                            {product.minStock ?? 0}
+                                        </span>
                                     </td>
                                     <td
                                         class="p-4 align-middle text-muted-foreground"
@@ -737,7 +843,7 @@
                         >
                     {/if}
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
                     <div class="grid gap-2">
                         <Label for="prod-price">Giá (VNĐ)</Label>
                         <Input
@@ -760,6 +866,15 @@
                             name="stock"
                             type="number"
                             value={editingProduct?.stock || 0}
+                        />
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="prod-min-stock">Tối thiểu</Label>
+                        <Input
+                            id="prod-min-stock"
+                            name="minStock"
+                            type="number"
+                            value={editingProduct?.minStock || 10}
                         />
                     </div>
                 </div>

@@ -72,11 +72,26 @@
         <div class="h-4 w-px bg-border mx-1"></div>
 
         <div class="flex items-center gap-2">
-            <div
-                class="h-7 w-7 rounded-full bg-secondary flex items-center justify-center text-xs font-medium text-secondary-foreground border border-border"
+            <Button
+                variant="ghost"
+                size="icon"
+                class="h-8 w-8 rounded-full border border-border bg-secondary text-secondary-foreground hover:text-foreground"
+                onclick={() => goto("/profile")}
+                title="Hồ sơ cá nhân"
             >
-                {getInitials($session.data?.user?.name)}
-            </div>
+                <span class="sr-only">Hồ sơ cá nhân</span>
+                {#if $session.data?.user?.image}
+                    <img
+                        src={$session.data.user.image}
+                        alt="Avatar"
+                        class="h-full w-full rounded-full object-cover"
+                    />
+                {:else}
+                    <span class="text-[10px] font-semibold">
+                        {getInitials($session.data?.user?.name)}
+                    </span>
+                {/if}
+            </Button>
             <Button
                 variant="ghost"
                 size="icon"

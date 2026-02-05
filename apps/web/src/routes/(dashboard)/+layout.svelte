@@ -5,7 +5,8 @@
 
     import { fade, fly } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
-    import { afterNavigate } from "$app/navigation";
+    import { afterNavigate, onNavigate } from "$app/navigation";
+    import { page } from "$app/stores";
 
     let { children, data } = $props();
 
@@ -14,6 +15,21 @@
 
     afterNavigate(() => {
         isMobileMenuOpen = false;
+    });
+
+    onNavigate((navigation) => {
+        if (typeof document === "undefined") return;
+        if (!("startViewTransition" in document)) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            return;
+        }
+        return new Promise((resolve) => {
+            // @ts-expect-error View Transition API
+            document.startViewTransition(async () => {
+                resolve();
+                await navigation.complete;
+            });
+        });
     });
 </script>
 

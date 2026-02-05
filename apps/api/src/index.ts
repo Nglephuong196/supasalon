@@ -15,6 +15,7 @@ import {
   invoicesController,
   membershipTiersController,
   membersController,
+  dashboardController,
 } from "./controllers";
 
 type Bindings = {
@@ -80,6 +81,7 @@ protectedRoutes.route("/bookings", bookingsController);
 protectedRoutes.route("/invoices", invoicesController);
 protectedRoutes.route("/membership-tiers", membershipTiersController);
 protectedRoutes.route("/members", membersController);
+protectedRoutes.route("/dashboard", dashboardController);
 
 app.route("/", protectedRoutes);
 

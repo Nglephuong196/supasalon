@@ -5,7 +5,6 @@
     import { Label } from "$lib/components/ui/label";
     import * as Dialog from "$lib/components/ui/dialog";
     import * as Select from "$lib/components/ui/select";
-    import { Checkbox } from "$lib/components/ui/checkbox";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
     import * as AlertDialog from "$lib/components/ui/alert-dialog";
     import {
@@ -434,11 +433,6 @@
             <table class="w-full text-sm">
                 <thead class="border-b border-gray-100 bg-muted/40">
                     <tr>
-                        <th class="h-12 w-[50px] px-4 align-middle">
-                            <Checkbox
-                                class="border-gray-300 text-primary focus:ring-primary"
-                            />
-                        </th>
                         <th
                             class="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-nowrap"
                             >Nhân viên</th
@@ -459,11 +453,6 @@
                 <tbody class="divide-y divide-gray-100">
                     {#each allEmployees as employee (employee.id)}
                         <tr class="hover:bg-muted/50 transition-colors">
-                            <td class="p-4 align-middle">
-                                <Checkbox
-                                    class="border-gray-300 text-primary focus:ring-primary"
-                                />
-                            </td>
                             <td class="p-4 align-middle">
                                 <div class="flex items-center gap-3">
                                     <div
@@ -571,7 +560,7 @@
                     {/each}
                     {#if allEmployees.length === 0}
                         <tr>
-                            <td colspan="5" class="h-24 text-center">
+                            <td colspan="4" class="h-24 text-center">
                                 <div
                                     class="flex flex-col items-center justify-center text-muted-foreground p-4"
                                 >

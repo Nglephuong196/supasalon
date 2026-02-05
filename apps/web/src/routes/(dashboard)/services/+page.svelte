@@ -22,7 +22,6 @@
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
-    import { Checkbox } from "$lib/components/ui/checkbox";
     import * as Select from "$lib/components/ui/select";
 
     // Props
@@ -30,6 +29,7 @@
 
     // State with URL sync
     let searchQuery = $state($page.url.searchParams.get("q") || "");
+    let categorySearchQuery = $state("");
     const categoryParam = $page.url.searchParams.get("category");
     let selectedCategoryId = $state<number | null>(
         categoryParam ? parseInt(categoryParam) : null,
@@ -108,6 +108,11 @@
             return matchesCategory && matchesSearch;
         }),
     );
+    let filteredCategories = $derived(
+        data.categories.filter((c: any) =>
+            c.name.toLowerCase().includes(categorySearchQuery.toLowerCase()),
+        ),
+    );
 
     // Helpers
     function formatPrice(price: number) {
@@ -116,6 +121,10 @@
 
     function getCategoryName(id: number) {
         return data.categories.find((c: any) => c.id === id)?.name || "Unknown";
+    }
+
+    function categoryCount(id: number) {
+        return data.services.filter((s: any) => s.categoryId === id).length;
     }
 
     // Handlers
@@ -210,6 +219,14 @@
                 Quản lý hình thức và giá dịch vụ tại salon
             </p>
         </div>
+        <div class="hidden md:flex items-center gap-2">
+            <span class="px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                {filteredServices.length} / {data.services.length} dịch vụ
+            </span>
+            <span class="px-3 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
+                {data.categories.length} danh mục
+            </span>
+        </div>
     </div>
 
     <!-- Main Content Split View -->
@@ -273,6 +290,34 @@
                 </Button>
             </div>
 
+            <div class="space-y-2">
+                <div class="relative">
+                    <Search
+                        class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground"
+                        aria-hidden="true"
+                    />
+                    <Input
+                        type="search"
+                        placeholder="Tìm danh mục..."
+                        class="pl-9 h-9"
+                        bind:value={categorySearchQuery}
+                    />
+                </div>
+                <div class="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{data.categories.length} danh mục</span>
+                    <button
+                        class="hover:text-foreground underline"
+                        on:click={() => {
+                            selectedCategoryId = null;
+                            categorySearchQuery = "";
+                            updateUrlParams();
+                        }}
+                    >
+                        Xóa bộ lọc
+                    </button>
+                </div>
+            </div>
+
             <div class="flex-1 overflow-y-auto space-y-1 pr-2">
                 <Button
                     variant="ghost"
@@ -298,7 +343,7 @@
                     </span>
                 </Button>
 
-                {#each data.categories as category}
+                {#each filteredCategories as category}
                     <div class="group relative">
                         <Button
                             variant="ghost"
@@ -311,6 +356,16 @@
                             onclick={() => selectCategory(category.id)}
                         >
                             <span class="truncate flex-1">{category.name}</span>
+                            <span
+                                class={cn(
+                                    "text-[10px] py-0.5 px-2 rounded-full",
+                                    selectedCategoryId === category.id
+                                        ? "bg-primary/10 text-primary"
+                                        : "bg-gray-100 text-gray-600",
+                                )}
+                            >
+                                {categoryCount(category.id)}
+                            </span>
                             {#if selectedCategoryId === category.id}
                                 <span
                                     class="h-1.5 w-1.5 rounded-full bg-primary absolute left-1 top-1/2 -translate-y-1/2"
@@ -362,12 +417,16 @@
                     </div>
                 {/each}
 
-                {#if data.categories.length === 0}
+                {#if filteredCategories.length === 0}
                     <div
                         class="text-center py-8 px-4 text-xs text-muted-foreground border-2 border-dashed border-gray-100 rounded-lg"
                     >
-                        Chưa có danh mục nào. <br />
-                        Nhấn dấu + để thêm.
+                        {#if categorySearchQuery}
+                            Không tìm thấy danh mục phù hợp.
+                        {:else}
+                            Chưa có danh mục nào. <br />
+                            Nhấn dấu + để thêm.
+                        {/if}
                     </div>
                 {/if}
             </div>
@@ -379,7 +438,7 @@
                 class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm h-full flex flex-col"
             >
                 <div
-                    class="p-4 flex items-center justify-between gap-4 border-b border-gray-100 flex-none"
+                    class="p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-gray-100 flex-none"
                 >
                     <div>
                         <h3
@@ -436,17 +495,42 @@
                     </div>
                 </div>
 
+                <!-- Quick Filters -->
+                <div class="px-4 pb-3 border-b border-gray-100">
+                    <div class="flex items-center gap-2 flex-wrap text-xs">
+                        <button
+                            class={cn(
+                                "px-3 py-1 rounded-full border transition-all",
+                                selectedCategoryId === null
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-white text-muted-foreground border-border hover:text-foreground",
+                            )}
+                            on:click={() => selectCategory(null)}
+                        >
+                            Tất cả
+                        </button>
+                        {#each data.categories as category}
+                            <button
+                                class={cn(
+                                    "px-3 py-1 rounded-full border transition-all",
+                                    selectedCategoryId === category.id
+                                        ? "bg-primary text-primary-foreground border-primary"
+                                        : "bg-white text-muted-foreground border-border hover:text-foreground",
+                                )}
+                                on:click={() => selectCategory(category.id)}
+                            >
+                                {category.name}
+                            </button>
+                        {/each}
+                    </div>
+                </div>
+
                 <div class="flex-1 overflow-auto">
                     <table class="w-full text-sm">
                         <thead
                             class="border-b border-gray-100 bg-muted/40 sticky top-0 bg-white"
                         >
                             <tr>
-                                <th class="h-12 w-[50px] px-4 align-middle">
-                                    <Checkbox
-                                        class="border-gray-300 text-primary focus:ring-primary"
-                                    />
-                                </th>
                                 <th
                                     class="h-12 px-4 text-left align-middle font-medium text-muted-foreground text-nowrap"
                                     >Tên dịch vụ</th
@@ -475,11 +559,6 @@
                         <tbody class="divide-y divide-gray-100">
                             {#each filteredServices as service (service.id)}
                                 <tr class="hover:bg-muted/50 transition-colors">
-                                    <td class="p-4 align-middle">
-                                        <Checkbox
-                                            class="border-gray-300 text-primary focus:ring-primary"
-                                        />
-                                    </td>
                                     <td class="p-4 align-middle font-medium">
                                         {service.name}
                                     </td>
@@ -506,7 +585,11 @@
                                                 class="h-3 w-3"
                                                 aria-hidden="true"
                                             />
-                                            {service.duration} phút
+                                            <span
+                                                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted text-muted-foreground"
+                                            >
+                                                {service.duration} phút
+                                            </span>
                                         </div>
                                     </td>
                                     <td
@@ -571,7 +654,7 @@
                             {/each}
                             {#if filteredServices.length === 0}
                                 <tr>
-                                    <td colspan="7" class="h-32 text-center">
+                                    <td colspan="6" class="h-32 text-center">
                                         <div
                                             class="flex flex-col items-center justify-center text-muted-foreground p-4"
                                         >

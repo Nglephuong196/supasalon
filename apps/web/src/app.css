@@ -1,172 +1,286 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
-/* CSS Variables for Professional Feminine Theme (Purple/Lavender) */
+/* CSS Variables for Refined Purple Salon Theme */
 :root {
-  /* Core Colors - Soft Warm Whites */
-  --background: 0 0% 100%;
-  --foreground: 260 10% 10%;
-  /* Very dark purple-gray */
+    /* Core Colors - Soft Lilac + Ink */
+    --background: 258 40% 98%;
+    --foreground: 255 18% 12%;
+    /* Deep ink */
 
-  --card: 0 0% 100%;
-  --card-foreground: 260 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 255 18% 12%;
 
-  --popover: 0 0% 100%;
-  --popover-foreground: 260 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 255 18% 12%;
 
-  /* Primary - Deep Royal Purple */
-  --primary: 265 80% 50%;
-  /* #7C3AED - Elegant Purple */
-  --primary-foreground: 0 0% 100%;
+    /* Primary - Royal Purple */
+    --primary: 265 75% 48%;
+    /* #7B3AED */
+    --primary-foreground: 0 0% 100%;
 
-  /* Secondary - Soft Lavender */
-  --secondary: 265 60% 96%;
-  /* #F5F3FF */
-  --secondary-foreground: 265 80% 50%;
+    /* Secondary - Soft Lavender */
+    --secondary: 265 60% 96%;
+    --secondary-foreground: 265 70% 35%;
 
-  /* Muted - Warm Grays */
-  --muted: 260 10% 96%;
-  --muted-foreground: 260 6% 45%;
+    /* Muted - Lilac Gray */
+    --muted: 260 18% 94%;
+    --muted-foreground: 255 10% 45%;
 
-  /* Accent - Lavender Highlight */
-  --accent: 265 60% 96%;
-  --accent-foreground: 265 80% 50%;
+    /* Accent - Periwinkle */
+    --accent: 240 80% 95%;
+    --accent-foreground: 255 55% 35%;
 
-  /* Destructive - Soft Red */
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
+    /* Destructive - Soft Red */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-  /* Borders & Inputs */
-  --border: #E5E7EB;
-  /* Light gray border as requested */
-  --input: #E5E7EB;
-  --ring: 265 80% 50%;
-  /* Purple focus ring */
+    /* Borders & Inputs */
+    --border: hsl(260 18% 88%);
+    --input: hsl(260 18% 88%);
+    --ring: 265 75% 48%;
 
-  --radius: 0.75rem;
-  /* Softer, larger radius for feminine feel */
+    --radius: 0.75rem;
+    /* Softer, larger radius for feminine feel */
 
-  /* Sidebar - Clean with subtle tint */
-  --sidebar-background: 0 0% 100%;
-  --sidebar-foreground: 260 6% 40%;
-  --sidebar-border: 260 15% 92%;
-  --sidebar-accent: 265 60% 97%;
-  /* Very pale lavender */
-  --sidebar-accent-foreground: 265 80% 50%;
-  /* Purple text */
-  --sidebar-ring: 265 80% 50%;
+    /* Sidebar - Soft Lilac */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 255 10% 40%;
+    --sidebar-border: 260 18% 90%;
+    --sidebar-accent: 265 60% 97%;
+    --sidebar-accent-foreground: 265 70% 35%;
+    --sidebar-ring: 265 75% 48%;
 }
 
 @theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: hsl(var(--ring));
-  --color-sidebar-background: hsl(var(--sidebar-background));
-  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
-  --color-sidebar-border: hsl(var(--sidebar-border));
-  --color-sidebar-accent: hsl(var(--sidebar-accent));
-  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+    --color-background: hsl(var(--background));
+    --color-foreground: hsl(var(--foreground));
+    --color-card: hsl(var(--card));
+    --color-card-foreground: hsl(var(--card-foreground));
+    --color-popover: hsl(var(--popover));
+    --color-popover-foreground: hsl(var(--popover-foreground));
+    --color-primary: hsl(var(--primary));
+    --color-primary-foreground: hsl(var(--primary-foreground));
+    --color-secondary: hsl(var(--secondary));
+    --color-secondary-foreground: hsl(var(--secondary-foreground));
+    --color-muted: hsl(var(--muted));
+    --color-muted-foreground: hsl(var(--muted-foreground));
+    --color-accent: hsl(var(--accent));
+    --color-accent-foreground: hsl(var(--accent-foreground));
+    --color-destructive: hsl(var(--destructive));
+    --color-destructive-foreground: hsl(var(--destructive-foreground));
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: hsl(var(--ring));
+    --color-sidebar-background: hsl(var(--sidebar-background));
+    --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+    --color-sidebar-border: hsl(var(--sidebar-border));
+    --color-sidebar-accent: hsl(var(--sidebar-accent));
+    --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
 }
 
 body {
-  background-color: #FAFAFA;
-  /* Very subtle warm gray background for page */
-  color: hsl(var(--foreground));
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-feature-settings: 'cv11', 'ss01';
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    background: linear-gradient(180deg, hsl(258 40% 98%), hsl(250 35% 96%));
+    /* Soft lilac gradient background */
+    color: hsl(var(--foreground));
+    font-family:
+        "Plus Jakarta Sans",
+        system-ui,
+        -apple-system,
+        sans-serif;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    position: relative;
+    min-height: 100%;
+}
+
+/* Display typography for headings */
+h1,
+h2,
+h3,
+.display-font {
+    font-family: "Playfair Display", serif;
+    letter-spacing: -0.015em;
+}
+
+/* Refined display usage helpers */
+.display-title {
+    font-family: "Playfair Display", serif;
+    letter-spacing: -0.02em;
+}
+
+.display-subtitle {
+    font-family: "Playfair Display", serif;
+    letter-spacing: -0.01em;
+}
+
+/* Accent typography for premium CTAs */
+.btn-display {
+    font-family: "Playfair Display", serif;
+    letter-spacing: 0.01em;
+}
+
+/* Soft background shapes */
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    inset: auto;
+    width: 520px;
+    height: 520px;
+    border-radius: 999px;
+    filter: blur(60px);
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: -1;
+}
+
+body::before {
+    top: -120px;
+    right: -120px;
+    background: radial-gradient(circle, hsl(265 80% 70%), transparent 60%);
+}
+
+body::after {
+    bottom: -140px;
+    left: -120px;
+    background: radial-gradient(circle, hsl(240 90% 80%), transparent 60%);
+}
+
+/* Subtle texture layer */
+body {
+    background-image:
+        radial-gradient(
+            circle at 20% 10%,
+            hsl(265 70% 92% / 0.5),
+            transparent 35%
+        ),
+        radial-gradient(
+            circle at 80% 20%,
+            hsl(240 80% 92% / 0.45),
+            transparent 40%
+        ),
+        linear-gradient(180deg, hsl(258 40% 98%), hsl(250 35% 96%));
+    background-attachment: fixed;
+}
+
+/* View transitions (smooth cross-fade on navigation) */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+}
+
+::view-transition-old(root) {
+    opacity: 1;
+}
+
+::view-transition-new(root) {
+    opacity: 0;
+    animation: fadeIn 220ms ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.surface-texture {
+    background-image:
+        radial-gradient(
+            circle at 15% 10%,
+            hsl(265 70% 92% / 0.55),
+            transparent 40%
+        ),
+        radial-gradient(
+            circle at 85% 0%,
+            hsl(240 80% 92% / 0.5),
+            transparent 35%
+        );
 }
 
 /* Minimalist Utilities */
 
 /* Elegant Card Hover */
 .card-hover {
-  transition: all 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .card-hover:hover {
-  border-color: hsl(var(--primary) / 0.2);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px -10px rgba(124, 58, 237, 0.1);
-  /* Purple tinted shadow */
+    border-color: hsl(var(--primary) / 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -10px rgba(124, 58, 237, 0.18);
 }
 
 /* Primary Button Gradient (Subtle) */
 .btn-primary {
-  background: linear-gradient(135deg, hsl(265, 80%, 50%), hsl(275, 80%, 45%));
-  color: hsl(var(--primary-foreground));
-  font-weight: 500;
-  transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+    background: linear-gradient(135deg, hsl(265, 75%, 48%), hsl(275, 70%, 45%));
+    color: hsl(var(--primary-foreground));
+    font-weight: 500;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    font-family: "Playfair Display", serif;
+    letter-spacing: 0.01em;
 }
 
 .btn-primary:hover {
-  opacity: 0.95;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.35);
+    opacity: 0.95;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
 }
 
 /* Clean Button - Flat */
 .btn-clean {
-  background-color: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  font-weight: 500;
-  transition: all 0.2s;
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    font-weight: 500;
+    transition: all 0.2s;
 }
 
 /* Gradient Button - Rich Purple */
 .btn-gradient {
-  background: linear-gradient(135deg, hsl(265, 80%, 50%), hsl(275, 80%, 45%));
-  color: white;
-  font-weight: 500;
-  border: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+    background: linear-gradient(135deg, hsl(265, 75%, 48%), hsl(275, 70%, 45%));
+    color: white;
+    font-weight: 500;
+    border: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    font-family: "Playfair Display", serif;
+    letter-spacing: 0.01em;
 }
 
 .btn-gradient:hover {
-  opacity: 0.95;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.35);
+    opacity: 0.95;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
 }
 
 /* Scrollbar Sytling */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-  border-radius: 99px;
+    background: hsl(var(--border));
+    border-radius: 99px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground));
+    background: hsl(var(--muted-foreground));
 }

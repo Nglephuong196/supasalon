@@ -10,4 +10,4 @@ export { bookingsController } from "./bookings";
 export { invoicesController } from "./invoices";
 export { membershipTiersController } from "./membership-tiers";
 export { membersController } from "./members";
-
+export { dashboardController } from "./dashboard";

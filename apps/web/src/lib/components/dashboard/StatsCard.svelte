@@ -13,6 +13,8 @@
         trendValue?: string;
         iconBgColor?: string;
         iconColor?: string;
+        context?: string;
+        loading?: boolean;
     }
 
     let {
@@ -24,6 +26,8 @@
         trendValue,
         iconBgColor = "bg-primary/10" /* Lavender tint */,
         iconColor = "text-primary" /* Deep Purple */,
+        context,
+        loading = false,
     }: Props = $props();
 </script>
 
@@ -54,16 +58,29 @@
         </div>
 
         <div class="space-y-1">
-            <span class="text-sm font-medium text-muted-foreground block"
-                >{title}</span
-            >
-            <span
-                class="text-2xl font-bold tracking-tight text-foreground block"
-                >{value}</span
-            >
-            <span class="text-xs text-muted-foreground block"
-                >{description}</span
-            >
+            {#if loading}
+                <div class="h-3 w-20 bg-muted/50 rounded animate-pulse"></div>
+                <div class="h-3 w-24 bg-muted/40 rounded animate-pulse"></div>
+                <div class="h-7 w-28 bg-muted/60 rounded animate-pulse"></div>
+                <div class="h-3 w-32 bg-muted/40 rounded animate-pulse"></div>
+            {:else}
+                {#if context}
+                    <span
+                        class="text-[10px] uppercase tracking-wide text-muted-foreground block"
+                        >{context}</span
+                    >
+                {/if}
+                <span class="text-sm font-medium text-muted-foreground block"
+                    >{title}</span
+                >
+                <span
+                    class="text-2xl font-bold tracking-tight text-foreground block"
+                    >{value}</span
+                >
+                <span class="text-xs text-muted-foreground block"
+                    >{description}</span
+                >
+            {/if}
         </div>
     </CardContent>
 </Card>

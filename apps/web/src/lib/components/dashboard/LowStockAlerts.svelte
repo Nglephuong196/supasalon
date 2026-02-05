@@ -9,36 +9,18 @@
     import { cn } from "$lib/utils";
     import { Button } from "$lib/components/ui/button";
 
-    const lowStockProducts = [
-        {
-            id: 1,
-            name: "Loreal Shampoo",
-            stock: 3,
-            minStock: 10,
-            status: "critical",
-        },
-        {
-            id: 2,
-            name: "Hair Dye #5",
-            stock: 5,
-            minStock: 15,
-            status: "warning",
-        },
-        {
-            id: 3,
-            name: "Hairspray Extra",
-            stock: 8,
-            minStock: 20,
-            status: "warning",
-        },
-        {
-            id: 4,
-            name: "Conditioner Repair",
-            stock: 2,
-            minStock: 10,
-            status: "critical",
-        },
-    ];
+    interface Props {
+        items?: Array<{
+            id: number | string;
+            name: string;
+            stock: number;
+            minStock: number;
+            status: string;
+        }>;
+        loading?: boolean;
+    }
+
+    let { items = [], loading = false }: Props = $props();
 </script>
 
 <Card
@@ -47,9 +29,16 @@
     <CardHeader
         class="flex flex-row items-center justify-between pb-3 border-b border-border/30 space-y-0 bg-gray-50/30"
     >
-        <CardTitle class="text-sm font-semibold text-foreground tracking-tight">
-            Sắp hết hàng
-        </CardTitle>
+        <div>
+            <CardTitle
+                class="text-sm font-semibold text-foreground tracking-tight"
+            >
+                Sắp hết hàng
+            </CardTitle>
+            <p class="text-[11px] text-muted-foreground mt-1">
+                Ưu tiên nhập hàng cho sản phẩm dưới mức tối thiểu
+            </p>
+        </div>
         <Button
             variant="ghost"
             size="icon"
@@ -59,51 +48,77 @@
         </Button>
     </CardHeader>
     <CardContent class="p-0">
-        {#each lowStockProducts as product}
-            <div
-                class="flex items-center gap-3 px-5 py-4 hover:bg-purple-50/30 transition-colors border-b border-border/30 last:border-0 group"
-            >
-                <div
-                    class={cn(
-                        "flex items-center justify-center h-9 w-9 rounded-xl transition-all shadow-sm",
-                        product.status === "critical" &&
-                            "text-rose-600 bg-rose-50 border border-rose-100",
-                        product.status === "warning" &&
-                            "text-amber-600 bg-amber-50 border border-amber-100",
-                    )}
-                >
-                    {#if product.status === "critical"}
-                        <AlertCircle class="h-4.5 w-4.5" />
-                    {:else}
-                        <PackageOpen class="h-4.5 w-4.5" />
-                    {/if}
+        {#if loading}
+            {#each Array(4).fill(0) as _}
+                <div class="flex items-center gap-3 px-5 py-4 border-b border-border/30 last:border-0">
+                    <div class="h-9 w-9 bg-muted/40 rounded-xl animate-pulse"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-3 w-32 bg-muted/40 rounded animate-pulse"></div>
+                        <div class="h-3 w-24 bg-muted/30 rounded animate-pulse"></div>
+                    </div>
+                    <div class="h-5 w-16 bg-muted/40 rounded-full animate-pulse"></div>
                 </div>
-
-                <div class="flex-1 min-w-0">
-                    <p
-                        class="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors"
-                    >
-                        {product.name}
-                    </p>
-                    <p class="text-xs text-muted-foreground">
-                        Tối thiểu: <span class="font-medium text-foreground"
-                            >{product.minStock}</span
-                        >
-                    </p>
-                </div>
-
-                <div
-                    class={cn(
-                        "text-xs font-bold px-3 py-1 rounded-full border shadow-sm",
-                        product.status === "critical"
-                            ? "bg-rose-50 text-rose-700 border-rose-200"
-                            : "bg-amber-50 text-amber-700 border-amber-200",
-                    )}
-                >
-                    {product.stock} còn lại
-                </div>
+            {/each}
+        {:else if items.length === 0}
+            <div class="px-6 py-8 text-center text-sm text-muted-foreground">
+                Tồn kho ổn định, không có cảnh báo.
             </div>
-        {/each}
+        {:else}
+            {#each items as product}
+                <div
+                    class="flex items-center gap-3 px-5 py-4 hover:bg-purple-50/30 transition-colors border-b border-border/30 last:border-0 group"
+                >
+                    <div
+                        class={cn(
+                            "flex items-center justify-center h-9 w-9 rounded-xl transition-all shadow-sm",
+                            product.status === "critical" &&
+                                "text-rose-600 bg-rose-50 border border-rose-100",
+                            product.status === "warning" &&
+                                "text-amber-600 bg-amber-50 border border-amber-100",
+                        )}
+                    >
+                        {#if product.status === "critical"}
+                            <AlertCircle class="h-4.5 w-4.5" />
+                        {:else}
+                            <PackageOpen class="h-4.5 w-4.5" />
+                        {/if}
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <p
+                            class="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors"
+                        >
+                            {product.name}
+                        </p>
+                        <p class="text-xs text-muted-foreground">
+                            Tối thiểu:
+                            <span class="font-medium text-foreground">
+                                {product.minStock}
+                            </span>
+                        </p>
+                    </div>
+
+                    <div
+                        class={cn(
+                            "text-xs font-bold px-3 py-1 rounded-full border shadow-sm",
+                            product.status === "critical"
+                                ? "bg-rose-50 text-rose-700 border-rose-200"
+                                : "bg-amber-50 text-amber-700 border-amber-200",
+                        )}
+                    >
+                        {product.stock} còn lại
+                    </div>
+
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        class="text-xs h-7 px-2"
+                    >
+                        Nhập hàng
+                    </Button>
+                </div>
+            {/each}
+        {/if}
         <div class="p-2 bg-gray-50/30 border-t border-border/30">
             <Button
                 variant="ghost"
