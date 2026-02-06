@@ -23,7 +23,7 @@
     let formattedDate = $state("");
     let lastUpdated = $state("");
     type RangeKey = "today" | "week" | "month" | "year";
-    let selectedRange = $state<RangeKey>(data.range || "week");
+    let selectedRange = $state<RangeKey>("week");
 
     $effect(() => {
         selectedRange = data.range || "week";

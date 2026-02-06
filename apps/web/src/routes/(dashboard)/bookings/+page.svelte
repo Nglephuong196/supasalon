@@ -6,6 +6,7 @@
     import * as Dialog from "$lib/components/ui/dialog";
     import * as AlertDialog from "$lib/components/ui/alert-dialog";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+    import * as Tabs from "$lib/components/ui/tabs";
     import {
         CalendarCheck,
         Clock,
@@ -35,6 +36,7 @@
     import Combobox from "$lib/components/ui/combobox/combobox.svelte";
     import * as Select from "$lib/components/ui/select";
     import { toast } from "svelte-sonner";
+    import BookingCalendar from "$lib/components/bookings/booking-calendar.svelte";
     import type { PageData } from "./$types";
     import {
         DateFormatter,
@@ -45,6 +47,8 @@
     } from "@internationalized/date";
 
     let { data }: { data: PageData } = $props();
+
+    let activeTab = $state("list");
 
     // Filter states
     let dateFilter = $state<"today" | "week" | "month" | "custom">("today");
@@ -561,10 +565,17 @@
         </Card>
     </div>
 
-    <!-- Bookings Table Card -->
-    <div
-        class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm"
-    >
+    <Tabs.Root bind:value={activeTab} class="space-y-4">
+        <Tabs.List class="w-fit">
+            <Tabs.Trigger value="list">Danh sách</Tabs.Trigger>
+            <Tabs.Trigger value="calendar">Lịch</Tabs.Trigger>
+        </Tabs.List>
+
+        <Tabs.Content value="list">
+            <!-- Bookings Table Card -->
+            <div
+                class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm"
+            >
         <!-- Filters Header -->
         <div class="p-4 border-b border-gray-100 space-y-4">
             <div
@@ -1074,7 +1085,20 @@
                 </div>
             </div>
         {/if}
-    </div>
+            </div>
+        </Tabs.Content>
+
+        <Tabs.Content value="calendar">
+            <div
+                class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm p-4"
+            >
+                <BookingCalendar
+                    bookings={data.bookings}
+                    services={data.services}
+                />
+            </div>
+        </Tabs.Content>
+    </Tabs.Root>
 </div>
 
 <!-- Create Booking Dialog -->
