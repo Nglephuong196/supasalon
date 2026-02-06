@@ -2,11 +2,8 @@ import { createAuthClient } from "better-auth/svelte";
 import { organizationClient } from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
-    baseURL: import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:8787',
-    plugins: [
-        organizationClient()
-    ]
+  baseURL: import.meta.env.VITE_AUTH_BASE_URL || "http://localhost:8787",
+  plugins: [organizationClient()],
 });
 
 export const { signIn, signUp, signOut, useSession, organization } = authClient;
-

@@ -3,33 +3,35 @@ import type { Database } from "../db";
 import { services, serviceCategories, type NewService } from "../db/schema";
 
 export class ServicesService {
-  constructor(private db: Database) { }
+  constructor(private db: Database) {}
 
   async findAll(organizationId: string) {
-    return this.db.select({
-      id: services.id,
-      categoryId: services.categoryId,
-      name: services.name,
-      description: services.description,
-      price: services.price,
-      duration: services.duration,
-      createdAt: services.createdAt,
-    })
+    return this.db
+      .select({
+        id: services.id,
+        categoryId: services.categoryId,
+        name: services.name,
+        description: services.description,
+        price: services.price,
+        duration: services.duration,
+        createdAt: services.createdAt,
+      })
       .from(services)
       .innerJoin(serviceCategories, eq(services.categoryId, serviceCategories.id))
       .where(eq(serviceCategories.organizationId, organizationId));
   }
 
   async findById(id: number, organizationId: string) {
-    return this.db.select({
-      id: services.id,
-      categoryId: services.categoryId,
-      name: services.name,
-      description: services.description,
-      price: services.price,
-      duration: services.duration,
-      createdAt: services.createdAt,
-    })
+    return this.db
+      .select({
+        id: services.id,
+        categoryId: services.categoryId,
+        name: services.name,
+        description: services.description,
+        price: services.price,
+        duration: services.duration,
+        createdAt: services.createdAt,
+      })
       .from(services)
       .innerJoin(serviceCategories, eq(services.categoryId, serviceCategories.id))
       .where(and(eq(services.id, id), eq(serviceCategories.organizationId, organizationId)))
@@ -38,7 +40,16 @@ export class ServicesService {
 
   async findByCategoryId(categoryId: number, organizationId: string) {
     // Also verify category belongs to salon
-    const category = await this.db.select().from(serviceCategories).where(and(eq(serviceCategories.id, categoryId), eq(serviceCategories.organizationId, organizationId))).get();
+    const category = await this.db
+      .select()
+      .from(serviceCategories)
+      .where(
+        and(
+          eq(serviceCategories.id, categoryId),
+          eq(serviceCategories.organizationId, organizationId),
+        ),
+      )
+      .get();
     if (!category) return [];
 
     return this.db.select().from(services).where(eq(services.categoryId, categoryId));
@@ -46,7 +57,16 @@ export class ServicesService {
 
   async create(data: NewService, organizationId: string) {
     // Verify category belongs to salon
-    const category = await this.db.select().from(serviceCategories).where(and(eq(serviceCategories.id, data.categoryId), eq(serviceCategories.organizationId, organizationId))).get();
+    const category = await this.db
+      .select()
+      .from(serviceCategories)
+      .where(
+        and(
+          eq(serviceCategories.id, data.categoryId),
+          eq(serviceCategories.organizationId, organizationId),
+        ),
+      )
+      .get();
 
     if (!category) {
       throw new Error("Invalid category for this organization");
@@ -63,7 +83,16 @@ export class ServicesService {
 
     // If changing category, verify new category belongs to salon
     if (data.categoryId) {
-      const category = await this.db.select().from(serviceCategories).where(and(eq(serviceCategories.id, data.categoryId), eq(serviceCategories.organizationId, organizationId))).get();
+      const category = await this.db
+        .select()
+        .from(serviceCategories)
+        .where(
+          and(
+            eq(serviceCategories.id, data.categoryId),
+            eq(serviceCategories.organizationId, organizationId),
+          ),
+        )
+        .get();
       if (!category) {
         throw new Error("Invalid category for this organization");
       }

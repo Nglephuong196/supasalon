@@ -3,14 +3,23 @@ import type { Database } from "../db";
 import { serviceCategories, type NewServiceCategory } from "../db/schema";
 
 export class ServiceCategoriesService {
-  constructor(private db: Database) { }
+  constructor(private db: Database) {}
 
   async findAll(organizationId: string) {
-    return this.db.select().from(serviceCategories).where(eq(serviceCategories.organizationId, organizationId));
+    return this.db
+      .select()
+      .from(serviceCategories)
+      .where(eq(serviceCategories.organizationId, organizationId));
   }
 
   async findById(id: number, organizationId: string) {
-    return this.db.select().from(serviceCategories).where(and(eq(serviceCategories.id, id), eq(serviceCategories.organizationId, organizationId))).get();
+    return this.db
+      .select()
+      .from(serviceCategories)
+      .where(
+        and(eq(serviceCategories.id, id), eq(serviceCategories.organizationId, organizationId)),
+      )
+      .get();
   }
 
   async create(data: NewServiceCategory) {
@@ -19,12 +28,23 @@ export class ServiceCategoriesService {
   }
 
   async update(id: number, organizationId: string, data: Partial<NewServiceCategory>) {
-    const result = await this.db.update(serviceCategories).set(data).where(and(eq(serviceCategories.id, id), eq(serviceCategories.organizationId, organizationId))).returning();
+    const result = await this.db
+      .update(serviceCategories)
+      .set(data)
+      .where(
+        and(eq(serviceCategories.id, id), eq(serviceCategories.organizationId, organizationId)),
+      )
+      .returning();
     return result[0];
   }
 
   async delete(id: number, organizationId: string) {
-    const result = await this.db.delete(serviceCategories).where(and(eq(serviceCategories.id, id), eq(serviceCategories.organizationId, organizationId))).returning();
+    const result = await this.db
+      .delete(serviceCategories)
+      .where(
+        and(eq(serviceCategories.id, id), eq(serviceCategories.organizationId, organizationId)),
+      )
+      .returning();
     return result[0];
   }
 }

@@ -9,23 +9,12 @@ export const load: PageServerLoad = async ({ fetch, cookies, parent }) => {
   const { memberRole, memberPermissions } = await parent();
 
   // Check read permission - redirect if denied
-  if (
-    !checkPermission(
-      memberRole,
-      memberPermissions,
-      RESOURCES.PRODUCT,
-      ACTIONS.READ,
-    )
-  ) {
+  if (!checkPermission(memberRole, memberPermissions, RESOURCES.PRODUCT, ACTIONS.READ)) {
     throw redirect(302, "/unauthorized");
   }
 
   // Get permission flags for UI
-  const permissions = getResourcePermissions(
-    memberRole,
-    memberPermissions,
-    RESOURCES.PRODUCT,
-  );
+  const permissions = getResourcePermissions(memberRole, memberPermissions, RESOURCES.PRODUCT);
 
   if (!organizationId) {
     return { products: [], categories: [], ...permissions };
@@ -90,14 +79,11 @@ export const actions: Actions = {
     if (!id || !name) return fail(400, { missing: true });
 
     try {
-      const response = await fetch(
-        `${PUBLIC_API_URL}/product-categories/${id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name }),
-        },
-      );
+      const response = await fetch(`${PUBLIC_API_URL}/product-categories/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
 
       if (!response.ok) {
         const res = await response.json();
@@ -120,12 +106,9 @@ export const actions: Actions = {
     if (!id) return fail(400, { missing: true });
 
     try {
-      const response = await fetch(
-        `${PUBLIC_API_URL}/product-categories/${id}`,
-        {
-          method: "DELETE",
-        },
-      );
+      const response = await fetch(`${PUBLIC_API_URL}/product-categories/${id}`, {
+        method: "DELETE",
+      });
 
       if (!response.ok) {
         const res = await response.json();
@@ -208,15 +191,9 @@ export const actions: Actions = {
     const categoryId = data.get("categoryId")
       ? parseInt(data.get("categoryId") as string)
       : undefined;
-    const price = data.get("price")
-      ? parseFloat(data.get("price") as string)
-      : undefined;
-    const stock = data.get("stock")
-      ? parseInt(data.get("stock") as string)
-      : undefined;
-    const minStock = data.get("minStock")
-      ? parseInt(data.get("minStock") as string)
-      : undefined;
+    const price = data.get("price") ? parseFloat(data.get("price") as string) : undefined;
+    const stock = data.get("stock") ? parseInt(data.get("stock") as string) : undefined;
+    const minStock = data.get("minStock") ? parseInt(data.get("minStock") as string) : undefined;
     const sku = data.get("sku") as string | undefined;
     const description = data.get("description") as string;
 

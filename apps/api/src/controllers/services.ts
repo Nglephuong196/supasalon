@@ -68,12 +68,16 @@ servicesController.put("/:id", requirePermission(RESOURCES.SERVICE, ACTIONS.UPDA
 });
 
 // Delete operation
-servicesController.delete("/:id", requirePermission(RESOURCES.SERVICE, ACTIONS.DELETE), async (c) => {
-  const service = new ServicesService(c.get("db"));
-  const organization = c.get("organization");
-  const id = parseInt(c.req.param("id"));
+servicesController.delete(
+  "/:id",
+  requirePermission(RESOURCES.SERVICE, ACTIONS.DELETE),
+  async (c) => {
+    const service = new ServicesService(c.get("db"));
+    const organization = c.get("organization");
+    const id = parseInt(c.req.param("id"));
 
-  const svc = await service.delete(id, organization.id);
-  if (!svc) return c.json({ error: "Service not found" }, 404);
-  return c.json({ message: "Service deleted" });
-});
+    const svc = await service.delete(id, organization.id);
+    if (!svc) return c.json({ error: "Service not found" }, 404);
+    return c.json({ message: "Service deleted" });
+  },
+);

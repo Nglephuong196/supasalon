@@ -3,15 +3,13 @@
   "name": "api",
   "main": "src/index.ts",
   "compatibility_date": "2026-01-10",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "supasalon-db",
       "database_id": "local",
-      "migrations_dir": "drizzle"
-    }
-  ]
+      "migrations_dir": "drizzle",
+    },
+  ],
 }

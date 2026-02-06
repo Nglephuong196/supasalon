@@ -4,15 +4,15 @@ A multi-tenant salon management SaaS with web and mobile apps.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| **Web** | SvelteKit 2 + Svelte 5 + Tailwind v4 + shadcn-svelte |
-| **API** | Hono on Cloudflare Workers |
-| **Mobile** | Expo 54 + React Native |
-| **Database** | Cloudflare D1 (SQLite) + Drizzle ORM |
-| **Auth** | Better Auth (email/password) |
-| **Monorepo** | pnpm workspaces + Turbo |
-| **Hosting** | Cloudflare (Workers + Pages) |
+| Layer        | Technology                                           |
+| ------------ | ---------------------------------------------------- |
+| **Web**      | SvelteKit 2 + Svelte 5 + Tailwind v4 + shadcn-svelte |
+| **API**      | Hono on Cloudflare Workers                           |
+| **Mobile**   | Expo 54 + React Native                               |
+| **Database** | Cloudflare D1 (SQLite) + Drizzle ORM                 |
+| **Auth**     | Better Auth (email/password)                         |
+| **Monorepo** | pnpm workspaces + Turbo                              |
+| **Hosting**  | Cloudflare (Workers + Pages)                         |
 
 ## Project Structure
 
@@ -36,12 +36,14 @@ Hono serverless API deployed to Cloudflare Workers with D1 database.
 **Entry point:** `src/index.ts`
 
 **Structure:**
+
 - `src/controllers/` - Route handlers (auth, users, customers, memberships, services, products, bookings, invoices, dashboard)
 - `src/services/` - Business logic layer
 - `src/db/` - Database connection and schema
 - `src/lib/auth.ts` - Better Auth configuration
 
 **Environment variables** (`.dev.vars`):
+
 ```
 BETTER_AUTH_SECRET=<your-secret>
 BETTER_AUTH_URL=http://localhost:8787
@@ -72,6 +74,7 @@ BETTER_AUTH_URL=http://localhost:8787
 ### Database Schema (`apps/api/src/db/schema.ts`)
 
 **Better Auth tables:**
+
 - `user` - Users
 - `session` - Auth sessions (7-day expiry)
 - `account` - OAuth accounts
@@ -81,6 +84,7 @@ BETTER_AUTH_URL=http://localhost:8787
 - `invitation` - Organization invitations
 
 **Business tables:**
+
 - `customers` - Linked to organization
 - `customerMemberships` - Customer membership history
 - `membershipTiers` - Membership tier definitions
@@ -98,29 +102,34 @@ BETTER_AUTH_URL=http://localhost:8787
 SvelteKit 2 with Svelte 5, deployed to Cloudflare Pages.
 
 **UI Stack:**
+
 - Tailwind CSS v4
 - shadcn-svelte (Radix-based components)
 - bits-ui
 - lucide-svelte (icons)
 
 **Auth client:** `src/lib/auth-client.ts`
+
 ```typescript
-import { signIn, signUp, signOut, useSession } from '$lib/auth-client';
+import { signIn, signUp, signOut, useSession } from "$lib/auth-client";
 ```
 
 **Signup form fields:**
+
 - `salonName` - Salon name (used to create organization)
 - `province` - Vietnamese province
 - `address` - Street address
 - `phone` - Phone number
 
 **Routes:**
+
 - `/` - Landing page
 - `/(auth)/login` - Login page
 - `/(auth)/signup` - Signup page
 - `/dashboard` - Protected dashboard
 
 **Environment variables** (`.env`):
+
 ```
 VITE_AUTH_BASE_URL=http://localhost:8787
 ```
@@ -128,11 +137,13 @@ VITE_AUTH_BASE_URL=http://localhost:8787
 ### Shared Packages
 
 **`@repo/constants`:**
+
 - `VIETNAM_PROVINCES` - List of 34 Vietnamese provinces (post-2025 reform)
 - `VIETNAM_PHONE_REGEX` - Vietnamese phone number validation
 - `isValidVietnamesePhone()` - Phone validation helper
 
 **`@repo/database`:**
+
 - Shared TypeScript types (placeholder for future expansion)
 
 ## Getting Started
@@ -190,16 +201,17 @@ cd apps/api
 
 ### Commands
 
-| Command | Description |
-|---------|-------------|
-| `pnpm run db:generate` | Generate migration from schema changes |
-| `pnpm run db:migrate:local` | Apply migrations to local D1 |
-| `pnpm run db:migrate:prod` | Apply migrations to remote D1 |
-| `pnpm run db:studio` | Open Drizzle Studio GUI |
+| Command                     | Description                            |
+| --------------------------- | -------------------------------------- |
+| `pnpm run db:generate`      | Generate migration from schema changes |
+| `pnpm run db:migrate:local` | Apply migrations to local D1           |
+| `pnpm run db:migrate:prod`  | Apply migrations to remote D1          |
+| `pnpm run db:studio`        | Open Drizzle Studio GUI                |
 
 ### Better Auth Schema
 
 Regenerate auth tables if needed:
+
 ```bash
 pnpm exec @better-auth/cli generate --config src/lib/auth.ts
 ```
@@ -222,11 +234,11 @@ pnpm run deploy
 
 ## Key Files Reference
 
-| File | Purpose |
-|------|---------|
-| `apps/api/src/index.ts` | API entry point and routes |
-| `apps/api/src/lib/auth.ts` | Better Auth configuration |
-| `apps/api/src/db/schema.ts` | Database schema (all tables) |
-| `apps/api/wrangler.jsonc` | Cloudflare Workers config |
-| `apps/web/src/lib/auth-client.ts` | Frontend auth client |
-| `packages/constants/vietnam.ts` | Vietnam provinces & phone validation |
+| File                              | Purpose                              |
+| --------------------------------- | ------------------------------------ |
+| `apps/api/src/index.ts`           | API entry point and routes           |
+| `apps/api/src/lib/auth.ts`        | Better Auth configuration            |
+| `apps/api/src/db/schema.ts`       | Database schema (all tables)         |
+| `apps/api/wrangler.jsonc`         | Cloudflare Workers config            |
+| `apps/web/src/lib/auth-client.ts` | Frontend auth client                 |
+| `packages/constants/vietnam.ts`   | Vietnam provinces & phone validation |

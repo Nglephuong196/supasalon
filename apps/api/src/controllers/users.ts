@@ -73,11 +73,7 @@ usersController.put("/:id/role", async (c) => {
   }
 
   try {
-    const updated = await service.updateRole(
-      organization.id,
-      userId,
-      body.role,
-    );
+    const updated = await service.updateRole(organization.id, userId, body.role);
     if (!updated) return c.json({ error: "Member not found" }, 404);
     return c.json(updated);
   } catch (error: any) {

@@ -2,16 +2,10 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "moduleResolution": "Bundler",
-    "types": [
-      "./worker-configuration.d.ts"
-    ],
+    "types": ["./worker-configuration.d.ts"],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx"
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
 }

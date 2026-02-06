@@ -18,23 +18,12 @@ export const load: PageServerLoad = async ({ fetch, cookies, parent, url }) => {
   const { memberRole, memberPermissions } = await parent();
 
   // Check read permission - redirect if denied
-  if (
-    !checkPermission(
-      memberRole,
-      memberPermissions,
-      RESOURCES.BOOKING,
-      ACTIONS.READ,
-    )
-  ) {
+  if (!checkPermission(memberRole, memberPermissions, RESOURCES.BOOKING, ACTIONS.READ)) {
     throw redirect(302, "/unauthorized");
   }
 
   // Get permission flags for UI
-  const permissions = getResourcePermissions(
-    memberRole,
-    memberPermissions,
-    RESOURCES.BOOKING,
-  );
+  const permissions = getResourcePermissions(memberRole, memberPermissions, RESOURCES.BOOKING);
 
   if (!organizationId) {
     return {
@@ -82,23 +71,17 @@ export const load: PageServerLoad = async ({ fetch, cookies, parent, url }) => {
 
   // handleFetch automatically injects cookies and X-Organization-Id
   try {
-    const [
-      bookingsRes,
-      statsRes,
-      customersRes,
-      servicesRes,
-      categoriesRes,
-      membersRes,
-    ] = await Promise.all([
-      fetch(`${PUBLIC_API_URL}/bookings?${queryParams.toString()}`),
-      fetch(
-        `${PUBLIC_API_URL}/bookings/stats?${from ? `from=${from}` : ""}${to ? `&to=${to}` : ""}`,
-      ),
-      fetch(`${PUBLIC_API_URL}/customers`),
-      fetch(`${PUBLIC_API_URL}/services`),
-      fetch(`${PUBLIC_API_URL}/service-categories`),
-      fetch(`${PUBLIC_API_URL}/members`),
-    ]);
+    const [bookingsRes, statsRes, customersRes, servicesRes, categoriesRes, membersRes] =
+      await Promise.all([
+        fetch(`${PUBLIC_API_URL}/bookings?${queryParams.toString()}`),
+        fetch(
+          `${PUBLIC_API_URL}/bookings/stats?${from ? `from=${from}` : ""}${to ? `&to=${to}` : ""}`,
+        ),
+        fetch(`${PUBLIC_API_URL}/customers`),
+        fetch(`${PUBLIC_API_URL}/services`),
+        fetch(`${PUBLIC_API_URL}/service-categories`),
+        fetch(`${PUBLIC_API_URL}/members`),
+      ]);
 
     if (bookingsRes.status === 403) {
       throw redirect(302, "/unauthorized");
@@ -119,9 +102,7 @@ export const load: PageServerLoad = async ({ fetch, cookies, parent, url }) => {
         };
     const customers = customersRes.ok ? await customersRes.json() : [];
     const services = servicesRes.ok ? await servicesRes.json() : [];
-    const serviceCategories = categoriesRes.ok
-      ? await categoriesRes.json()
-      : [];
+    const serviceCategories = categoriesRes.ok ? await categoriesRes.json() : [];
     const members = membersRes.ok ? await membersRes.json() : [];
 
     return {
@@ -277,8 +258,7 @@ export const actions: Actions = {
     const id = data.get("id");
     const status = data.get("status");
 
-    if (!id || !status)
-      return fail(400, { message: "Vui lòng điền đầy đủ thông tin" });
+    if (!id || !status) return fail(400, { message: "Vui lòng điền đầy đủ thông tin" });
 
     try {
       const res = await fetch(`${PUBLIC_API_URL}/bookings/${id}/status`, {
@@ -335,8 +315,7 @@ export const actions: Actions = {
     const name = data.get("name");
     const phone = data.get("phone");
 
-    if (!name || !phone)
-      return fail(400, { message: "Vui lòng điền đầy đủ thông tin" });
+    if (!name || !phone) return fail(400, { message: "Vui lòng điền đầy đủ thông tin" });
 
     try {
       const res = await fetch(`${PUBLIC_API_URL}/customers`, {

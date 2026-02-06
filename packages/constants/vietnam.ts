@@ -9,7 +9,7 @@ export const VIETNAM_PROVINCES = [
   "TP. Hồ Chí Minh",
   "Cần Thơ",
   "Hải Phòng",
-  
+
   // 28 Provinces (Tỉnh)
   // Unchanged (11)
   "Lai Châu",
@@ -21,30 +21,30 @@ export const VIETNAM_PROVINCES = [
   "Nghệ An",
   "Hà Tĩnh",
   "Cao Bằng",
-  
+
   // Newly formed through mergers
-  "Tuyên Quang",      // Hà Giang + Tuyên Quang
-  "Lào Cai",          // Yên Bái + Lào Cai
-  "Thái Nguyên",      // Bắc Kạn + Thái Nguyên
-  "Phú Thọ",          // Vĩnh Phúc + Hòa Bình + Phú Thọ
-  "Bắc Ninh",         // Bắc Giang + Bắc Ninh
-  "Hưng Yên",         // Thái Bình + Hưng Yên
-  "Ninh Bình",        // Hà Nam + Nam Định + Ninh Bình
-  "Quảng Trị",        // Quảng Bình + Quảng Trị
-  "Quảng Ngãi",       // Kon Tum + Quảng Ngãi
-  "Gia Lai",          // Bình Định + Gia Lai
-  "Khánh Hòa",        // Ninh Thuận + Khánh Hòa
-  "Lâm Đồng",         // Đắk Nông + Bình Thuận + Lâm Đồng
-  "Đắk Lắk",          // Phú Yên + Đắk Lắk
-  "Đồng Nai",         // Bình Phước + Đồng Nai
-  "Tây Ninh",         // Long An + Tây Ninh
-  "Vĩnh Long",        // Bến Tre + Trà Vinh + Vĩnh Long
-  "Đồng Tháp",        // Tiền Giang + Đồng Tháp
-  "Cà Mau",           // Bạc Liêu + Cà Mau
-  "An Giang",         // Kiên Giang + An Giang
+  "Tuyên Quang", // Hà Giang + Tuyên Quang
+  "Lào Cai", // Yên Bái + Lào Cai
+  "Thái Nguyên", // Bắc Kạn + Thái Nguyên
+  "Phú Thọ", // Vĩnh Phúc + Hòa Bình + Phú Thọ
+  "Bắc Ninh", // Bắc Giang + Bắc Ninh
+  "Hưng Yên", // Thái Bình + Hưng Yên
+  "Ninh Bình", // Hà Nam + Nam Định + Ninh Bình
+  "Quảng Trị", // Quảng Bình + Quảng Trị
+  "Quảng Ngãi", // Kon Tum + Quảng Ngãi
+  "Gia Lai", // Bình Định + Gia Lai
+  "Khánh Hòa", // Ninh Thuận + Khánh Hòa
+  "Lâm Đồng", // Đắk Nông + Bình Thuận + Lâm Đồng
+  "Đắk Lắk", // Phú Yên + Đắk Lắk
+  "Đồng Nai", // Bình Phước + Đồng Nai
+  "Tây Ninh", // Long An + Tây Ninh
+  "Vĩnh Long", // Bến Tre + Trà Vinh + Vĩnh Long
+  "Đồng Tháp", // Tiền Giang + Đồng Tháp
+  "Cà Mau", // Bạc Liêu + Cà Mau
+  "An Giang", // Kiên Giang + An Giang
 ] as const;
 
-export type VietnamProvince = typeof VIETNAM_PROVINCES[number];
+export type VietnamProvince = (typeof VIETNAM_PROVINCES)[number];
 
 // Vietnamese phone number regex
 // Matches: 0xxxxxxxxx, +84xxxxxxxxx (10 digits after 0 or 9 after +84)

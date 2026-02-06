@@ -19,10 +19,7 @@ export class ProductsService {
         createdAt: products.createdAt,
       })
       .from(products)
-      .innerJoin(
-        productCategories,
-        eq(products.categoryId, productCategories.id),
-      )
+      .innerJoin(productCategories, eq(products.categoryId, productCategories.id))
       .where(eq(productCategories.organizationId, organizationId));
   }
 
@@ -40,16 +37,8 @@ export class ProductsService {
         createdAt: products.createdAt,
       })
       .from(products)
-      .innerJoin(
-        productCategories,
-        eq(products.categoryId, productCategories.id),
-      )
-      .where(
-        and(
-          eq(products.id, id),
-          eq(productCategories.organizationId, organizationId),
-        ),
-      )
+      .innerJoin(productCategories, eq(products.categoryId, productCategories.id))
+      .where(and(eq(products.id, id), eq(productCategories.organizationId, organizationId)))
       .get();
   }
 
@@ -66,10 +55,7 @@ export class ProductsService {
       .get();
     if (!category) return [];
 
-    return this.db
-      .select()
-      .from(products)
-      .where(eq(products.categoryId, categoryId));
+    return this.db.select().from(products).where(eq(products.categoryId, categoryId));
   }
 
   async create(data: NewProduct, organizationId: string) {
@@ -112,11 +98,7 @@ export class ProductsService {
       }
     }
 
-    const result = await this.db
-      .update(products)
-      .set(data)
-      .where(eq(products.id, id))
-      .returning();
+    const result = await this.db.update(products).set(data).where(eq(products.id, id)).returning();
     return result[0];
   }
 
@@ -124,10 +106,7 @@ export class ProductsService {
     const product = await this.findById(id, organizationId);
     if (!product) return undefined;
 
-    const result = await this.db
-      .delete(products)
-      .where(eq(products.id, id))
-      .returning();
+    const result = await this.db.delete(products).where(eq(products.id, id)).returning();
     return result[0];
   }
 }

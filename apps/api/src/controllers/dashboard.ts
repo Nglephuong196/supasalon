@@ -207,9 +207,7 @@ dashboardController.get("/", requirePermission(RESOURCES.BOOKING, ACTIONS.READ),
   const chart = buildChart(range, paidInvoices, from);
 
   const servicesById = new Map(services.map((s: any) => [s.id, s.name]));
-  const membersById = new Map(
-    members.map((m: any) => [m.id, m.user?.name || "Nhân viên"]),
-  );
+  const membersById = new Map(members.map((m: any) => [m.id, m.user?.name || "Nhân viên"]));
 
   const schedule = (bookingsData.data || [])
     .filter((b: any) => {

@@ -1,17 +1,29 @@
 import { eq, and, desc, gte, lte } from "drizzle-orm";
 import type { Database } from "../db";
-import { invoices, invoiceItems, invoiceItemStaff, bookings, customers, type NewInvoice, type NewInvoiceItem, type NewInvoiceItemStaff } from "../db/schema";
+import {
+  invoices,
+  invoiceItems,
+  invoiceItemStaff,
+  bookings,
+  customers,
+  type NewInvoice,
+  type NewInvoiceItem,
+  type NewInvoiceItemStaff,
+} from "../db/schema";
 
 export type CreateInvoiceRequest = NewInvoice & {
   items?: (NewInvoiceItem & {
-    staff: NewInvoiceItemStaff[]
-  })[]
+    staff: NewInvoiceItemStaff[];
+  })[];
 };
 
 export class InvoicesService {
-  constructor(private db: Database) { }
+  constructor(private db: Database) {}
 
-  async findAll(organizationId: string, filters?: { isOpenInTab?: boolean; from?: Date; to?: Date }) {
+  async findAll(
+    organizationId: string,
+    filters?: { isOpenInTab?: boolean; from?: Date; to?: Date },
+  ) {
     const conditions = [eq(invoices.organizationId, organizationId)];
 
     if (filters?.isOpenInTab !== undefined) {
@@ -35,13 +47,13 @@ export class InvoicesService {
           with: {
             staffCommissions: {
               with: {
-                staff: true // Include staff details
-              }
-            }
-          }
-        }
+                staff: true, // Include staff details
+              },
+            },
+          },
+        },
       },
-      orderBy: [desc(invoices.createdAt)]
+      orderBy: [desc(invoices.createdAt)],
     });
   }
 
@@ -55,12 +67,12 @@ export class InvoicesService {
           with: {
             staffCommissions: {
               with: {
-                staff: true
-              }
-            }
-          }
-        }
-      }
+                staff: true,
+              },
+            },
+          },
+        },
+      },
     });
   }
 
@@ -73,12 +85,12 @@ export class InvoicesService {
           with: {
             staffCommissions: {
               with: {
-                staff: true
-              }
-            }
-          }
-        }
-      }
+                staff: true,
+              },
+            },
+          },
+        },
+      },
     });
   }
 
@@ -90,23 +102,30 @@ export class InvoicesService {
       organizationId,
       subtotal: cleanInvoiceData.subtotal || 0,
       discountValue: cleanInvoiceData.discountValue || 0,
-      discountType: cleanInvoiceData.discountType || 'percent',
+      discountType: cleanInvoiceData.discountType || "percent",
       total: cleanInvoiceData.total || 0,
       amountPaid: cleanInvoiceData.amountPaid || 0,
       change: cleanInvoiceData.change || 0,
-      status: cleanInvoiceData.status || 'pending',
+      status: cleanInvoiceData.status || "pending",
       paymentMethod: cleanInvoiceData.paymentMethod,
       notes: cleanInvoiceData.notes,
       customerId: cleanInvoiceData.customerId,
       bookingId: cleanInvoiceData.bookingId,
-      createdAt: cleanInvoiceData.createdAt instanceof Date ? cleanInvoiceData.createdAt : (cleanInvoiceData.createdAt ? new Date(cleanInvoiceData.createdAt) : new Date()),
+      createdAt:
+        cleanInvoiceData.createdAt instanceof Date
+          ? cleanInvoiceData.createdAt
+          : cleanInvoiceData.createdAt
+            ? new Date(cleanInvoiceData.createdAt)
+            : new Date(),
       paidAt: cleanInvoiceData.paidAt ? new Date(cleanInvoiceData.paidAt) : null,
       isOpenInTab: cleanInvoiceData.isOpenInTab ?? true,
-      deletedAt: cleanInvoiceData.deletedAt ? new Date(cleanInvoiceData.deletedAt) : null
+      deletedAt: cleanInvoiceData.deletedAt ? new Date(cleanInvoiceData.deletedAt) : null,
     };
 
     // Filter undefined values
-    Object.keys(insertData).forEach(key => insertData[key] === undefined && delete insertData[key]);
+    Object.keys(insertData).forEach(
+      (key) => insertData[key] === undefined && delete insertData[key],
+    );
 
     // D1/SQLite handles NULL in AUTOINCREMENT columns by using the next sequence value.
     // Drizzle's insert should now work since the 'deleted_at' column exists in the DB.
@@ -126,7 +145,7 @@ export class InvoicesService {
           quantity: Number(item.quantity) || 1,
           unitPrice: Number(item.unitPrice) || 0,
           discountValue: Number(item.discountValue) || 0,
-          discountType: item.discountType || 'percent',
+          discountType: item.discountType || "percent",
           total: Number(item.total) || 0,
         };
 
@@ -138,9 +157,9 @@ export class InvoicesService {
           const staffData = staff.map((s: any) => ({
             invoiceItemId: newItem.id,
             staffId: s.staffId,
-            role: s.role || 'technician',
+            role: s.role || "technician",
             commissionValue: Number(s.commissionValue) || 0,
-            commissionType: s.commissionType || 'percent',
+            commissionType: s.commissionType || "percent",
             bonus: Number(s.bonus) || 0,
           }));
           await this.db.insert(invoiceItemStaff).values(staffData);
@@ -157,18 +176,18 @@ export class InvoicesService {
     const updates: Partial<NewInvoice> = { ...data };
 
     // Convert date strings to Date objects
-    if (updates.createdAt && typeof updates.createdAt === 'string') {
+    if (updates.createdAt && typeof updates.createdAt === "string") {
       updates.createdAt = new Date(updates.createdAt);
     }
-    if (updates.paidAt && typeof updates.paidAt === 'string') {
+    if (updates.paidAt && typeof updates.paidAt === "string") {
       updates.paidAt = new Date(updates.paidAt);
     }
-    if (updates.deletedAt && typeof updates.deletedAt === 'string') {
+    if (updates.deletedAt && typeof updates.deletedAt === "string") {
       updates.deletedAt = new Date(updates.deletedAt);
     }
 
     // Explicit completion logic
-    if (data.status === 'paid') {
+    if (data.status === "paid") {
       updates.paidAt = new Date();
       updates.isOpenInTab = false; // Close tab on complete
     }
@@ -180,7 +199,8 @@ export class InvoicesService {
 
     const { items, ...invoiceFields } = updates as CreateInvoiceRequest;
 
-    const [updated] = await this.db.update(invoices)
+    const [updated] = await this.db
+      .update(invoices)
       .set(invoiceFields)
       .where(and(eq(invoices.id, id), eq(invoices.organizationId, organizationId)))
       .returning();
@@ -204,7 +224,7 @@ export class InvoicesService {
             quantity: Number(item.quantity) || 1,
             unitPrice: Number(item.unitPrice) || 0,
             discountValue: Number(item.discountValue) || 0,
-            discountType: item.discountType || 'percent',
+            discountType: item.discountType || "percent",
             total: Number(item.total) || 0,
           };
 
@@ -216,9 +236,9 @@ export class InvoicesService {
             const staffData = staff.map((s: any) => ({
               invoiceItemId: newItem.id,
               staffId: s.staffId,
-              role: s.role || 'technician',
+              role: s.role || "technician",
               commissionValue: Number(s.commissionValue) || 0,
-              commissionType: s.commissionType || 'percent',
+              commissionType: s.commissionType || "percent",
               bonus: Number(s.bonus) || 0,
             }));
             await this.db.insert(invoiceItemStaff).values(staffData);
@@ -233,11 +253,12 @@ export class InvoicesService {
   async delete(id: number, organizationId: string) {
     // Soft delete: status -> cancelled, deletedAt -> now, close tab
     // Instead of deleting the record, we mark it.
-    const [cancelled] = await this.db.update(invoices)
+    const [cancelled] = await this.db
+      .update(invoices)
       .set({
-        status: 'cancelled',
+        status: "cancelled",
         deletedAt: new Date(),
-        isOpenInTab: false
+        isOpenInTab: false,
       })
       .where(and(eq(invoices.id, id), eq(invoices.organizationId, organizationId)))
       .returning();

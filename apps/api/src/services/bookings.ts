@@ -20,7 +20,7 @@ export interface PaginatedResult<T> {
 }
 
 export class BookingsService {
-  constructor(private db: Database) { }
+  constructor(private db: Database) {}
 
   async findAll(organizationId: string, filters?: BookingFilters): Promise<PaginatedResult<any>> {
     const { from, to, status, search, page = 1, limit = 20 } = filters || {};
@@ -38,7 +38,7 @@ export class BookingsService {
     }
 
     // Status filter
-    if (status && status !== 'all') {
+    if (status && status !== "all") {
       conditions.push(eq(bookings.status, status as any));
     }
 
@@ -66,9 +66,10 @@ export class BookingsService {
     // Filter by search if provided (customer name or phone)
     if (search) {
       const searchLower = search.toLowerCase();
-      data = data.filter((b: any) =>
-        b.customer?.name?.toLowerCase().includes(searchLower) ||
-        b.customer?.phone?.includes(search)
+      data = data.filter(
+        (b: any) =>
+          b.customer?.name?.toLowerCase().includes(searchLower) ||
+          b.customer?.phone?.includes(search),
       );
     }
 
@@ -93,7 +94,11 @@ export class BookingsService {
   }
 
   async findById(id: number, organizationId: string) {
-    return this.db.select().from(bookings).where(and(eq(bookings.id, id), eq(bookings.organizationId, organizationId))).get();
+    return this.db
+      .select()
+      .from(bookings)
+      .where(and(eq(bookings.id, id), eq(bookings.organizationId, organizationId)))
+      .get();
   }
 
   async findByOrganizationId(organizationId: string) {
@@ -101,7 +106,10 @@ export class BookingsService {
   }
 
   async findByCustomerId(customerId: number, organizationId: string) {
-    return this.db.select().from(bookings).where(and(eq(bookings.customerId, customerId), eq(bookings.organizationId, organizationId)));
+    return this.db
+      .select()
+      .from(bookings)
+      .where(and(eq(bookings.customerId, customerId), eq(bookings.organizationId, organizationId)));
   }
 
   async create(data: any) {
@@ -117,7 +125,7 @@ export class BookingsService {
       status: data.status,
       guestCount: data.guestCount,
       notes: data.notes,
-      guests: guests // Direct JSON insert
+      guests: guests, // Direct JSON insert
     };
 
     const [booking] = await this.db.insert(bookings).values(bookingData).returning();
@@ -129,18 +137,25 @@ export class BookingsService {
     return this.db.query.bookings.findFirst({
       where: eq(bookings.id, booking.id),
       with: {
-        customer: true
-      }
+        customer: true,
+      },
     });
   }
 
   async update(id: number, organizationId: string, data: Partial<NewBooking>) {
-    const result = await this.db.update(bookings).set(data).where(and(eq(bookings.id, id), eq(bookings.organizationId, organizationId))).returning();
+    const result = await this.db
+      .update(bookings)
+      .set(data)
+      .where(and(eq(bookings.id, id), eq(bookings.organizationId, organizationId)))
+      .returning();
     return result[0];
   }
 
   async delete(id: number, organizationId: string) {
-    const result = await this.db.delete(bookings).where(and(eq(bookings.id, id), eq(bookings.organizationId, organizationId))).returning();
+    const result = await this.db
+      .delete(bookings)
+      .where(and(eq(bookings.id, id), eq(bookings.organizationId, organizationId)))
+      .returning();
     return result[0];
   }
 
@@ -160,10 +175,10 @@ export class BookingsService {
       .where(and(...conditions));
 
     const total = allBookings.length;
-    const pending = allBookings.filter(b => b.status === 'pending').length;
-    const confirmed = allBookings.filter(b => b.status === 'confirmed').length;
-    const completed = allBookings.filter(b => b.status === 'completed').length;
-    const cancelled = allBookings.filter(b => b.status === 'cancelled').length;
+    const pending = allBookings.filter((b) => b.status === "pending").length;
+    const confirmed = allBookings.filter((b) => b.status === "confirmed").length;
+    const completed = allBookings.filter((b) => b.status === "completed").length;
+    const cancelled = allBookings.filter((b) => b.status === "cancelled").length;
 
     return {
       total,

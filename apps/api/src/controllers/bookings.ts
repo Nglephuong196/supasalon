@@ -55,13 +55,13 @@ bookingsController.get("/", requirePermission(RESOURCES.BOOKING, ACTIONS.READ), 
 
   if (fromStr) {
     // Parse YYYY-MM-DD as local date at start of day
-    const [year, month, day] = fromStr.split('-').map(Number);
+    const [year, month, day] = fromStr.split("-").map(Number);
     from = new Date(year, month - 1, day, 0, 0, 0, 0);
   }
 
   if (toStr) {
     // Parse YYYY-MM-DD as local date at end of day (23:59:59.999)
-    const [year, month, day] = toStr.split('-').map(Number);
+    const [year, month, day] = toStr.split("-").map(Number);
     to = new Date(year, month - 1, day, 23, 59, 59, 999);
   }
 
@@ -91,12 +91,12 @@ bookingsController.get("/stats", requirePermission(RESOURCES.BOOKING, ACTIONS.RE
   let to: Date | undefined;
 
   if (fromStr) {
-    const [year, month, day] = fromStr.split('-').map(Number);
+    const [year, month, day] = fromStr.split("-").map(Number);
     from = new Date(year, month - 1, day, 0, 0, 0, 0);
   }
 
   if (toStr) {
-    const [year, month, day] = toStr.split('-').map(Number);
+    const [year, month, day] = toStr.split("-").map(Number);
     to = new Date(year, month - 1, day, 23, 59, 59, 999);
   }
 
@@ -128,7 +128,7 @@ bookingsController.post(
 
     const booking = await service.create(bookingData as NewBooking);
     return c.json(booking, 201);
-  }
+  },
 );
 
 // Update operation with Zod validation
@@ -145,7 +145,7 @@ bookingsController.put(
     const booking = await service.update(id, organization.id, body);
     if (!booking) return c.json({ error: "Booking not found" }, 404);
     return c.json(booking);
-  }
+  },
 );
 
 // Quick status update with Zod validation
@@ -162,16 +162,20 @@ bookingsController.patch(
     const booking = await service.update(id, organization.id, { status });
     if (!booking) return c.json({ error: "Booking not found" }, 404);
     return c.json(booking);
-  }
+  },
 );
 
 // Delete operation
-bookingsController.delete("/:id", requirePermission(RESOURCES.BOOKING, ACTIONS.DELETE), async (c) => {
-  const service = new BookingsService(c.get("db"));
-  const organization = c.get("organization");
-  const id = parseInt(c.req.param("id"));
+bookingsController.delete(
+  "/:id",
+  requirePermission(RESOURCES.BOOKING, ACTIONS.DELETE),
+  async (c) => {
+    const service = new BookingsService(c.get("db"));
+    const organization = c.get("organization");
+    const id = parseInt(c.req.param("id"));
 
-  const booking = await service.delete(id, organization.id);
-  if (!booking) return c.json({ error: "Booking not found" }, 404);
-  return c.json({ message: "Booking deleted" });
-});
+    const booking = await service.delete(id, organization.id);
+    if (!booking) return c.json({ error: "Booking not found" }, 404);
+    return c.json({ message: "Booking deleted" });
+  },
+);

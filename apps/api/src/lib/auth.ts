@@ -5,7 +5,10 @@ import { expo } from "@better-auth/expo";
 import type { Database } from "../db";
 import * as schema from "../db/schema";
 
-export function createAuth(db: Database, env: { BETTER_AUTH_SECRET: string; BETTER_AUTH_URL: string }) {
+export function createAuth(
+  db: Database,
+  env: { BETTER_AUTH_SECRET: string; BETTER_AUTH_URL: string },
+) {
   return betterAuth({
     database: drizzleAdapter(db, {
       provider: "sqlite",
@@ -21,7 +24,7 @@ export function createAuth(db: Database, env: { BETTER_AUTH_SECRET: string; BETT
       "http://localhost:8081",
       "http://10.0.2.2:8081",
       "supasalon://",
-      "exp://",  // Expo development
+      "exp://", // Expo development
       "exp://**",
     ],
     emailAndPassword: {
@@ -34,7 +37,7 @@ export function createAuth(db: Database, env: { BETTER_AUTH_SECRET: string; BETT
       organization({
         allowUserToCreateOrganization: true,
       }),
-      bearer(),  // Enable Bearer token authentication for mobile
+      bearer(), // Enable Bearer token authentication for mobile
     ],
     session: {
       expiresIn: 60 * 60 * 24 * 7, // 7 days

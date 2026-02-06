@@ -45,28 +45,36 @@ customersController.post("/", requirePermission(RESOURCES.CUSTOMER, ACTIONS.CREA
 });
 
 // Update operation
-customersController.put("/:id", requirePermission(RESOURCES.CUSTOMER, ACTIONS.UPDATE), async (c) => {
-  const service = new CustomersService(c.get("db"));
-  const organization = c.get("organization");
-  const id = parseInt(c.req.param("id"));
-  const body = await c.req.json<Partial<NewCustomer>>();
+customersController.put(
+  "/:id",
+  requirePermission(RESOURCES.CUSTOMER, ACTIONS.UPDATE),
+  async (c) => {
+    const service = new CustomersService(c.get("db"));
+    const organization = c.get("organization");
+    const id = parseInt(c.req.param("id"));
+    const body = await c.req.json<Partial<NewCustomer>>();
 
-  if (body.organizationId && body.organizationId !== organization.id) {
-    return c.json({ error: "Cannot move customer to another organization" }, 403);
-  }
+    if (body.organizationId && body.organizationId !== organization.id) {
+      return c.json({ error: "Cannot move customer to another organization" }, 403);
+    }
 
-  const customer = await service.update(id, organization.id, body);
-  if (!customer) return c.json({ error: "Customer not found" }, 404);
-  return c.json(customer);
-});
+    const customer = await service.update(id, organization.id, body);
+    if (!customer) return c.json({ error: "Customer not found" }, 404);
+    return c.json(customer);
+  },
+);
 
 // Delete operation
-customersController.delete("/:id", requirePermission(RESOURCES.CUSTOMER, ACTIONS.DELETE), async (c) => {
-  const service = new CustomersService(c.get("db"));
-  const organization = c.get("organization");
-  const id = parseInt(c.req.param("id"));
+customersController.delete(
+  "/:id",
+  requirePermission(RESOURCES.CUSTOMER, ACTIONS.DELETE),
+  async (c) => {
+    const service = new CustomersService(c.get("db"));
+    const organization = c.get("organization");
+    const id = parseInt(c.req.param("id"));
 
-  const customer = await service.delete(id, organization.id);
-  if (!customer) return c.json({ error: "Customer not found" }, 404);
-  return c.json({ message: "Customer deleted" });
-});
+    const customer = await service.delete(id, organization.id);
+    if (!customer) return c.json({ error: "Customer not found" }, 404);
+    return c.json({ message: "Customer deleted" });
+  },
+);

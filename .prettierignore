@@ -1,0 +1,11 @@
+node_modules
+.turbo
+.wrangler
+.svelte-kit
+dist
+build
+coverage
+pnpm-lock.yaml
+apps/api/drizzle/*
+!apps/api/drizzle/.gitkeep
+*.log

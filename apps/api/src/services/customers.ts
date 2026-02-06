@@ -3,14 +3,18 @@ import type { Database } from "../db";
 import { customers, type NewCustomer } from "../db/schema";
 
 export class CustomersService {
-  constructor(private db: Database) { }
+  constructor(private db: Database) {}
 
   async findAll(organizationId: string) {
     return this.db.select().from(customers).where(eq(customers.organizationId, organizationId));
   }
 
   async findById(id: number, organizationId: string) {
-    return this.db.select().from(customers).where(and(eq(customers.id, id), eq(customers.organizationId, organizationId))).get();
+    return this.db
+      .select()
+      .from(customers)
+      .where(and(eq(customers.id, id), eq(customers.organizationId, organizationId)))
+      .get();
   }
 
   async findByOrganizationId(organizationId: string) {
@@ -23,12 +27,19 @@ export class CustomersService {
   }
 
   async update(id: number, organizationId: string, data: Partial<NewCustomer>) {
-    const result = await this.db.update(customers).set(data).where(and(eq(customers.id, id), eq(customers.organizationId, organizationId))).returning();
+    const result = await this.db
+      .update(customers)
+      .set(data)
+      .where(and(eq(customers.id, id), eq(customers.organizationId, organizationId)))
+      .returning();
     return result[0];
   }
 
   async delete(id: number, organizationId: string) {
-    const result = await this.db.delete(customers).where(and(eq(customers.id, id), eq(customers.organizationId, organizationId))).returning();
+    const result = await this.db
+      .delete(customers)
+      .where(and(eq(customers.id, id), eq(customers.organizationId, organizationId)))
+      .returning();
     return result[0];
   }
 }

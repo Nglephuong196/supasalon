@@ -131,9 +131,7 @@ export class StaffCommissionRulesService {
     const found = await this.db
       .select({ id: member.id })
       .from(member)
-      .where(
-        and(eq(member.id, staffId), eq(member.organizationId, organizationId)),
-      )
+      .where(and(eq(member.id, staffId), eq(member.organizationId, organizationId)))
       .get();
 
     if (!found) {
@@ -141,22 +139,13 @@ export class StaffCommissionRulesService {
     }
   }
 
-  private async validateItem(
-    itemType: CommissionItemType,
-    itemId: number,
-    organizationId: string,
-  ) {
+  private async validateItem(itemType: CommissionItemType, itemId: number, organizationId: string) {
     if (itemType === "service") {
       const foundService = await this.db
         .select({ id: services.id })
         .from(services)
         .innerJoin(serviceCategories, eq(services.categoryId, serviceCategories.id))
-        .where(
-          and(
-            eq(services.id, itemId),
-            eq(serviceCategories.organizationId, organizationId),
-          ),
-        )
+        .where(and(eq(services.id, itemId), eq(serviceCategories.organizationId, organizationId)))
         .get();
 
       if (!foundService) {
@@ -170,12 +159,7 @@ export class StaffCommissionRulesService {
       .select({ id: products.id })
       .from(products)
       .innerJoin(productCategories, eq(products.categoryId, productCategories.id))
-      .where(
-        and(
-          eq(products.id, itemId),
-          eq(productCategories.organizationId, organizationId),
-        ),
-      )
+      .where(and(eq(products.id, itemId), eq(productCategories.organizationId, organizationId)))
       .get();
 
     if (!foundProduct) {
