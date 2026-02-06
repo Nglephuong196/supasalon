@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { browser } from "$app/environment";
   import Sidebar from "$lib/components/layout/Sidebar.svelte";
   import Header from "$lib/components/layout/Header.svelte";
   import { Toaster } from "$lib/components/ui/sonner";
@@ -12,15 +13,18 @@
 
   let isSidebarCollapsed = $state(false);
   let isMobileMenuOpen = $state(false);
+  const supportsViewTransitions =
+    browser &&
+    typeof document !== "undefined" &&
+    "startViewTransition" in document &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   afterNavigate(() => {
     isMobileMenuOpen = false;
   });
 
   onNavigate((navigation) => {
-    if (typeof document === "undefined") return;
-    if (!("startViewTransition" in document)) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (!supportsViewTransitions) {
       return;
     }
     return new Promise((resolve) => {
@@ -39,7 +43,7 @@
     <div class="ambient-grid"></div>
   </div>
   <!-- Desktop Sidebar -->
-  <div class="hidden md:flex">
+  <div class="dashboard-sidebar-static hidden md:flex">
     <Sidebar
       collapsed={isSidebarCollapsed}
       onToggle={() => (isSidebarCollapsed = !isSidebarCollapsed)}
@@ -84,17 +88,25 @@
   {/if}
 
   <div class="flex flex-1 flex-col overflow-hidden transition-all duration-300">
-    <Header onMobileMenuOpen={() => (isMobileMenuOpen = true)} />
+    <div class="dashboard-header-static">
+      <Header onMobileMenuOpen={() => (isMobileMenuOpen = true)} />
+    </div>
     <main class="dashboard-main flex-1 overflow-y-auto p-3 md:p-5 pb-20 md:pb-6">
       <div class="dashboard-page-frame">
         {#key $page.url.pathname}
-          <div
-            class="dashboard-page-content p-4 md:p-6"
-            in:fly={{ y: 16, duration: 220, easing: cubicOut }}
-            out:fade={{ duration: 120 }}
-          >
-            {@render children()}
-          </div>
+          {#if supportsViewTransitions}
+            <div class="dashboard-page-content p-4 md:p-6">
+              {@render children()}
+            </div>
+          {:else}
+            <div
+              class="dashboard-page-content p-4 md:p-6"
+              in:fly={{ y: 12, duration: 180, easing: cubicOut }}
+              out:fade={{ duration: 100 }}
+            >
+              {@render children()}
+            </div>
+          {/if}
         {/key}
       </div>
     </main>

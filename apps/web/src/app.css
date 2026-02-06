@@ -164,29 +164,57 @@ body {
   background-attachment: fixed;
 }
 
-/* View transitions (smooth cross-fade on navigation) */
+/* View transitions: keep app chrome stable and animate content only */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
 }
 
-::view-transition-old(root) {
-  opacity: 1;
+.dashboard-sidebar-static,
+.dashboard-header-static {
+  view-transition-name: none;
 }
 
-::view-transition-new(root) {
-  opacity: 0;
-  animation: fadeIn 220ms ease-out forwards;
+.dashboard-page-content {
+  view-transition-name: dashboard-content;
 }
 
-@keyframes fadeIn {
+::view-transition-group(dashboard-content) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+::view-transition-old(dashboard-content) {
+  animation: dashboard-content-out 160ms ease both;
+}
+
+::view-transition-new(dashboard-content) {
+  animation: dashboard-content-in 220ms cubic-bezier(0.2, 0.72, 0.22, 1) both;
+}
+
+@keyframes dashboard-content-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.995);
+    filter: blur(2px);
+  }
+}
+
+@keyframes dashboard-content-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(10px) scale(0.996);
+    filter: blur(3px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 

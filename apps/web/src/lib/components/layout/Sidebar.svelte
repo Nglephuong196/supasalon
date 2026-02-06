@@ -191,7 +191,7 @@
             <a
               href={item.href}
               class={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-all duration-200 group",
+                "group flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-colors duration-150",
                 $page.url.pathname === item.href
                   ? "bg-sidebar-accent text-primary shadow-sm ring-1 ring-sidebar-border"
                   : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
@@ -231,7 +231,7 @@
             <a
               href={item.href}
               class={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-all duration-200 group",
+                "group flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-colors duration-150",
                 $page.url.pathname === item.href
                   ? "bg-sidebar-accent text-primary shadow-sm ring-1 ring-sidebar-border"
                   : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
@@ -271,7 +271,7 @@
             <a
               href={item.href}
               class={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-all duration-200 group",
+                "group flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-colors duration-150",
                 $page.url.pathname === item.href
                   ? "bg-sidebar-accent text-primary shadow-sm ring-1 ring-sidebar-border"
                   : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
