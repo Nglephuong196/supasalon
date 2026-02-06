@@ -81,6 +81,8 @@
         updateUrlParams();
     }
 
+    let { data } = $props();
+
     // Filtered customers based on search and filter
     let filteredCustomers = $derived.by(() => {
         let result = data.customers;
@@ -103,8 +105,6 @@
 
         return result;
     });
-
-    let { data } = $props();
 
     // Form data for create
     let createFormData = $state({

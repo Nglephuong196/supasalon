@@ -5,50 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1768984073541,
-      "tag": "0000_military_daimon_hellstrom",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1769007328962,
-      "tag": "0001_chemical_princess_powerful",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1769266403529,
-      "tag": "0002_advanced_invoicing",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1769442713987,
-      "tag": "0003_absurd_ender_wiggin",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1769503691411,
-      "tag": "0004_gorgeous_scorpion",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1770195886172,
-      "tag": "0005_add_min_stock",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1770196174619,
-      "tag": "0006_black_frog_thor",
+      "when": 1770355550021,
+      "tag": "0000_stale_mandrill",
       "breakpoints": true
     }
   ]

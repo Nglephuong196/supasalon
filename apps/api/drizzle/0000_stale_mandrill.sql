@@ -70,17 +70,55 @@ CREATE TABLE `invitation` (
 	FOREIGN KEY (`inviterId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE TABLE `invoice_item_staff` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`invoice_item_id` integer NOT NULL,
+	`staff_id` text NOT NULL,
+	`role` text DEFAULT 'technician' NOT NULL,
+	`commission_value` real DEFAULT 0,
+	`commission_type` text DEFAULT 'percent',
+	`bonus` real DEFAULT 0,
+	FOREIGN KEY (`invoice_item_id`) REFERENCES `invoice_items`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`staff_id`) REFERENCES `member`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `invoice_items` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`invoice_id` integer NOT NULL,
+	`type` text NOT NULL,
+	`reference_id` integer,
+	`name` text NOT NULL,
+	`quantity` integer DEFAULT 1 NOT NULL,
+	`unit_price` real NOT NULL,
+	`discount_value` real DEFAULT 0,
+	`discount_type` text DEFAULT 'percent',
+	`total` real NOT NULL,
+	FOREIGN KEY (`invoice_id`) REFERENCES `invoices`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
 CREATE TABLE `invoices` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`booking_id` integer NOT NULL,
-	`amount` real NOT NULL,
+	`organization_id` text NOT NULL,
+	`customer_id` integer,
+	`booking_id` integer,
+	`subtotal` real DEFAULT 0 NOT NULL,
+	`discount_value` real DEFAULT 0,
+	`discount_type` text DEFAULT 'percent',
+	`total` real DEFAULT 0 NOT NULL,
+	`amount_paid` real DEFAULT 0,
+	`change` real DEFAULT 0,
 	`status` text DEFAULT 'pending' NOT NULL,
+	`payment_method` text,
+	`notes` text,
 	`paid_at` integer,
+	`is_open_in_tab` integer DEFAULT true,
+	`deleted_at` integer,
 	`created_at` integer NOT NULL,
+	FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`booking_id`) REFERENCES `bookings`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `invoices_booking_id_unique` ON `invoices` (`booking_id`);--> statement-breakpoint
 CREATE TABLE `member` (
 	`id` text PRIMARY KEY NOT NULL,
 	`organizationId` text NOT NULL,
@@ -121,6 +159,28 @@ CREATE TABLE `organization` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `organization_slug_unique` ON `organization` (`slug`);--> statement-breakpoint
+CREATE TABLE `product_categories` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`organization_id` text NOT NULL,
+	`name` text NOT NULL,
+	`description` text,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`organization_id`) REFERENCES `organization`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `products` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`category_id` integer NOT NULL,
+	`name` text NOT NULL,
+	`description` text,
+	`price` real NOT NULL,
+	`stock` integer DEFAULT 0 NOT NULL,
+	`min_stock` integer DEFAULT 10 NOT NULL,
+	`sku` text,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`category_id`) REFERENCES `product_categories`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
 CREATE TABLE `service_categories` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`organization_id` text NOT NULL,
