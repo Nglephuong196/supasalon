@@ -15,6 +15,7 @@ import {
   invoicesController,
   membershipTiersController,
   membersController,
+  staffCommissionRulesController,
   dashboardController,
 } from "./controllers";
 
@@ -81,6 +82,7 @@ protectedRoutes.route("/bookings", bookingsController);
 protectedRoutes.route("/invoices", invoicesController);
 protectedRoutes.route("/membership-tiers", membershipTiersController);
 protectedRoutes.route("/members", membersController);
+protectedRoutes.route("/staff-commission-rules", staffCommissionRulesController);
 protectedRoutes.route("/dashboard", dashboardController);
 
 app.route("/", protectedRoutes);

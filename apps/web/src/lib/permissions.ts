@@ -20,6 +20,7 @@ export const ROUTE_PERMISSIONS: Record<string, { resource: Resource; action: Act
     '/bookings': { resource: RESOURCES.BOOKING, action: ACTIONS.READ },
     '/invoices': { resource: RESOURCES.INVOICE, action: ACTIONS.READ },
     '/employees': { resource: RESOURCES.EMPLOYEE, action: ACTIONS.READ },
+    '/commission-settings': { resource: RESOURCES.EMPLOYEE, action: ACTIONS.READ },
     '/products': { resource: RESOURCES.PRODUCT, action: ACTIONS.READ },
 };
 

@@ -20,6 +20,7 @@
         Crown,
         Settings2,
         Users,
+        BadgePercent,
     } from "@lucide/svelte";
     import { cn } from "$lib/utils";
     import { toast } from "svelte-sonner";
@@ -29,11 +30,14 @@
     import { enhance } from "$app/forms";
     import type { MembershipTier, Member } from "./+page.server";
     import { RESOURCES, ACTIONS } from "@repo/constants";
+    import CommissionSettingsPanel from "$lib/components/settings/CommissionSettingsPanel.svelte";
 
     let { data } = $props();
 
     // --- State ---
-    let activeTab = $state<"tiers" | "general" | "permissions">("tiers");
+    let activeTab = $state<"tiers" | "general" | "permissions" | "commissions">(
+        "tiers",
+    );
     let rankingMode = $state<"spending" | "points">("spending");
     let isCreateDialogOpen = $state(false);
     let isDeleteDialogOpen = $state(false);
@@ -271,6 +275,14 @@
             >
                 <Users class="h-4 w-4 mr-2" />
                 Phân quyền
+            </Button>
+            <Button
+                variant={activeTab === "commissions" ? "default" : "ghost"}
+                onclick={() => (activeTab = "commissions")}
+                class="rounded-lg px-4 py-2 text-sm font-medium"
+            >
+                <BadgePercent class="h-4 w-4 mr-2" />
+                Hoa hồng
             </Button>
         </div>
 
@@ -599,6 +611,22 @@
                         </TableBody>
                     </Table>
                 </div>
+            </div>
+        {/if}
+
+        {#if activeTab === "commissions"}
+            <div class="mt-6">
+                <CommissionSettingsPanel
+                    data={{
+                        members: data.members,
+                        services: data.services,
+                        products: data.products,
+                        serviceCategories: data.serviceCategories,
+                        productCategories: data.productCategories,
+                        rules: data.commissionRules,
+                        canUpdate: true,
+                    }}
+                />
             </div>
         {/if}
     </div>

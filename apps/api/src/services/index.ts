@@ -8,5 +8,6 @@ export { ProductsService } from "./products";
 export { BookingsService } from "./bookings";
 export * from "./invoices";
 export { MembersService } from "./members";
+export { StaffCommissionRulesService } from "./staff-commission-rules";
 export { MembershipTiersService } from "./membership-tiers";
 
