@@ -11,9 +11,9 @@
     Sparkles,
     ShoppingBag,
     Percent,
-    DollarSign,
     UserCircle,
     ChevronDown,
+    Search,
   } from "@lucide/svelte";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
@@ -25,10 +25,51 @@
     open: boolean;
     items: any[];
     staff: any[];
+    commissionRules?: any[];
     onConfirm: () => void;
   }
 
-  let { open = $bindable(false), items = $bindable([]), staff = [], onConfirm }: Props = $props();
+  let {
+    open = $bindable(false),
+    items = $bindable([]),
+    staff = [],
+    commissionRules = [],
+    onConfirm,
+  }: Props = $props();
+  type IndexedAssignmentItem = { item: any; index: number };
+  let staffSearchQuery = $state("");
+  let filteredStaff = $derived.by(() => {
+    const normalized = staffSearchQuery.trim().toLowerCase();
+    if (!normalized) return staff;
+    return staff.filter((member: any) => member.name?.toLowerCase().includes(normalized));
+  });
+  let serviceAssignments = $derived.by(() =>
+    items
+      .map((item: any, index: number): IndexedAssignmentItem => ({ item, index }))
+      .filter((entry: IndexedAssignmentItem) => entry.item.type === "service"),
+  );
+  let productAssignments = $derived.by(() =>
+    items
+      .map((item: any, index: number): IndexedAssignmentItem => ({ item, index }))
+      .filter((entry: IndexedAssignmentItem) => entry.item.type === "product"),
+  );
+  let orderedAssignments = $derived([...serviceAssignments, ...productAssignments]);
+  let totalAssigned = $derived(
+    items.reduce(
+      (sum: number, item: any) =>
+        sum +
+        (item.staffTechnicians || []).filter((s: any) => s.staffId).length +
+        (item.staffSellers || []).filter((s: any) => s.staffId).length,
+      0,
+    ),
+  );
+  let itemWithAssignments = $derived(
+    items.filter(
+      (item: any) =>
+        (item.staffTechnicians || []).some((s: any) => s.staffId) ||
+        (item.staffSellers || []).some((s: any) => s.staffId),
+    ).length,
+  );
 
   function addStaff(item: any, role: "technician" | "seller") {
     const newEntry = {
@@ -67,6 +108,41 @@
     return staff.find((s) => s.id === staffId)?.name || "";
   }
 
+  function getCommissionRule(item: any, staffId: string) {
+    if (!item?.referenceId || !staffId) return null;
+
+    return (
+      commissionRules.find(
+        (rule: any) =>
+          rule.staffId === staffId &&
+          rule.itemType === item.type &&
+          Number(rule.itemId) === Number(item.referenceId),
+      ) || null
+    );
+  }
+
+  function applyCommissionFromRule(item: any, staffEntry: any, staffId: string) {
+    staffEntry.staffId = staffId;
+
+    const matchedRule = getCommissionRule(item, staffId);
+    if (!matchedRule) {
+      staffEntry.commissionType = "percent";
+      staffEntry.commissionValue = 0;
+      staffEntry.ruleApplied = false;
+      return;
+    }
+
+    staffEntry.commissionType = matchedRule.commissionType;
+    staffEntry.commissionValue = Number(matchedRule.commissionValue) || 0;
+    staffEntry.ruleApplied = true;
+  }
+
+  function getRuleLabel(staffEntry: any) {
+    const value = Number(staffEntry.commissionValue || 0);
+    if (staffEntry.commissionType === "percent") return `Theo quy tắc: ${value}%`;
+    return `Theo quy tắc: ${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+  }
+
   // Normalize staff entries when dialog opens
   $effect(() => {
     if (open) {
@@ -75,13 +151,17 @@
           if (s.showBonus === undefined) {
             s.showBonus = (s.bonus || 0) > 0;
           }
+          if (s.ruleApplied === undefined) s.ruleApplied = false;
         }
         for (const s of item.staffSellers || []) {
           if (s.showBonus === undefined) {
             s.showBonus = (s.bonus || 0) > 0;
           }
+          if (s.ruleApplied === undefined) s.ruleApplied = false;
         }
       }
+    } else {
+      staffSearchQuery = "";
     }
   });
 </script>
@@ -99,6 +179,22 @@
       <Dialog.Description class="text-muted-foreground">
         Phân công nhân viên thực hiện và tính hoa hồng cho từng dịch vụ/sản phẩm
       </Dialog.Description>
+      <div class="mt-3 grid grid-cols-2 gap-2 sm:w-fit sm:grid-cols-3">
+        <div class="rounded-md border border-border/70 bg-background px-3 py-1.5 text-xs">
+          <span class="text-muted-foreground">Mục trong hóa đơn:</span>
+          <span class="ml-1 font-semibold text-foreground">{items.length}</span>
+        </div>
+        <div class="rounded-md border border-border/70 bg-background px-3 py-1.5 text-xs">
+          <span class="text-muted-foreground">Đã phân công:</span>
+          <span class="ml-1 font-semibold text-foreground"
+            >{itemWithAssignments}/{items.length}</span
+          >
+        </div>
+        <div class="rounded-md border border-border/70 bg-background px-3 py-1.5 text-xs">
+          <span class="text-muted-foreground">Tổng lượt xếp:</span>
+          <span class="ml-1 font-semibold text-foreground">{totalAssigned}</span>
+        </div>
+      </div>
     </Dialog.Header>
 
     <Separator class="shrink-0" />
@@ -119,7 +215,37 @@
             </div>
           </div>
         {:else}
-          {#each items as item, i (i)}
+          {#each orderedAssignments as entry, orderIndex (entry.index)}
+            {@const item = entry.item}
+            {@const i = entry.index}
+            {#if orderIndex === 0 || orderedAssignments[orderIndex - 1].item.type !== item.type}
+              <div
+                class="rounded-lg border px-3 py-2 {item.type === 'service'
+                  ? 'border-primary/30 bg-primary/5'
+                  : 'border-emerald-300 bg-emerald-50/70'}"
+              >
+                <div class="flex items-center justify-between">
+                  <div
+                    class="flex items-center gap-2 text-sm font-semibold {item.type === 'service'
+                      ? 'text-primary'
+                      : 'text-emerald-700'}"
+                  >
+                    {#if item.type === "service"}
+                      <Sparkles class="h-4 w-4" />
+                      Dịch vụ
+                    {:else}
+                      <ShoppingBag class="h-4 w-4" />
+                      Sản phẩm
+                    {/if}
+                  </div>
+                  <Badge variant="secondary">
+                    {item.type === "service"
+                      ? serviceAssignments.length
+                      : productAssignments.length}
+                  </Badge>
+                </div>
+              </div>
+            {/if}
             <div
               class="rounded-xl bg-card shadow-sm overflow-hidden transition-all hover:shadow-md"
               in:fly={{ y: 20, duration: 300, delay: i * 50 }}
@@ -147,9 +273,7 @@
                     <h4 class="font-semibold truncate">
                       {item.name || "Mục chưa đặt tên"}
                     </h4>
-                    <p class="text-xs text-muted-foreground">
-                      {item.type === "service" ? "Dịch vụ" : "Sản phẩm"} • SL: {item.quantity || 1}
-                    </p>
+                    <p class="text-xs text-muted-foreground">SL: {item.quantity || 1}</p>
                   </div>
                 </div>
                 <Badge variant="secondary" class="shrink-0">
@@ -216,30 +340,48 @@
                                   />
                                 </button>
                               </Popover.Trigger>
-                              <Popover.Content
-                                class="w-[220px] p-2 max-h-[250px] overflow-y-auto"
-                                align="start"
-                              >
-                                <div class="space-y-1">
-                                  {#each staff as s}
-                                    <button
-                                      type="button"
-                                      class="w-full flex items-center gap-2 px-2 py-2 rounded-md text-left text-sm hover:bg-muted transition-colors {staffEntry.staffId ===
-                                      s.id
-                                        ? 'bg-primary/10 text-primary font-medium'
-                                        : ''}"
-                                      onclick={() => {
-                                        staffEntry.staffId = s.id;
-                                      }}
-                                    >
-                                      <span
-                                        class="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0"
+                              <Popover.Content class="w-[260px] p-2 max-h-[300px]" align="start">
+                                <div class="space-y-2">
+                                  <div class="relative">
+                                    <Search
+                                      class="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground"
+                                    />
+                                    <Input
+                                      class="h-8 pl-8 pr-2 text-xs"
+                                      placeholder="Tìm nhân viên..."
+                                      bind:value={staffSearchQuery}
+                                    />
+                                  </div>
+                                  <div class="max-h-[220px] overflow-y-auto space-y-1 pr-1">
+                                    {#if filteredStaff.length === 0}
+                                      <div
+                                        class="rounded-md border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground"
                                       >
-                                        {getStaffInitials(s.name)}
-                                      </span>
-                                      <span class="truncate">{s.name}</span>
-                                    </button>
-                                  {/each}
+                                        Không tìm thấy nhân viên phù hợp
+                                      </div>
+                                    {:else}
+                                      {#each filteredStaff as s}
+                                        <button
+                                          type="button"
+                                          class="w-full flex items-center gap-2 px-2 py-2 rounded-md text-left text-sm hover:bg-muted transition-colors {staffEntry.staffId ===
+                                          s.id
+                                            ? 'bg-primary/10 text-primary font-medium'
+                                            : ''}"
+                                          onclick={() => {
+                                            applyCommissionFromRule(item, staffEntry, s.id);
+                                            staffSearchQuery = "";
+                                          }}
+                                        >
+                                          <span
+                                            class="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0"
+                                          >
+                                            {getStaffInitials(s.name)}
+                                          </span>
+                                          <span class="truncate">{s.name}</span>
+                                        </button>
+                                      {/each}
+                                    {/if}
+                                  </div>
                                 </div>
                               </Popover.Content>
                             </Popover.Root>
@@ -257,6 +399,10 @@
                                   class="w-16 h-8 border-0 text-right text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
                                   placeholder="0"
                                   bind:value={staffEntry.commissionValue}
+                                  disabled={!staffEntry.staffId}
+                                  oninput={() => {
+                                    staffEntry.ruleApplied = false;
+                                  }}
                                 />
                                 <!-- Segmented Toggle -->
                                 <div class="flex border-l">
@@ -266,8 +412,10 @@
                                     'percent'
                                       ? 'bg-primary text-primary-foreground'
                                       : 'hover:bg-muted'}"
+                                    disabled={!staffEntry.staffId}
                                     onclick={() => {
                                       staffEntry.commissionType = "percent";
+                                      staffEntry.ruleApplied = false;
                                     }}
                                   >
                                     <Percent class="h-3.5 w-3.5" />
@@ -278,8 +426,10 @@
                                     'fixed'
                                       ? 'bg-primary text-primary-foreground'
                                       : 'hover:bg-muted'}"
+                                    disabled={!staffEntry.staffId}
                                     onclick={() => {
                                       staffEntry.commissionType = "fixed";
+                                      staffEntry.ruleApplied = false;
                                     }}
                                   >
                                     đ
@@ -287,6 +437,14 @@
                                 </div>
                               </div>
                             </div>
+                            {#if staffEntry.ruleApplied}
+                              <Badge
+                                variant="secondary"
+                                class="h-6 border border-emerald-200 bg-emerald-50 text-emerald-700"
+                              >
+                                {getRuleLabel(staffEntry)}
+                              </Badge>
+                            {/if}
 
                             <!-- Remove Button -->
                             <Button
@@ -400,30 +558,48 @@
                                   />
                                 </button>
                               </Popover.Trigger>
-                              <Popover.Content
-                                class="w-[220px] p-2 max-h-[250px] overflow-y-auto"
-                                align="start"
-                              >
-                                <div class="space-y-1">
-                                  {#each staff as s}
-                                    <button
-                                      type="button"
-                                      class="w-full flex items-center gap-2 px-2 py-2 rounded-md text-left text-sm hover:bg-muted transition-colors {staffEntry.staffId ===
-                                      s.id
-                                        ? 'bg-primary/10 text-primary font-medium'
-                                        : ''}"
-                                      onclick={() => {
-                                        staffEntry.staffId = s.id;
-                                      }}
-                                    >
-                                      <span
-                                        class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white text-xs font-bold flex items-center justify-center shrink-0"
+                              <Popover.Content class="w-[260px] p-2 max-h-[300px]" align="start">
+                                <div class="space-y-2">
+                                  <div class="relative">
+                                    <Search
+                                      class="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground"
+                                    />
+                                    <Input
+                                      class="h-8 pl-8 pr-2 text-xs"
+                                      placeholder="Tìm nhân viên..."
+                                      bind:value={staffSearchQuery}
+                                    />
+                                  </div>
+                                  <div class="max-h-[220px] overflow-y-auto space-y-1 pr-1">
+                                    {#if filteredStaff.length === 0}
+                                      <div
+                                        class="rounded-md border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground"
                                       >
-                                        {getStaffInitials(s.name)}
-                                      </span>
-                                      <span class="truncate">{s.name}</span>
-                                    </button>
-                                  {/each}
+                                        Không tìm thấy nhân viên phù hợp
+                                      </div>
+                                    {:else}
+                                      {#each filteredStaff as s}
+                                        <button
+                                          type="button"
+                                          class="w-full flex items-center gap-2 px-2 py-2 rounded-md text-left text-sm hover:bg-muted transition-colors {staffEntry.staffId ===
+                                          s.id
+                                            ? 'bg-primary/10 text-primary font-medium'
+                                            : ''}"
+                                          onclick={() => {
+                                            applyCommissionFromRule(item, staffEntry, s.id);
+                                            staffSearchQuery = "";
+                                          }}
+                                        >
+                                          <span
+                                            class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white text-xs font-bold flex items-center justify-center shrink-0"
+                                          >
+                                            {getStaffInitials(s.name)}
+                                          </span>
+                                          <span class="truncate">{s.name}</span>
+                                        </button>
+                                      {/each}
+                                    {/if}
+                                  </div>
                                 </div>
                               </Popover.Content>
                             </Popover.Root>
@@ -441,6 +617,10 @@
                                   class="w-16 h-8 border-0 text-right text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
                                   placeholder="0"
                                   bind:value={staffEntry.commissionValue}
+                                  disabled={!staffEntry.staffId}
+                                  oninput={() => {
+                                    staffEntry.ruleApplied = false;
+                                  }}
                                 />
                                 <!-- Segmented Toggle -->
                                 <div class="flex border-l">
@@ -450,8 +630,10 @@
                                     'percent'
                                       ? 'bg-primary text-primary-foreground'
                                       : 'hover:bg-muted'}"
+                                    disabled={!staffEntry.staffId}
                                     onclick={() => {
                                       staffEntry.commissionType = "percent";
+                                      staffEntry.ruleApplied = false;
                                     }}
                                   >
                                     <Percent class="h-3.5 w-3.5" />
@@ -462,8 +644,10 @@
                                     'fixed'
                                       ? 'bg-primary text-primary-foreground'
                                       : 'hover:bg-muted'}"
+                                    disabled={!staffEntry.staffId}
                                     onclick={() => {
                                       staffEntry.commissionType = "fixed";
+                                      staffEntry.ruleApplied = false;
                                     }}
                                   >
                                     đ
@@ -471,6 +655,14 @@
                                 </div>
                               </div>
                             </div>
+                            {#if staffEntry.ruleApplied}
+                              <Badge
+                                variant="secondary"
+                                class="h-6 border border-emerald-200 bg-emerald-50 text-emerald-700"
+                              >
+                                {getRuleLabel(staffEntry)}
+                              </Badge>
+                            {/if}
 
                             <!-- Remove Button -->
                             <Button

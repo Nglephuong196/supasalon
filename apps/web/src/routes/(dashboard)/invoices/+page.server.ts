@@ -36,6 +36,7 @@ export const load: PageServerLoad = async ({ fetch, cookies, parent }) => {
       productsRes,
       serviceCatsRes,
       productCatsRes,
+      commissionRulesRes,
     ] = await Promise.all([
       fetch(`${PUBLIC_API_URL}/invoices`),
       fetch(`${PUBLIC_API_URL}/invoices?isOpenInTab=true&date=today`),
@@ -45,6 +46,7 @@ export const load: PageServerLoad = async ({ fetch, cookies, parent }) => {
       fetch(`${PUBLIC_API_URL}/products`),
       fetch(`${PUBLIC_API_URL}/service-categories`),
       fetch(`${PUBLIC_API_URL}/product-categories`),
+      fetch(`${PUBLIC_API_URL}/staff-commission-rules`),
     ]);
 
     if (invoicesRes.status === 403) {
@@ -61,6 +63,7 @@ export const load: PageServerLoad = async ({ fetch, cookies, parent }) => {
     const members = membersRes.ok ? await membersRes.json() : [];
     let services = servicesRes.ok ? await servicesRes.json() : [];
     let products = productsRes.ok ? await productsRes.json() : [];
+    const commissionRules = commissionRulesRes.ok ? await commissionRulesRes.json() : [];
 
     const serviceParams = serviceCatsRes.ok ? await serviceCatsRes.json() : [];
     const productParams = productCatsRes.ok ? await productCatsRes.json() : [];
@@ -86,12 +89,21 @@ export const load: PageServerLoad = async ({ fetch, cookies, parent }) => {
       staff: members.map((m: any) => ({ id: m.id, name: m.user?.name || m.userId, ...m })), // Quick map
       services,
       products,
+      commissionRules,
       ...permissions,
     };
   } catch (e) {
     if ((e as any)?.status === 302) throw e;
     console.error("Error fetching invoices data:", e);
-    return { invoices: [], customers: [], staff: [], services: [], products: [], ...permissions };
+    return {
+      invoices: [],
+      customers: [],
+      staff: [],
+      services: [],
+      products: [],
+      commissionRules: [],
+      ...permissions,
+    };
   }
 };
 

@@ -14,6 +14,8 @@
     User,
     FileText,
     RotateCcw,
+    Sparkles,
+    ShoppingBag,
   } from "@lucide/svelte";
   import InvoiceItemRow from "./InvoiceItemRow.svelte";
   import { toast } from "svelte-sonner";
@@ -32,6 +34,7 @@
     staff = [],
     services = [],
     products = [],
+    commissionRules = [],
     onSaveSuccess = () => {},
     invoice = $bindable({
       invoiceDate: new Date().toISOString().split("T")[0],
@@ -49,6 +52,7 @@
     staff?: any[];
     services?: any[];
     products?: any[];
+    commissionRules?: any[];
     onSaveSuccess?: () => void;
     invoice?: {
       id?: number;
@@ -95,6 +99,16 @@
 
   let total = $derived(Math.max(0, subtotal - invoiceDiscount));
   let change = $derived(Math.max(0, invoice.amountPaid - total));
+  let itemCount = $derived(invoice.items.length);
+  let assignedStaffCount = $derived(
+    invoice.items.reduce(
+      (sum: number, current: any) =>
+        sum +
+        (current.staffTechnicians || []).filter((s: any) => s.staffId).length +
+        (current.staffSellers || []).filter((s: any) => s.staffId).length,
+      0,
+    ),
+  );
 
   // Filtered Catalog
   let filteredServices = $derived(
@@ -318,6 +332,20 @@
 
   let groupedServices = $derived(groupByCategory(filteredServices));
   let groupedProducts = $derived(groupByCategory(filteredProducts));
+  type IndexedInvoiceItem = { item: any; index: number };
+  let serviceItemEntries = $derived.by(() =>
+    invoice.items
+      .map((item: any, index: number): IndexedInvoiceItem => ({ item, index }))
+      .filter((entry: IndexedInvoiceItem) => entry.item.type === "service"),
+  );
+  let productItemEntries = $derived.by(() =>
+    invoice.items
+      .map((item: any, index: number): IndexedInvoiceItem => ({ item, index }))
+      .filter((entry: IndexedInvoiceItem) => entry.item.type === "product"),
+  );
+  let catalogResultCount = $derived(
+    catalogTab === "services" ? filteredServices.length : filteredProducts.length,
+  );
 
   // Accordion State
   let accordionValue = $state<string[]>([]);
@@ -379,6 +407,22 @@
             </div>
           </div>
         </div>
+        <div class="grid gap-2 sm:grid-cols-3">
+          <div class="rounded-lg border border-border/70 bg-muted/20 px-3 py-2">
+            <p class="text-[11px] uppercase tracking-wider text-muted-foreground">Số mục</p>
+            <p class="text-sm font-semibold">{itemCount} mục</p>
+          </div>
+          <div class="rounded-lg border border-border/70 bg-muted/20 px-3 py-2">
+            <p class="text-[11px] uppercase tracking-wider text-muted-foreground">
+              Nhân viên đã xếp
+            </p>
+            <p class="text-sm font-semibold">{assignedStaffCount} người</p>
+          </div>
+          <div class="rounded-lg border border-border/70 bg-muted/20 px-3 py-2">
+            <p class="text-[11px] uppercase tracking-wider text-muted-foreground">Tổng tạm tính</p>
+            <p class="text-sm font-semibold">{formatPrice(subtotal)}</p>
+          </div>
+        </div>
 
         <!-- Customer & Dates Info -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -389,38 +433,35 @@
             </Label>
             {#if selectedCustomer}
               <div
-                class="border rounded-lg p-4 bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 flex items-start justify-between h-[88px]"
+                class="h-[44px] rounded-lg border border-blue-100 bg-blue-50/50 px-3 dark:bg-blue-900/10 flex items-center justify-between gap-2"
               >
-                <div class="overflow-hidden">
-                  <div class="font-bold text-lg text-blue-900 dark:text-blue-100 truncate">
+                <div class="min-w-0 overflow-hidden">
+                  <div class="truncate text-sm font-semibold text-blue-900 dark:text-blue-100">
                     {selectedCustomer.name}
                   </div>
-                  <div class="text-sm text-muted-foreground truncate">
+                  <div class="truncate text-xs text-muted-foreground">
                     {selectedCustomer.phone || "Không có SĐT"}
                   </div>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  class="h-6 w-6 shrink-0"
+                  class="h-7 w-7 shrink-0"
                   onclick={removeCustomer}
                 >
                   <X class="h-4 w-4" />
                 </Button>
               </div>
             {:else}
-              <div class="h-[88px] flex flex-col justify-start">
+              <div>
                 <Combobox
                   items={customerItems}
                   bind:value={invoice.customerId}
                   placeholder="Tìm khách hàng..."
                   searchPlaceholder="Tìm theo tên hoặc SĐT..."
                   emptyText="Không tìm thấy khách hàng."
-                  class="w-full"
+                  class="w-full h-[44px]"
                 />
-                <p class="text-xs text-muted-foreground mt-2 px-1">
-                  Chọn khách hàng để tạo hóa đơn
-                </p>
               </div>
             {/if}
           </div>
@@ -430,13 +471,11 @@
             <Label class="flex items-center gap-2">
               <CalendarIcon class="h-4 w-4" /> Ngày hóa đơn
             </Label>
-            <div class="h-[88px] flex flex-col justify-start">
-              <DatePicker
-                bind:value={invoice.invoiceDate}
-                class="w-full bg-muted/50 h-[44px]"
-                disabled={false}
-              />
-            </div>
+            <DatePicker
+              bind:value={invoice.invoiceDate}
+              class="w-full bg-muted/50 h-[44px]"
+              disabled={false}
+            />
           </div>
 
           <!-- Time -->
@@ -444,13 +483,11 @@
             <Label class="flex items-center gap-2">
               <CalendarIcon class="h-4 w-4" /> Thời gian
             </Label>
-            <div class="h-[88px] flex flex-col justify-start">
-              <Input
-                type="time"
-                bind:value={invoiceTime}
-                class="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-              />
-            </div>
+            <Input
+              type="time"
+              bind:value={invoiceTime}
+              class="h-[44px] bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+            />
           </div>
         </div>
 
@@ -463,10 +500,82 @@
           </div>
 
           {#if invoice.items.length > 0}
-            <div class="space-y-3">
-              {#each invoice.items as item, i}
-                <InvoiceItemRow bind:item={invoice.items[i]} index={i} {removeItem} />
-              {/each}
+            <div class="space-y-4">
+              {#if serviceItemEntries.length > 0}
+                <div class="rounded-xl border border-primary/20 bg-primary/5 p-3">
+                  <div class="mb-3 flex items-center justify-between">
+                    <div class="flex items-center gap-2 text-sm font-semibold text-primary">
+                      <Sparkles class="h-4 w-4" />
+                      Dịch vụ
+                    </div>
+                    <span
+                      class="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                    >
+                      {serviceItemEntries.length} mục
+                    </span>
+                  </div>
+                  <div class="mb-2 overflow-x-auto">
+                    <div
+                      class="hidden min-w-[760px] items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground md:grid md:grid-cols-[minmax(180px,1fr)_110px_64px_170px_120px_34px]"
+                    >
+                      <span>Mục</span>
+                      <span>Đơn giá</span>
+                      <span class="text-center">SL</span>
+                      <span>Giảm giá</span>
+                      <span class="text-right">Thành tiền</span>
+                      <span></span>
+                    </div>
+                  </div>
+                  <div class="space-y-2 overflow-x-auto">
+                    {#each serviceItemEntries as entry (entry.index)}
+                      <InvoiceItemRow
+                        bind:item={invoice.items[entry.index]}
+                        index={entry.index}
+                        {removeItem}
+                        compact
+                      />
+                    {/each}
+                  </div>
+                </div>
+              {/if}
+
+              {#if productItemEntries.length > 0}
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3">
+                  <div class="mb-3 flex items-center justify-between">
+                    <div class="flex items-center gap-2 text-sm font-semibold text-emerald-700">
+                      <ShoppingBag class="h-4 w-4" />
+                      Sản phẩm
+                    </div>
+                    <span
+                      class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700"
+                    >
+                      {productItemEntries.length} mục
+                    </span>
+                  </div>
+                  <div class="mb-2 overflow-x-auto">
+                    <div
+                      class="hidden min-w-[760px] items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground md:grid md:grid-cols-[minmax(180px,1fr)_110px_64px_170px_120px_34px]"
+                    >
+                      <span>Mục</span>
+                      <span>Đơn giá</span>
+                      <span class="text-center">SL</span>
+                      <span>Giảm giá</span>
+                      <span class="text-right">Thành tiền</span>
+                      <span></span>
+                    </div>
+                  </div>
+                  <div class="space-y-2 overflow-x-auto">
+                    {#each productItemEntries as entry (entry.index)}
+                      <InvoiceItemRow
+                        bind:item={invoice.items[entry.index]}
+                        index={entry.index}
+                        {removeItem}
+                        compact
+                      />
+                    {/each}
+                  </div>
+                </div>
+              {/if}
             </div>
           {:else}
             <div
@@ -474,6 +583,16 @@
             >
               <p>Chưa có dịch vụ hoặc sản phẩm nào được chọn</p>
               <p class="text-sm">Vui lòng chọn từ danh sách bên phải</p>
+              <div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+                <Button variant="outline" size="sm" onclick={() => addItem("service")}>
+                  <Plus class="h-3.5 w-3.5 mr-1" />
+                  Thêm dịch vụ tùy chỉnh
+                </Button>
+                <Button variant="outline" size="sm" onclick={() => addItem("product")}>
+                  <Plus class="h-3.5 w-3.5 mr-1" />
+                  Thêm sản phẩm tùy chỉnh
+                </Button>
+              </div>
             </div>
           {/if}
         </div>
@@ -535,14 +654,14 @@
             </div>
 
             <!-- Payment Method -->
-            <div class="flex items-center justify-between pt-2">
+            <div class="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
               <Label>Phương thức thanh toán</Label>
               <Select.Root
                 type="single"
                 value={invoice.paymentMethod}
                 onValueChange={(v) => (invoice.paymentMethod = v as any)}
               >
-                <Select.Trigger class="w-[180px]">
+                <Select.Trigger class="w-full sm:w-[180px]">
                   {invoice.paymentMethod === "cash"
                     ? "Tiền mặt"
                     : invoice.paymentMethod === "card"
@@ -557,47 +676,50 @@
               </Select.Root>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-              <form
-                method="POST"
-                action="?/delete"
-                use:enhance={({ formData, cancel }) => {
-                  if (!invoice.id || !confirm("Bạn có chắc muốn hủy hóa đơn này?")) {
-                    cancel();
-                    return;
-                  }
-                  isLoading = true;
-                  formData.set("id", invoice.id.toString());
-                  return async ({ result }) => {
-                    isLoading = false;
-                    if (result.type === "success") {
-                      toast.success("Đã hủy hóa đơn");
-                      onSaveSuccess();
-                    } else if (result.type === "failure") {
-                      toast.error((result.data?.message as string) || "Không thể hủy hóa đơn");
+            <div class="mt-4 space-y-3">
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <form
+                  class="min-w-0"
+                  method="POST"
+                  action="?/delete"
+                  use:enhance={({ formData, cancel }) => {
+                    if (!invoice.id || !confirm("Bạn có chắc muốn hủy hóa đơn này?")) {
+                      cancel();
+                      return;
                     }
-                  };
-                }}
-              >
+                    isLoading = true;
+                    formData.set("id", invoice.id.toString());
+                    return async ({ result }) => {
+                      isLoading = false;
+                      if (result.type === "success") {
+                        toast.success("Đã hủy hóa đơn");
+                        onSaveSuccess();
+                      } else if (result.type === "failure") {
+                        toast.error((result.data?.message as string) || "Không thể hủy hóa đơn");
+                      }
+                    };
+                  }}
+                >
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    size="lg"
+                    class="w-full min-w-0 whitespace-normal text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                    disabled={isLoading}
+                  >
+                    Hủy thanh toán
+                  </Button>
+                </form>
+
                 <Button
-                  type="submit"
                   variant="outline"
                   size="lg"
-                  class="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-                  disabled={isLoading}
+                  class="w-full min-w-0 whitespace-normal text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+                  onclick={() => (assignStaffOpen = true)}
                 >
-                  Hủy thanh toán
+                  <User class="h-4 w-4 mr-2" /> Xếp nhân viên
                 </Button>
-              </form>
-
-              <Button
-                variant="outline"
-                size="lg"
-                class="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
-                onclick={() => (assignStaffOpen = true)}
-              >
-                <User class="h-4 w-4 mr-2" /> Xếp nhân viên
-              </Button>
+              </div>
 
               <form
                 method="POST"
@@ -627,7 +749,12 @@
                   };
                 }}
               >
-                <Button type="submit" class="w-full btn-gradient" size="lg" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  class="w-full btn-gradient shadow-md shadow-primary/25"
+                  size="lg"
+                  disabled={isLoading}
+                >
                   {#if isLoading}
                     <Loader2 class="h-4 w-4 mr-2 animate-spin" />
                   {/if}
@@ -684,18 +811,18 @@
   </ScrollArea>
 
   <!-- RIGHT COLUMN: CATALOG -->
-  <div class="w-full lg:w-1/3 shrink-0 flex flex-col h-full bg-muted/5 p-6">
+  <div class="w-full shrink-0 flex flex-col h-full bg-muted/5 p-6 lg:w-[360px] lg:min-w-[340px]">
     <!-- Catalog Header & Search (Fixed) -->
     <div class="flex flex-col">
       <div class="p-4 pb-2">
-        <div class="flex items-center justify-between mb-4">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
           <h3 class="text-sm font-semibold flex items-center gap-2">
             <Package class="h-4 w-4" /> Danh mục
           </h3>
           <Button
             size="sm"
             variant="secondary"
-            class="h-7 text-xs"
+            class="h-7 text-xs whitespace-nowrap"
             onclick={() => addItem("service")}
           >
             <Plus class="h-3 w-3 mr-1" /> Tùy chỉnh
@@ -707,19 +834,22 @@
           onValueChange={(v) => (catalogTab = v as string)}
           class="w-full"
         >
-          <Tabs.List class="w-full grid grid-cols-2 mb-0 bg-muted/50 p-1 rounded-lg">
+          <Tabs.List class="mb-0 grid w-full grid-cols-2 rounded-lg bg-muted/50 p-1">
             <Tabs.Trigger
               value="services"
-              class="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              class="min-w-0 rounded-md px-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
               >Dịch vụ</Tabs.Trigger
             >
             <Tabs.Trigger
               value="products"
-              class="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              class="min-w-0 rounded-md px-2 data-[state=active]:bg-background data-[state=active]:shadow-sm"
               >Sản phẩm</Tabs.Trigger
             >
           </Tabs.List>
         </Tabs.Root>
+        <p class="mt-2 text-xs text-muted-foreground">
+          Hiển thị {catalogResultCount} mục phù hợp
+        </p>
       </div>
 
       <Separator />
@@ -729,15 +859,25 @@
           <Search class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Tìm kiếm..."
-            class="pl-9 bg-muted/20 border-none shadow-none focus-visible:ring-1"
+            class="pl-9 pr-8 bg-muted/20 border-none shadow-none focus-visible:ring-1"
             bind:value={catalogSearch}
           />
+          {#if catalogSearch}
+            <button
+              type="button"
+              class="absolute right-2 top-2 inline-flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+              onclick={() => (catalogSearch = "")}
+              aria-label="Xóa tìm kiếm"
+            >
+              <X class="h-3.5 w-3.5" />
+            </button>
+          {/if}
         </div>
       </div>
 
       <div class="flex-1 min-h-0 bg-muted/5">
         <ScrollArea class="h-full">
-          <!-- Note: Tabs Content must be here, but Tabs.Root is in header. 
+          <!-- Note: Tabs Content must be here, but Tabs.Root is in header.
                               Separating Tabs.Root and Content is not standard in some libs, but shadcn Tabs uses Context so it should work if Root wraps everything.
                               Ah, I closed Tabs.Root in the header div. That won't work.
                               I must wrap the whole thing in Tabs.Root.
@@ -834,6 +974,7 @@
     bind:open={assignStaffOpen}
     bind:items={invoice.items}
     {staff}
+    {commissionRules}
     onConfirm={() => {
       // Trigger auto-save by re-assigning invoice.items
       invoice.items = [...invoice.items];

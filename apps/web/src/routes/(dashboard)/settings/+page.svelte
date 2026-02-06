@@ -13,7 +13,18 @@
   import { Checkbox } from "$lib/components/ui/checkbox";
   import * as Dialog from "$lib/components/ui/dialog";
   import * as AlertDialog from "$lib/components/ui/alert-dialog";
-  import { Plus, Pencil, Trash2, Crown, Settings2, Users, BadgePercent } from "@lucide/svelte";
+  import {
+    Plus,
+    Pencil,
+    Trash2,
+    Crown,
+    Settings2,
+    Users,
+    BadgePercent,
+    Eye,
+    ShieldCheck,
+    ShieldX,
+  } from "@lucide/svelte";
   import { cn } from "$lib/utils";
   import { toast } from "svelte-sonner";
   import { Label } from "$lib/components/ui/label";
@@ -38,6 +49,15 @@
   // Permission State
   let isPermissionDialogOpen = $state(false);
   let editingMember = $state<Member | null>(null);
+  type PermissionDraft = Record<string, string[]>;
+  let permissionDraft = $state<PermissionDraft>({});
+
+  const PERMISSION_COLUMNS = [
+    { id: ACTIONS.READ, label: "Xem" },
+    { id: ACTIONS.CREATE, label: "Tạo mới" },
+    { id: ACTIONS.UPDATE, label: "Chỉnh sửa" },
+    { id: ACTIONS.DELETE, label: "Xóa" },
+  ];
 
   const PERMISSION_GROUPS = [
     {
@@ -77,7 +97,7 @@
         { id: ACTIONS.READ, label: "Xem" },
         { id: ACTIONS.CREATE, label: "Tạo mới" },
         { id: ACTIONS.UPDATE, label: "Chỉnh sửa" },
-        { id: ACTIONS.DELETE, label: " Xóa" },
+        { id: ACTIONS.DELETE, label: "Xóa" },
       ],
     },
     {
@@ -187,21 +207,87 @@
 
   function openPermissionDialog(member: Member) {
     editingMember = member;
+    permissionDraft = buildPermissionDraft(member);
     isPermissionDialogOpen = true;
   }
 
-  function hasPermission(member: Member | null, resource: string, action: string): boolean {
-    if (!member || !member.permissions || member.permissions.length === 0) return false;
-
-    // Get the first (and should be only) permission record
-    const permRecord = member.permissions[0];
-    if (!permRecord || !permRecord.permissions) return false;
-
-    const resourcePerms = permRecord.permissions[resource];
-    if (!resourcePerms) return false;
-
-    return resourcePerms.includes(action);
+  function buildPermissionDraft(member: Member | null): PermissionDraft {
+    if (!member?.permissions?.[0]?.permissions) return {};
+    const raw = member.permissions[0].permissions;
+    const draft: PermissionDraft = {};
+    for (const [resource, actions] of Object.entries(raw)) {
+      draft[resource] = [...actions];
+    }
+    return draft;
   }
+
+  function hasDraftPermission(resource: string, action: string): boolean {
+    return (permissionDraft[resource] || []).includes(action);
+  }
+
+  function setDraftPermission(resource: string, action: string, enabled: boolean) {
+    const current = new Set(permissionDraft[resource] || []);
+    if (enabled) current.add(action);
+    else current.delete(action);
+
+    permissionDraft = {
+      ...permissionDraft,
+      [resource]: Array.from(current),
+    };
+  }
+
+  function setResourcePermissions(resource: string, actions: string[], enabled: boolean) {
+    permissionDraft = {
+      ...permissionDraft,
+      [resource]: enabled ? [...actions] : [],
+    };
+  }
+
+  function applyPermissionPreset(preset: "read" | "full" | "clear") {
+    const next: PermissionDraft = {};
+    for (const group of PERMISSION_GROUPS) {
+      if (preset === "clear") {
+        next[group.resource] = [];
+      } else if (preset === "read") {
+        next[group.resource] = group.actions
+          .filter((action) => action.id === ACTIONS.READ)
+          .map((action) => action.id);
+      } else {
+        next[group.resource] = group.actions.map((action) => action.id);
+      }
+    }
+    permissionDraft = next;
+  }
+
+  function isResourceFullySelected(group: (typeof PERMISSION_GROUPS)[number]): boolean {
+    const allowedActions = group.actions.map((action) => action.id);
+    if (allowedActions.length === 0) return false;
+    return allowedActions.every((action) => hasDraftPermission(group.resource, action));
+  }
+
+  function isResourcePartiallySelected(group: (typeof PERMISSION_GROUPS)[number]): boolean {
+    const allowedActions = group.actions.map((action) => action.id);
+    if (allowedActions.length === 0) return false;
+    const selectedCount = allowedActions.filter((action) =>
+      hasDraftPermission(group.resource, action),
+    ).length;
+    return selectedCount > 0 && selectedCount < allowedActions.length;
+  }
+
+  function getSelectedCountForResource(resource: string): number {
+    return (permissionDraft[resource] || []).length;
+  }
+
+  function isActionAvailable(group: (typeof PERMISSION_GROUPS)[number], actionId: string): boolean {
+    return group.actions.some((action) => action.id === actionId);
+  }
+
+  let totalPermissionOptions = $derived(
+    PERMISSION_GROUPS.reduce((total, group) => total + group.actions.length, 0),
+  );
+  let grantedPermissionCount = $derived(
+    Object.values(permissionDraft).reduce((total, actions) => total + actions.length, 0),
+  );
 
   function getTotalPermissions(member: Member): number {
     if (!member.permissions || member.permissions.length === 0) return 0;
@@ -568,17 +654,54 @@
 
 <!-- Permission Dialog -->
 <Dialog.Root bind:open={isPermissionDialogOpen}>
-  <Dialog.Content class="sm:max-w-[650px]">
+  <Dialog.Content class="sm:max-w-[760px] max-h-[88vh] flex flex-col">
     <Dialog.Header>
       <Dialog.Title>Phân quyền nhân viên</Dialog.Title>
       <Dialog.Description>
         Cấp quyền truy cập chi tiết cho <b>{editingMember?.user.name}</b>
       </Dialog.Description>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <span class="rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">
+          Đã cấp: <span class="font-semibold text-foreground">{grantedPermissionCount}</span> /
+          <span class="font-semibold text-foreground">{totalPermissionOptions}</span>
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          class="h-7 gap-1.5"
+          onclick={() => applyPermissionPreset("read")}
+        >
+          <Eye class="h-3.5 w-3.5" />
+          Chỉ xem
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          class="h-7 gap-1.5"
+          onclick={() => applyPermissionPreset("full")}
+        >
+          <ShieldCheck class="h-3.5 w-3.5" />
+          Toàn quyền
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          class="h-7 gap-1.5 text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700"
+          onclick={() => applyPermissionPreset("clear")}
+        >
+          <ShieldX class="h-3.5 w-3.5" />
+          Bỏ chọn hết
+        </Button>
+      </div>
     </Dialog.Header>
 
     <form
       action="?/updatePermissions"
       method="POST"
+      class="flex min-h-0 flex-1 flex-col"
       use:enhance={() => {
         return async ({ result, update }) => {
           if (result.type === "success") {
@@ -592,91 +715,128 @@
       }}
     >
       <input type="hidden" name="memberId" value={editingMember?.id} />
+      {#each Object.entries(permissionDraft) as [resource, actions]}
+        {#each actions as action}
+          <input type="hidden" name={"permissions[" + resource + "][" + action + "]"} value="on" />
+        {/each}
+      {/each}
 
-      <div class="py-4">
-        <div class="space-y-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tài nguyên</TableHead>
-                <TableHead class="text-center">Xem</TableHead>
-                <TableHead class="text-center">Tạo mới</TableHead>
-                <TableHead class="text-center">Chỉnh sửa</TableHead>
-                <TableHead class="text-center">Xóa</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+      <div class="min-h-0 flex-1 py-4">
+        <div class="h-full space-y-3">
+          <div
+            class="rounded-lg border border-border/70 bg-muted/20 p-2 text-xs text-muted-foreground"
+          >
+            Mẹo: Chọn vào tên tài nguyên để bật/tắt nhanh toàn bộ quyền của dòng đó.
+          </div>
+
+          <div
+            class="hidden h-full overflow-auto rounded-xl border border-border/70 bg-background md:block"
+          >
+            <div class="min-w-[700px] space-y-2 p-3">
+              <div
+                class="sticky top-0 z-10 grid grid-cols-[minmax(220px,1fr)_96px_96px_96px_96px] items-center rounded-lg border border-border/70 bg-muted/60 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground backdrop-blur"
+              >
+                <span>Tài nguyên</span>
+                {#each PERMISSION_COLUMNS as column}
+                  <span class="text-center">{column.label}</span>
+                {/each}
+              </div>
+
               {#each PERMISSION_GROUPS as group}
-                <TableRow>
-                  <TableCell class="font-medium">{group.label}</TableCell>
+                <div
+                  class="grid grid-cols-[minmax(220px,1fr)_96px_96px_96px_96px] items-center rounded-lg border border-border/70 bg-white px-3 py-2 transition-colors hover:bg-muted/20"
+                >
+                  <div class="flex items-center gap-2">
+                    <Checkbox
+                      checked={isResourceFullySelected(group)}
+                      indeterminate={isResourcePartiallySelected(group)}
+                      onCheckedChange={(checked) =>
+                        setResourcePermissions(
+                          group.resource,
+                          group.actions.map((action) => action.id),
+                          checked === true,
+                        )}
+                    />
+                    <span class="font-medium">{group.label}</span>
+                    <span
+                      class="ml-auto rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground"
+                    >
+                      {getSelectedCountForResource(group.resource)}/{group.actions.length}
+                    </span>
+                  </div>
 
-                  <!-- Read Action -->
-                  <TableCell class="text-center">
-                    {#if group.actions.find((a) => a.id === ACTIONS.READ)}
-                      <div class="flex justify-center">
+                  {#each PERMISSION_COLUMNS as column}
+                    <div class="flex justify-center">
+                      {#if isActionAvailable(group, column.id)}
                         <Checkbox
-                          id="{group.resource}-{ACTIONS.READ}"
-                          name="permissions[{group.resource}][{ACTIONS.READ}]"
+                          id={group.resource + "-" + column.id}
                           class="border-gray-300 text-primary focus:ring-primary"
-                          checked={hasPermission(editingMember, group.resource, ACTIONS.READ)}
+                          checked={hasDraftPermission(group.resource, column.id)}
+                          onCheckedChange={(checked) =>
+                            setDraftPermission(group.resource, column.id, checked === true)}
                         />
-                      </div>
-                    {:else}
-                      <span class="text-muted-foreground">-</span>
-                    {/if}
-                  </TableCell>
-
-                  <!-- Create Action -->
-                  <TableCell class="text-center">
-                    {#if group.actions.find((a) => a.id === ACTIONS.CREATE)}
-                      <div class="flex justify-center">
-                        <Checkbox
-                          id="{group.resource}-{ACTIONS.CREATE}"
-                          name="permissions[{group.resource}][{ACTIONS.CREATE}]"
-                          class="border-gray-300 text-primary focus:ring-primary"
-                          checked={hasPermission(editingMember, group.resource, ACTIONS.CREATE)}
-                        />
-                      </div>
-                    {:else}
-                      <span class="text-muted-foreground">-</span>
-                    {/if}
-                  </TableCell>
-
-                  <!-- Update Action -->
-                  <TableCell class="text-center">
-                    {#if group.actions.find((a) => a.id === ACTIONS.UPDATE)}
-                      <div class="flex justify-center">
-                        <Checkbox
-                          id="{group.resource}-{ACTIONS.UPDATE}"
-                          name="permissions[{group.resource}][{ACTIONS.UPDATE}]"
-                          class="border-gray-300 text-primary focus:ring-primary"
-                          checked={hasPermission(editingMember, group.resource, ACTIONS.UPDATE)}
-                        />
-                      </div>
-                    {:else}
-                      <span class="text-muted-foreground">-</span>
-                    {/if}
-                  </TableCell>
-
-                  <!-- Delete Action -->
-                  <TableCell class="text-center">
-                    {#if group.actions.find((a) => a.id === ACTIONS.DELETE)}
-                      <div class="flex justify-center">
-                        <Checkbox
-                          id="{group.resource}-{ACTIONS.DELETE}"
-                          name="permissions[{group.resource}][{ACTIONS.DELETE}]"
-                          class="border-gray-300 text-primary focus:ring-primary"
-                          checked={hasPermission(editingMember, group.resource, ACTIONS.DELETE)}
-                        />
-                      </div>
-                    {:else}
-                      <span class="text-muted-foreground">-</span>
-                    {/if}
-                  </TableCell>
-                </TableRow>
+                      {:else}
+                        <span
+                          class="inline-flex items-center justify-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                        >
+                          -
+                        </span>
+                      {/if}
+                    </div>
+                  {/each}
+                </div>
               {/each}
-            </TableBody>
-          </Table>
+            </div>
+          </div>
+
+          <div class="space-y-3 overflow-auto md:hidden">
+            {#each PERMISSION_GROUPS as group}
+              <div class="rounded-lg border border-border/70 bg-background p-3">
+                <div class="mb-3 flex items-center gap-2">
+                  <Checkbox
+                    checked={isResourceFullySelected(group)}
+                    indeterminate={isResourcePartiallySelected(group)}
+                    onCheckedChange={(checked) =>
+                      setResourcePermissions(
+                        group.resource,
+                        group.actions.map((action) => action.id),
+                        checked === true,
+                      )}
+                  />
+                  <span class="font-medium">{group.label}</span>
+                  <span
+                    class="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                  >
+                    {getSelectedCountForResource(group.resource)}/{group.actions.length}
+                  </span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                  {#each PERMISSION_COLUMNS as column}
+                    {#if isActionAvailable(group, column.id)}
+                      <button
+                        type="button"
+                        class={cn(
+                          "h-9 rounded-md border text-sm font-medium transition-colors",
+                          hasDraftPermission(group.resource, column.id)
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-background text-muted-foreground",
+                        )}
+                        onclick={() =>
+                          setDraftPermission(
+                            group.resource,
+                            column.id,
+                            !hasDraftPermission(group.resource, column.id),
+                          )}
+                      >
+                        {column.label}
+                      </button>
+                    {/if}
+                  {/each}
+                </div>
+              </div>
+            {/each}
+          </div>
         </div>
       </div>
 

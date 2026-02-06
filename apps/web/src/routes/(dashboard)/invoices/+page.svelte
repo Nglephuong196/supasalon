@@ -187,6 +187,38 @@
       }
     }
   }
+
+  async function showInvoiceInTab(invoice: any) {
+    const idStr = invoice.id.toString();
+
+    if (!drafts.find((d) => d.id === idStr)) {
+      drafts = [...drafts, mapInvoiceToDraft(invoice, nextDraftId++)];
+    }
+
+    activeTab = idStr;
+
+    if (invoice.isOpenInTab) return;
+
+    const formData = new FormData();
+    formData.append("id", idStr);
+    formData.append(
+      "payload",
+      JSON.stringify({
+        isOpenInTab: true,
+      }),
+    );
+
+    try {
+      await fetch("?/update", {
+        method: "POST",
+        body: formData,
+      });
+      await invalidateAll();
+    } catch (error) {
+      toast.error("Không thể đồng bộ trạng thái tab");
+      console.error("Failed to mark invoice tab as open", error);
+    }
+  }
   // -- HELPERS --
   function formatPrice(price: number) {
     return new Intl.NumberFormat("vi-VN").format(price) + "đ";
@@ -402,32 +434,13 @@
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content align="end">
                           <DropdownMenu.Label>Hành động</DropdownMenu.Label>
-                          {#if !invoice.isOpenInTab}
-                            <DropdownMenu.Separator />
-                            <form
-                              method="POST"
-                              action="?/update"
-                              use:enhance={() =>
-                                async ({ update }) =>
-                                  await update()}
-                            >
-                              <input type="hidden" name="id" value={invoice.id} />
-                              <input
-                                type="hidden"
-                                name="payload"
-                                value={JSON.stringify({
-                                  isOpenInTab: true,
-                                })}
-                              />
-                              <DropdownMenu.Item class="w-full">
-                                {#snippet child({ props })}
-                                  <button {...props} type="submit">
-                                    <ExternalLink class="mr-2 h-4 w-4" /> Mở lại tab
-                                  </button>
-                                {/snippet}
-                              </DropdownMenu.Item>
-                            </form>
-                          {/if}
+                          <DropdownMenu.Separator />
+                          <DropdownMenu.Item
+                            class="w-full"
+                            onclick={() => showInvoiceInTab(invoice)}
+                          >
+                            <ExternalLink class="mr-2 h-4 w-4" /> Hiển thị trong tab
+                          </DropdownMenu.Item>
 
                           {#if invoice.status === "pending"}
                             <DropdownMenu.Separator />
@@ -662,6 +675,7 @@
               staff={data.staff}
               services={data.services}
               products={data.products}
+              commissionRules={data.commissionRules}
               onSaveSuccess={() => closeDraft(draft.id)}
             />
           </div>

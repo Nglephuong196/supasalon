@@ -126,15 +126,25 @@
 
 <div
   class={cn(
-    "flex h-full flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300",
+    "relative flex h-full flex-col overflow-hidden border-r border-sidebar-border bg-sidebar transition-all duration-300",
     collapsed ? "w-16" : "w-64",
     className,
   )}
 >
+  <div
+    class="pointer-events-none absolute inset-x-3 top-2 h-px bg-gradient-to-r from-transparent via-primary/45 to-transparent"
+  ></div>
+  <div
+    class="pointer-events-none absolute -right-12 top-12 h-28 w-28 rounded-full bg-primary/15 blur-2xl"
+  ></div>
+  <div
+    class="pointer-events-none absolute -left-12 bottom-20 h-28 w-28 rounded-full bg-indigo-300/20 blur-2xl"
+  ></div>
+
   <!-- Header -->
   <div
     class={cn(
-      "flex h-14 items-center px-4 border-b border-sidebar-border/50",
+      "flex h-14 items-center border-b border-sidebar-border/50 px-4",
       collapsed ? "justify-center" : "justify-between",
     )}
   >
@@ -175,40 +185,49 @@
   </div>
 
   <!-- Navigation -->
-  <div class="flex-1 overflow-y-auto px-3 py-2 space-y-2 md:py-4 md:space-y-6">
+  <div class="flex-1 space-y-4 overflow-y-auto px-3 py-3 md:py-4">
     <!-- Section: Main -->
     {#if filteredMainNav.length > 0}
       <div class="space-y-1">
         {#if !collapsed}
-          <h4
-            class="px-2 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-2"
-          >
-            Menu chính
-          </h4>
+          <div class="mb-1 flex items-center gap-2 px-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-primary/70"></span>
+            <h4 class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">
+              Menu chính
+            </h4>
+          </div>
         {/if}
         <nav class="space-y-0.5">
           {#each filteredMainNav as item}
             <a
               href={item.href}
               class={cn(
-                "group flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-colors duration-150",
+                "group relative flex items-center gap-3 overflow-hidden rounded-lg px-3 py-2 text-base font-medium transition-colors duration-150",
                 $page.url.pathname === item.href
-                  ? "bg-sidebar-accent text-primary shadow-sm ring-1 ring-sidebar-border"
-                  : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
+                  ? "bg-gradient-to-r from-primary/15 to-primary/5 text-primary shadow-sm ring-1 ring-primary/20"
+                  : "text-muted-foreground hover:bg-white hover:text-foreground",
                 collapsed ? "justify-center px-2" : "",
               )}
               title={collapsed ? item.title : undefined}
             >
-              <item.icon
+              <span
                 class={cn(
-                  "h-4.5 w-4.5 shrink-0 transition-colors",
+                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-all",
                   $page.url.pathname === item.href
-                    ? "text-primary"
-                    : "text-muted-foreground group-hover:text-foreground",
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground group-hover:bg-muted group-hover:text-foreground",
                 )}
-              />
+              >
+                <item.icon class="h-4 w-4" />
+              </span>
               {#if !collapsed}
                 <span class="truncate">{item.title}</span>
+                <span
+                  class={cn(
+                    "ml-auto h-1.5 w-1.5 rounded-full transition-colors",
+                    $page.url.pathname === item.href ? "bg-primary" : "bg-transparent",
+                  )}
+                ></span>
               {/if}
             </a>
           {/each}
@@ -218,37 +237,46 @@
 
     <!-- Section: Management -->
     {#if filteredManagementNav.length > 0}
-      <div class="space-y-1">
+      <div class="space-y-1 border-t border-sidebar-border/50 pt-3">
         {#if !collapsed}
-          <h4
-            class="px-2 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-2"
-          >
-            Quản lý
-          </h4>
+          <div class="mb-1 flex items-center gap-2 px-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-indigo-500/80"></span>
+            <h4 class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">
+              Quản lý
+            </h4>
+          </div>
         {/if}
         <nav class="space-y-0.5">
           {#each filteredManagementNav as item}
             <a
               href={item.href}
               class={cn(
-                "group flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-colors duration-150",
+                "group relative flex items-center gap-3 overflow-hidden rounded-lg px-3 py-2 text-base font-medium transition-colors duration-150",
                 $page.url.pathname === item.href
-                  ? "bg-sidebar-accent text-primary shadow-sm ring-1 ring-sidebar-border"
-                  : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
+                  ? "bg-gradient-to-r from-primary/15 to-primary/5 text-primary shadow-sm ring-1 ring-primary/20"
+                  : "text-muted-foreground hover:bg-white hover:text-foreground",
                 collapsed ? "justify-center px-2" : "",
               )}
               title={collapsed ? item.title : undefined}
             >
-              <item.icon
+              <span
                 class={cn(
-                  "h-4.5 w-4.5 shrink-0 transition-colors",
+                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-all",
                   $page.url.pathname === item.href
-                    ? "text-primary"
-                    : "text-muted-foreground group-hover:text-foreground",
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground group-hover:bg-muted group-hover:text-foreground",
                 )}
-              />
+              >
+                <item.icon class="h-4 w-4" />
+              </span>
               {#if !collapsed}
                 <span class="truncate">{item.title}</span>
+                <span
+                  class={cn(
+                    "ml-auto h-1.5 w-1.5 rounded-full transition-colors",
+                    $page.url.pathname === item.href ? "bg-primary" : "bg-transparent",
+                  )}
+                ></span>
               {/if}
             </a>
           {/each}
@@ -258,37 +286,46 @@
 
     <!-- Section: System -->
     {#if filteredFinanceNav.length > 0}
-      <div class="space-y-1">
+      <div class="space-y-1 border-t border-sidebar-border/50 pt-3">
         {#if !collapsed}
-          <h4
-            class="px-2 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-wider mb-2"
-          >
-            Hệ thống
-          </h4>
+          <div class="mb-1 flex items-center gap-2 px-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-fuchsia-500/80"></span>
+            <h4 class="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">
+              Hệ thống
+            </h4>
+          </div>
         {/if}
         <nav class="space-y-0.5">
           {#each filteredFinanceNav as item}
             <a
               href={item.href}
               class={cn(
-                "group flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-colors duration-150",
+                "group relative flex items-center gap-3 overflow-hidden rounded-lg px-3 py-2 text-base font-medium transition-colors duration-150",
                 $page.url.pathname === item.href
-                  ? "bg-sidebar-accent text-primary shadow-sm ring-1 ring-sidebar-border"
-                  : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
+                  ? "bg-gradient-to-r from-primary/15 to-primary/5 text-primary shadow-sm ring-1 ring-primary/20"
+                  : "text-muted-foreground hover:bg-white hover:text-foreground",
                 collapsed ? "justify-center px-2" : "",
               )}
               title={collapsed ? item.title : undefined}
             >
-              <item.icon
+              <span
                 class={cn(
-                  "h-4.5 w-4.5 shrink-0 transition-colors",
+                  "flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-all",
                   $page.url.pathname === item.href
-                    ? "text-primary"
-                    : "text-muted-foreground group-hover:text-foreground",
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground group-hover:bg-muted group-hover:text-foreground",
                 )}
-              />
+              >
+                <item.icon class="h-4 w-4" />
+              </span>
               {#if !collapsed}
                 <span class="truncate">{item.title}</span>
+                <span
+                  class={cn(
+                    "ml-auto h-1.5 w-1.5 rounded-full transition-colors",
+                    $page.url.pathname === item.href ? "bg-primary" : "bg-transparent",
+                  )}
+                ></span>
               {/if}
             </a>
           {/each}
@@ -298,10 +335,10 @@
   </div>
 
   <!-- User section -->
-  <div class="p-3 border-t border-sidebar-border/50 bg-gray-50/50">
+  <div class="border-t border-sidebar-border/50 bg-gray-50/50 p-3">
     <div
       class={cn(
-        "flex items-center gap-3 p-2 rounded-xl hover:bg-white hover:shadow-sm transition-all cursor-pointer group border border-transparent hover:border-sidebar-border",
+        "group flex cursor-pointer items-center gap-3 rounded-xl border border-transparent bg-white/70 p-2 shadow-[0_10px_24px_-20px_rgba(44,20,92,0.8)] transition-all hover:border-sidebar-border hover:bg-white hover:shadow-sm",
         collapsed ? "justify-center" : "",
       )}
     >
