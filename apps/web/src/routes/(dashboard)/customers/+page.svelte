@@ -221,24 +221,26 @@
 
 <div class="flex flex-col gap-6">
   <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight text-gray-900">Khách hàng</h1>
-      <p class="text-gray-500 mt-1">Quản lý thông tin khách hàng của bạn</p>
+  <div class="page-hero p-5 sm:p-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="section-title text-2xl font-bold tracking-tight text-gray-900">Khách hàng</h1>
+        <p class="mt-1 text-gray-500">Quản lý thông tin khách hàng của bạn</p>
+      </div>
+      {#if data.canCreate}
+        <Button
+          onclick={() => (isCreateDialogOpen = true)}
+          class="btn-gradient shadow-lg shadow-purple-200"
+        >
+          <Plus class="mr-2 h-4 w-4" aria-hidden="true" />
+          Tạo mới khách hàng
+        </Button>
+      {/if}
     </div>
-    {#if data.canCreate}
-      <Button
-        onclick={() => (isCreateDialogOpen = true)}
-        class="btn-gradient shadow-lg shadow-purple-200"
-      >
-        <Plus class="h-4 w-4 mr-2" aria-hidden="true" />
-        Tạo mới khách hàng
-      </Button>
-    {/if}
   </div>
 
   <!-- Search and filters -->
-  <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+  <div class="filter-strip flex flex-col items-start gap-4 p-4 sm:flex-row sm:items-center">
     <div class="relative flex-1 max-w-md w-full">
       <label for="customer-search" class="sr-only">Tìm kiếm khách hàng</label>
       <Search
@@ -249,7 +251,7 @@
         id="customer-search"
         type="search"
         placeholder="Tìm kiếm khách hàng…"
-        class="pl-10 pr-10 bg-white border-gray-200 rounded-xl focus:border-purple-300 focus:ring-purple-100"
+        class="soft-input rounded-xl pl-10 pr-10 focus:border-purple-300 focus:ring-purple-100"
         value={searchQuery}
         oninput={handleSearchInput}
       />
@@ -288,7 +290,7 @@
   </div>
 
   <!-- Customers Table -->
-  <div class="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+  <div class="table-shell overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead class="bg-gray-50/50 border-b border-gray-100">
@@ -307,7 +309,7 @@
         </thead>
         <tbody class="divide-y divide-gray-100">
           {#each filteredCustomers as customer, index}
-            <tr class="hover:bg-gray-50/50 transition-colors group">
+            <tr class="group transition-colors hover:bg-gray-50/50">
               <!-- Avatar -->
               <td class="p-4 align-middle">
                 <div

@@ -61,33 +61,43 @@
 
 <div class="flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
   <!-- Header Section -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight text-foreground">Tổng quan</h1>
-      <p class="text-muted-foreground mt-1">Hiệu suất salon của bạn trong nháy mắt.</p>
-    </div>
-    <div class="flex items-center gap-3">
-      <span
-        class="text-sm font-medium text-muted-foreground hidden sm:block border border-border px-3 py-1.5 rounded-md bg-white"
-      >
-        {formattedDate}
-      </span>
-      <div class="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
-        <span class="px-2 py-1 rounded-full border border-border bg-muted/40">
-          Dữ liệu: {chartContext}
-        </span>
-        <span>Cập nhật lúc {lastUpdated}</span>
+  <div
+    class="relative overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-white/95 via-white/90 to-secondary/40 p-5 sm:p-6 shadow-[0_24px_45px_-36px_rgba(70,39,161,0.55)]"
+  >
+    <div
+      class="pointer-events-none absolute -right-16 -top-14 h-40 w-40 rounded-full bg-primary/20 blur-3xl"
+    ></div>
+    <div
+      class="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-indigo-300/30 blur-2xl"
+    ></div>
+    <div class="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground">Tổng quan</h1>
+        <p class="text-muted-foreground mt-1">Hiệu suất salon của bạn trong nháy mắt.</p>
       </div>
-      <Button class="btn-clean shadow-sm">
-        <Plus class="h-4 w-4 mr-2" />
-        Đặt lịch mới
-      </Button>
+      <div class="flex items-center gap-3">
+        <span
+          class="text-sm font-medium text-muted-foreground hidden sm:block border border-border/80 px-3 py-1.5 rounded-lg bg-white/90 shadow-[0_8px_18px_-16px_rgba(40,23,86,0.85)]"
+        >
+          {formattedDate}
+        </span>
+        <div class="hidden md:flex items-center gap-2 text-xs text-muted-foreground">
+          <span class="px-2 py-1 rounded-full border border-border bg-white/80">
+            Dữ liệu: {chartContext}
+          </span>
+          <span>Cập nhật lúc {lastUpdated}</span>
+        </div>
+        <Button class="btn-gradient shadow-sm">
+          <Plus class="h-4 w-4 mr-2" />
+          Đặt lịch mới
+        </Button>
+      </div>
     </div>
   </div>
 
   <!-- Range Filter -->
   <div
-    class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white border border-border/60 rounded-xl px-4 py-3 shadow-sm"
+    class="premium-card flex flex-col md:flex-row md:items-center md:justify-between gap-3 rounded-xl px-4 py-3 shadow-sm"
   >
     <div class="flex items-center gap-2 flex-wrap">
       {#each ["today", "week", "month", "year"] as RangeKey[] as range}
@@ -164,7 +174,7 @@
   <div class="grid gap-6 lg:grid-cols-3">
     <!-- Revenue Chart Placeholder - Takes 2 columns -->
     <div class="lg:col-span-2">
-      <Card class="h-full border border-border shadow-sm rounded-lg bg-card">
+      <Card class="premium-card h-full border border-border shadow-sm rounded-lg bg-card">
         <CardContent class="p-6">
           <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-2">
@@ -209,7 +219,7 @@
                 {:else}
                   {#each chartData as value}
                     <div
-                      class="w-full bg-secondary hover:bg-primary/80 transition-colors rounded-t-sm relative group"
+                      class="w-full bg-gradient-to-t from-primary/85 via-primary/65 to-indigo-300/70 hover:brightness-110 transition-all rounded-t-sm relative group"
                       style="height: {Math.max(6, Math.round((value / chartMax) * 100))}%"
                     >
                       <div

@@ -198,9 +198,11 @@
 
 <div class="h-[calc(100vh-6rem)] flex flex-col gap-4">
   <!-- Page Header -->
-  <div class="flex items-center justify-between flex-none">
+  <div class="page-hero flex flex-none items-center justify-between p-5 sm:p-6">
     <div>
-      <h1 class="text-2xl font-bold tracking-tight text-foreground">Quản lý sản phẩm</h1>
+      <h1 class="section-title text-2xl font-bold tracking-tight text-foreground">
+        Quản lý sản phẩm
+      </h1>
       <p class="text-muted-foreground">Quản lý danh mục và sản phẩm bán tại salon</p>
     </div>
     <div class="hidden md:flex items-center gap-2">
@@ -250,7 +252,7 @@
 
     <!-- Sidebar: Categories (hidden on mobile) -->
     <div
-      class="hidden md:flex w-64 flex-none flex-col gap-4 bg-white rounded-xl border border-border/60 shadow-sm p-4 overflow-hidden"
+      class="panel-shell hidden w-64 flex-none flex-col gap-4 bg-white p-4 overflow-hidden md:flex"
     >
       <div class="flex items-center justify-between flex-none">
         <h2 class="font-semibold text-foreground flex items-center gap-2">
@@ -285,7 +287,7 @@
           <span>{data.categories.length} danh mục</span>
           <button
             class="hover:text-foreground underline"
-            on:click={() => {
+            onclick={() => {
               selectedCategoryId = null;
               categorySearchQuery = "";
               updateUrlParams();
@@ -394,9 +396,7 @@
 
     <!-- Main Area: Product Table -->
     <div class="flex-1 min-w-0">
-      <div
-        class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm h-full flex flex-col"
-      >
+      <div class="table-shell bg-card text-card-foreground h-full flex flex-col">
         <div
           class="p-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-gray-100 flex-none"
         >
@@ -416,7 +416,7 @@
                 id="product-search"
                 type="search"
                 placeholder="Tìm kiếm sản phẩm…"
-                class="pl-9 pr-9 h-9"
+                class="soft-input h-9 pl-9 pr-9"
                 value={searchQuery}
                 oninput={handleSearchInput}
               />
@@ -441,7 +441,7 @@
         </div>
 
         <!-- Quick Filters -->
-        <div class="px-4 pb-3 border-b border-gray-100">
+        <div class="filter-strip rounded-none border-x-0 border-t-0 px-4 pb-3">
           <div class="flex items-center gap-2 flex-wrap text-xs">
             <button
               class={cn(
@@ -450,7 +450,7 @@
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-white text-muted-foreground border-border hover:text-foreground",
               )}
-              on:click={() => selectCategory(null)}
+              onclick={() => selectCategory(null)}
             >
               Tất cả
             </button>
@@ -462,7 +462,7 @@
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-white text-muted-foreground border-border hover:text-foreground",
                 )}
-                on:click={() => selectCategory(category.id)}
+                onclick={() => selectCategory(category.id)}
               >
                 {category.name}
               </button>

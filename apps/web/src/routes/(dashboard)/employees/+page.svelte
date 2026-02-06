@@ -135,10 +135,15 @@
 </svelte:head>
 
 <div class="flex flex-col gap-6">
-  <!-- Header -->
+  <div class="page-hero p-5 sm:p-6">
+    <h1 class="section-title text-2xl font-bold tracking-tight text-foreground">Nhân viên</h1>
+    <p class="mt-1 text-muted-foreground">
+      Quản lý tài khoản nội bộ, vai trò và quyền truy cập theo tổ chức.
+    </p>
+  </div>
 
   <!-- Employees Content -->
-  <div class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm">
+  <div class="table-shell bg-card text-card-foreground">
     <div
       class="p-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-gray-100"
     >
@@ -160,7 +165,7 @@
             id="employee-search"
             type="search"
             placeholder="Tìm kiếm nhân viên…"
-            class="pl-9 pr-9 h-9"
+            class="soft-input h-9 pl-9 pr-9"
             value={searchQuery}
             oninput={handleSearchInput}
           />

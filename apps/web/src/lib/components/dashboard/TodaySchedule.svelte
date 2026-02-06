@@ -30,7 +30,9 @@
   };
 </script>
 
-<Card class="h-full border border-border/60 shadow-sm rounded-xl bg-white overflow-hidden">
+<Card
+  class="premium-card h-full border border-border/60 shadow-sm rounded-xl bg-white overflow-hidden"
+>
   <CardHeader
     class="flex flex-row items-center justify-between pb-3 border-b border-border/30 space-y-0 bg-gray-50/30"
   >

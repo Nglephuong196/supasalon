@@ -2,6 +2,7 @@
   import { browser } from "$app/environment";
   import { ScheduleXCalendar } from "@schedule-x/svelte";
   import {
+    type CalendarEventExternal,
     createCalendar,
     createViewDay,
     createViewMonthAgenda,
@@ -72,9 +73,15 @@
     return iso.replace("T", " ");
   }
 
-  function buildEvents(source: Booking[]) {
+  function isCalendarEventExternal(
+    event: CalendarEventExternal | null,
+  ): event is CalendarEventExternal {
+    return event !== null;
+  }
+
+  function buildEvents(source: Booking[]): CalendarEventExternal[] {
     return source
-      .map((booking) => {
+      .map((booking): CalendarEventExternal | null => {
         const start = toZonedDateTime(booking.date);
         if (!start) return null;
 
@@ -93,7 +100,7 @@
           end: toScheduleXDateTimeString(end),
         };
       })
-      .filter(Boolean);
+      .filter(isCalendarEventExternal);
   }
 
   let calendarApp = $state<any>(null);

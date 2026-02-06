@@ -215,10 +215,12 @@
   <title>POS Bán Hàng | SupaSalon</title>
 </svelte:head>
 
-<div class="h-[calc(100vh-6rem)] -m-6 flex flex-col md:flex-row overflow-hidden bg-muted/10">
+<div
+  class="panel-shell h-[calc(100vh-6rem)] -m-6 flex flex-col overflow-hidden md:flex-row bg-muted/10"
+>
   <!-- MAIN: TABS & WORKSPACE -->
   <div class="flex-1 flex flex-col h-full min-w-0 bg-muted/5">
-    <div class="bg-background px-4 pt-2 flex items-center justify-between gap-4">
+    <div class="glass-topbar bg-background px-4 pt-2 flex items-center justify-between gap-4">
       <!-- Tabs List -->
       <div class="flex-1 overflow-x-auto">
         <Tabs.Root
@@ -324,20 +326,20 @@
           <!-- HISTORY VIEW -->
           <div class="flex items-center justify-between mb-6">
             <div>
-              <h2 class="text-2xl font-bold tracking-tight">Lịch sử hóa đơn</h2>
+              <h2 class="section-title text-2xl font-bold tracking-tight">Lịch sử hóa đơn</h2>
               <p class="text-muted-foreground">Quản lý các giao dịch gần đây</p>
             </div>
             <div class="relative w-72">
               <Search class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Tìm mã HĐ, tên khách..."
-                class="pl-9"
+                class="soft-input pl-9"
                 bind:value={historySearch}
               />
             </div>
           </div>
 
-          <div class="rounded-xl bg-card shadow-sm overflow-hidden">
+          <div class="table-shell bg-card overflow-hidden">
             <table class="w-full text-sm">
               <thead>
                 <tr>

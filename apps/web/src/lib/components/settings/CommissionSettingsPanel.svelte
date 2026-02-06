@@ -332,12 +332,12 @@
 </script>
 
 <div class="grid gap-4 lg:grid-cols-3">
-  <div class="lg:col-span-2 rounded-xl border border-border/60 bg-white p-4 shadow-sm">
+  <div class="panel-shell lg:col-span-2 p-4">
     <div class="grid gap-4 md:grid-cols-3">
       <div class="md:col-span-2">
         <Label for="staff-select" class="mb-2 block">Nhân viên</Label>
         <Select.Root type="single" bind:value={selectedStaffId}>
-          <Select.Trigger id="staff-select" class="w-full">
+          <Select.Trigger id="staff-select" class="w-full soft-input">
             {#if selectedStaffId}
               {data.members.find((m: MemberRow) => m.id === selectedStaffId)?.user.name}
             {:else}
@@ -365,7 +365,7 @@
           />
           <Input
             id="search-item"
-            class="pl-9"
+            class="soft-input pl-9"
             placeholder="Tên dịch vụ/sản phẩm"
             bind:value={search}
           />
@@ -373,10 +373,11 @@
       </div>
     </div>
 
-    <div class="mt-4 flex flex-wrap gap-2">
+    <div class="filter-strip mt-4 flex flex-wrap gap-2 p-3">
       <Button
         type="button"
         variant={itemType === "service" ? "default" : "outline"}
+        class={itemType === "service" ? "chip-pill-active" : "chip-pill"}
         onclick={() => {
           itemType = "service";
           selectedCategoryId = null;
@@ -387,6 +388,7 @@
       <Button
         type="button"
         variant={itemType === "product" ? "default" : "outline"}
+        class={itemType === "product" ? "chip-pill-active" : "chip-pill"}
         onclick={() => {
           itemType = "product";
           selectedCategoryId = null;
@@ -394,7 +396,9 @@
       >
         Sản phẩm
       </Button>
-      <Button type="button" variant="ghost" onclick={refreshAll}>Làm mới dữ liệu</Button>
+      <Button type="button" variant="ghost" class="chip-pill" onclick={refreshAll}
+        >Làm mới dữ liệu</Button
+      >
     </div>
 
     <div class="mt-4 flex flex-wrap gap-2">
@@ -402,6 +406,7 @@
         type="button"
         size="sm"
         variant={selectedCategoryId === null ? "default" : "outline"}
+        class={selectedCategoryId === null ? "chip-pill-active" : "chip-pill"}
         onclick={() => (selectedCategoryId = null)}
       >
         Tất cả danh mục
@@ -411,6 +416,7 @@
           type="button"
           size="sm"
           variant={selectedCategoryId === category.id ? "default" : "outline"}
+          class={selectedCategoryId === category.id ? "chip-pill-active" : "chip-pill"}
           onclick={() => (selectedCategoryId = category.id)}
         >
           {category.name}
@@ -419,7 +425,7 @@
     </div>
   </div>
 
-  <div class="rounded-xl border border-border/60 bg-white p-4 shadow-sm">
+  <div class="panel-shell p-4">
     <div class="flex items-start justify-between gap-3">
       <div>
         <h2 class="font-semibold">Áp dụng nhanh</h2>
@@ -457,11 +463,19 @@
       </div>
       <div>
         <Label for="quick-value" class="mb-2 block">Giá trị</Label>
-        <Input id="quick-value" type="number" min="0" step="0.01" bind:value={quickValue} />
+        <Input
+          id="quick-value"
+          type="number"
+          min="0"
+          step="0.01"
+          bind:value={quickValue}
+          class="soft-input"
+        />
       </div>
       <Button
         type="button"
         disabled={bulkLoading || !data.canUpdate}
+        class="btn-gradient"
         onclick={applyQuickToFiltered}
       >
         {bulkLoading
@@ -474,9 +488,9 @@
   </div>
 </div>
 
-<div class="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden mt-4">
+<div class="table-shell mt-4 overflow-hidden">
   <div
-    class="border-b border-border/60 px-4 py-3 text-sm text-muted-foreground flex items-center gap-2"
+    class="filter-strip rounded-none border-x-0 border-t-0 px-4 py-3 text-sm text-muted-foreground flex items-center gap-2"
   >
     <Users class="h-4 w-4" />
     {#if selectedStaffId}
@@ -491,7 +505,7 @@
 
   <div class="overflow-x-auto">
     <table class="w-full min-w-[920px] text-sm">
-      <thead class="bg-muted/40 text-muted-foreground">
+      <thead class="text-muted-foreground">
         <tr>
           <th class="px-4 py-3 text-left font-medium"
             >{itemType === "service" ? "Dịch vụ" : "Sản phẩm"}</th
@@ -519,7 +533,7 @@
           {@const existing = getExistingRule(item.id)}
           {@const saving = !!rowLoading[key]}
 
-          <tr class="border-t border-border/60 align-top">
+          <tr class="align-top border-t border-border/60 transition-colors hover:bg-muted/20">
             <td class="px-4 py-3 font-medium text-foreground">{item.name}</td>
             <td class="px-4 py-3">{formatCurrency(item.price)}</td>
             <td class="px-4 py-3 w-48">
@@ -534,7 +548,7 @@
                   }
                 }}
               >
-                <Select.Trigger class="w-full">
+                <Select.Trigger class="w-full soft-input">
                   {draft.commissionType === "percent" ? "Phần trăm" : "Cố định"}
                 </Select.Trigger>
                 <Select.Content>
@@ -548,6 +562,7 @@
                 type="number"
                 min="0"
                 step="0.01"
+                class="soft-input"
                 value={draft.commissionValue}
                 oninput={(event) => {
                   setDraft(item.id, {

@@ -32,7 +32,7 @@
 </script>
 
 <Card
-  class="card-hover border border-border/60 shadow-sm bg-white hover:bg-white transition-all rounded-xl overflow-hidden"
+  class="premium-card card-hover border border-border/60 shadow-sm bg-white hover:bg-white transition-all rounded-xl overflow-hidden"
 >
   <CardContent class="p-5">
     <div class="flex items-start justify-between mb-4">

@@ -24,7 +24,6 @@
       return;
     }
     return new Promise((resolve) => {
-      // @ts-expect-error View Transition API
       document.startViewTransition(async () => {
         resolve();
         await navigation.complete;
@@ -33,7 +32,12 @@
   });
 </script>
 
-<div class="flex h-screen overflow-hidden bg-gray-50">
+<div class="dashboard-shell flex h-screen overflow-hidden bg-gray-50">
+  <div class="dashboard-ambient">
+    <div class="ambient-orb ambient-orb--one"></div>
+    <div class="ambient-orb ambient-orb--two"></div>
+    <div class="ambient-grid"></div>
+  </div>
   <!-- Desktop Sidebar -->
   <div class="hidden md:flex">
     <Sidebar
@@ -81,8 +85,18 @@
 
   <div class="flex flex-1 flex-col overflow-hidden transition-all duration-300">
     <Header onMobileMenuOpen={() => (isMobileMenuOpen = true)} />
-    <main class="flex-1 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
-      {@render children()}
+    <main class="dashboard-main flex-1 overflow-y-auto p-3 md:p-5 pb-20 md:pb-6">
+      <div class="dashboard-page-frame">
+        {#key $page.url.pathname}
+          <div
+            class="dashboard-page-content p-4 md:p-6"
+            in:fly={{ y: 16, duration: 220, easing: cubicOut }}
+            out:fade={{ duration: 120 }}
+          >
+            {@render children()}
+          </div>
+        {/key}
+      </div>
     </main>
   </div>
   <Toaster position="top-center" richColors />

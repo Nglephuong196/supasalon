@@ -32,7 +32,7 @@
 </script>
 
 <header
-  class="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-border bg-background px-6"
+  class="glass-topbar sticky top-0 z-30 flex h-14 items-center gap-4 px-6 shadow-[0_8px_24px_-18px_rgba(97,39,212,0.55)]"
 >
   <!-- Mobile Menu Trigger -->
   <Button
@@ -53,14 +53,18 @@
       <Input
         type="search"
         placeholder="Tìm kiếm..."
-        class="pl-9 h-9 w-64 bg-secondary/40 border-transparent focus:bg-background focus:border-border transition-all text-sm shadow-none rounded-md"
+        class="pl-9 h-9 w-72 bg-white/70 border-border/70 focus:bg-white focus:border-primary/35 transition-all text-sm shadow-[0_8px_18px_-18px_rgba(37,22,76,0.9)] rounded-lg"
       />
     </div>
   </div>
 
   <!-- Right Actions -->
   <div class="flex items-center gap-2">
-    <Button variant="ghost" size="icon" class="h-8 w-8 text-muted-foreground hover:text-foreground">
+    <Button
+      variant="ghost"
+      size="icon"
+      class="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all"
+    >
       <Bell class="h-4 w-4" />
     </Button>
 
@@ -70,7 +74,7 @@
       <Button
         variant="ghost"
         size="icon"
-        class="h-8 w-8 rounded-full border border-border bg-secondary text-secondary-foreground hover:text-foreground"
+        class="h-8 w-8 rounded-full border border-primary/20 bg-gradient-to-br from-white to-secondary text-secondary-foreground hover:text-foreground shadow-[0_6px_16px_-12px_rgba(90,42,214,0.8)]"
         onclick={() => goto("/profile")}
         title="Hồ sơ cá nhân"
       >

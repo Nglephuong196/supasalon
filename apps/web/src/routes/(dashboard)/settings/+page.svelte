@@ -223,14 +223,14 @@
 
 <div class="flex flex-col gap-6">
   <!-- Header -->
-  <div>
-    <h1 class="text-2xl font-bold tracking-tight text-foreground">Cài đặt</h1>
+  <div class="page-hero p-5 sm:p-6">
+    <h1 class="section-title text-2xl font-bold tracking-tight text-foreground">Cài đặt</h1>
     <p class="text-muted-foreground mt-1">Quản lý cấu hình hệ thống của bạn</p>
   </div>
 
   <!-- Tabs -->
   <div class="w-full">
-    <div class="bg-white border border-border/60 rounded-xl p-1 w-fit flex gap-1">
+    <div class="filter-strip flex w-fit gap-1 p-1">
       <Button
         variant={activeTab === "tiers" ? "default" : "ghost"}
         onclick={() => (activeTab = "tiers")}
@@ -268,7 +268,7 @@
     {#if activeTab === "tiers"}
       <div class="mt-6">
         <!-- Ranking Mode Selection -->
-        <div class="bg-white rounded-xl border border-border/60 p-6 mb-6">
+        <div class="panel-shell mb-6 p-6">
           <h3 class="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
             Vui lòng chọn cơ chế xét hạng phù hợp:
           </h3>
@@ -299,7 +299,7 @@
         </div>
 
         <!-- Tiers Table -->
-        <div class="bg-white rounded-xl border border-border/60 overflow-hidden">
+        <div class="table-shell">
           <div class="flex items-center justify-between p-4 border-b border-border/60">
             <h3 class="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
               Chi tiết điều kiện
@@ -404,7 +404,7 @@
 
     {#if activeTab === "general"}
       <div class="mt-6">
-        <div class="bg-white rounded-xl border border-border/60 p-6">
+        <div class="panel-shell p-6">
           <p class="text-muted-foreground">Các cài đặt chung sẽ sớm được thêm vào...</p>
         </div>
       </div>
@@ -412,7 +412,7 @@
 
     {#if activeTab === "permissions"}
       <div class="mt-6">
-        <div class="bg-white rounded-xl border border-border/60 overflow-hidden">
+        <div class="table-shell">
           <div class="p-4 border-b border-border/60">
             <h3 class="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
               Danh sách nhân viên

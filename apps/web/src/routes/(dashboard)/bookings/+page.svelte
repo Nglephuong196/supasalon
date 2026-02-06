@@ -442,28 +442,30 @@
 
 <div class="flex flex-col gap-4">
   <!-- Header -->
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight">Lịch hẹn</h1>
-      <p class="text-muted-foreground">Quản lý lịch hẹn của khách hàng</p>
-    </div>
-    <div class="flex items-center gap-2">
-      <Button variant="outline" class="gap-2">
-        <Download class="h-4 w-4" />
-        Xuất Excel
-      </Button>
-      {#if data.canCreate}
-        <Button class="btn-gradient gap-2" onclick={openCreateDialog}>
-          <Plus class="h-4 w-4" />
-          Tạo mới lịch hẹn
+  <div class="page-hero p-5 sm:p-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="section-title text-2xl font-bold tracking-tight">Lịch hẹn</h1>
+        <p class="text-muted-foreground">Quản lý lịch hẹn của khách hàng</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <Button variant="outline" class="gap-2 soft-input">
+          <Download class="h-4 w-4" />
+          Xuất Excel
         </Button>
-      {/if}
+        {#if data.canCreate}
+          <Button class="btn-gradient gap-2" onclick={openCreateDialog}>
+            <Plus class="h-4 w-4" />
+            Tạo mới lịch hẹn
+          </Button>
+        {/if}
+      </div>
     </div>
   </div>
 
   <!-- Stats Cards -->
   <div class="grid gap-4 grid-cols-2 sm:grid-cols-4">
-    <Card class="border border-gray-100 shadow-sm card-hover">
+    <Card class="premium-card card-hover">
       <CardContent class="p-4">
         <div class="flex items-center justify-between">
           <div class="space-y-1">
@@ -478,7 +480,7 @@
         </div>
       </CardContent>
     </Card>
-    <Card class="border border-gray-100 shadow-sm card-hover">
+    <Card class="premium-card card-hover">
       <CardContent class="p-4">
         <div class="flex items-center justify-between">
           <div class="space-y-1">
@@ -493,7 +495,7 @@
         </div>
       </CardContent>
     </Card>
-    <Card class="border border-gray-100 shadow-sm card-hover">
+    <Card class="premium-card card-hover">
       <CardContent class="p-4">
         <div class="flex items-center justify-between">
           <div class="space-y-1">
@@ -508,7 +510,7 @@
         </div>
       </CardContent>
     </Card>
-    <Card class="border border-gray-100 shadow-sm card-hover">
+    <Card class="premium-card card-hover">
       <CardContent class="p-4">
         <div class="flex items-center justify-between">
           <div class="space-y-1">
@@ -533,9 +535,9 @@
 
     <Tabs.Content value="list">
       <!-- Bookings Table Card -->
-      <div class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm">
+      <div class="table-shell bg-card text-card-foreground">
         <!-- Filters Header -->
-        <div class="p-4 border-b border-gray-100 space-y-4">
+        <div class="filter-strip rounded-none border-x-0 border-t-0 p-4 space-y-4">
           <div class="flex flex-col lg:flex-row lg:items-center gap-4 justify-between">
             <!-- Date Filter Buttons -->
             <div class="flex items-center gap-2 flex-wrap">
@@ -660,7 +662,7 @@
               <Input
                 type="search"
                 placeholder="Tìm theo tên hoặc SĐT..."
-                class="pl-9 h-9"
+                class="soft-input h-9 pl-9"
                 bind:value={searchQuery}
                 onkeydown={(e) => e.key === "Enter" && applyFilters()}
               />
@@ -952,7 +954,7 @@
     </Tabs.Content>
 
     <Tabs.Content value="calendar">
-      <div class="rounded-xl border border-gray-100 bg-card text-card-foreground shadow-sm p-4">
+      <div class="panel-shell bg-card text-card-foreground p-4">
         <BookingCalendar bookings={data.bookings} services={data.services} />
       </div>
     </Tabs.Content>
