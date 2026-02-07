@@ -36,7 +36,6 @@
   import Combobox from "$lib/components/ui/combobox/combobox.svelte";
   import * as Select from "$lib/components/ui/select";
   import { toast } from "svelte-sonner";
-  import BookingCalendar from "$lib/components/bookings/booking-calendar.svelte";
   import type { PageData } from "./$types";
   import {
     DateFormatter,
@@ -51,7 +50,7 @@
   let activeTab = $state("list");
 
   // Filter states
-  let dateFilter = $state<"today" | "week" | "month" | "custom">("today");
+  let dateFilter = $state<"today" | "pastWeek" | "week" | "month" | "custom">("today");
 
   // Date Range State
   const df = new DateFormatter("vi-VN", {
@@ -72,6 +71,8 @@
   let searchQuery = $state("");
   let currentPage = $state(1);
   let pageSize = $state(20);
+  let calendarServiceFilter = $state("all");
+  let calendarStaffFilter = $state("all");
 
   // Sync filter states from URL on data change
   $effect(() => {
@@ -79,6 +80,29 @@
     if (filters) {
       fromDate = filters.from || "";
       toDate = filters.to || "";
+      const today = getDateOnly(new Date());
+      const todayStr = today.toISOString().split("T")[0];
+      const sevenDaysAgoStr = addDays(today, -7).toISOString().split("T")[0];
+      const nextWeekStr = addDays(today, 7).toISOString().split("T")[0];
+      const firstDayOfMonthStr = new Date(today.getFullYear(), today.getMonth(), 1)
+        .toISOString()
+        .split("T")[0];
+      const lastDayOfMonthStr = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+        .toISOString()
+        .split("T")[0];
+
+      if (fromDate === todayStr && toDate === todayStr) {
+        dateFilter = "today";
+      } else if (fromDate === sevenDaysAgoStr && toDate === todayStr) {
+        dateFilter = "pastWeek";
+      } else if (fromDate === todayStr && toDate === nextWeekStr) {
+        dateFilter = "week";
+      } else if (fromDate === firstDayOfMonthStr && toDate === lastDayOfMonthStr) {
+        dateFilter = "month";
+      } else {
+        dateFilter = "custom";
+      }
+
       // Parse existing dates into RangeCalendar value if present
       if (fromDate && toDate) {
         try {
@@ -124,6 +148,22 @@
       label: `${c.name} - ${c.phone}`,
     })),
   );
+
+  let calendarServiceOptions = $derived([
+    { value: "all", label: "Tất cả dịch vụ" },
+    ...(data.services || []).map((service: any) => ({
+      value: service.id.toString(),
+      label: service.name,
+    })),
+  ]);
+
+  let calendarStaffOptions = $derived([
+    { value: "all", label: "Tất cả nhân viên" },
+    ...(data.members || []).map((member: any) => ({
+      value: member.id.toString(),
+      label: member.user?.name || member.name || `NV #${member.id}`,
+    })),
+  ]);
 
   $effect(() => {
     if (newBooking.customerId) {
@@ -174,6 +214,27 @@
     }
   });
 
+  let selectedCustomer = $derived(
+    (data.customers || []).find((c: any) => c.id.toString() === newBooking.customerId),
+  );
+
+  let totalGuestServices = $derived(
+    (newBooking.guests || []).reduce(
+      (total: number, guest: any) =>
+        total + (guest.services || []).filter((service: any) => service.serviceId).length,
+      0,
+    ),
+  );
+
+  let canSubmitBooking = $derived(
+    Boolean(
+      newBooking.customerId &&
+      newBooking.date &&
+      (parseInt(newBooking.guestCount) || 0) > 0 &&
+      totalGuestServices > 0,
+    ),
+  );
+
   const statusStyles: Record<string, string> = {
     confirmed: "bg-emerald-100 text-emerald-700 border-emerald-200",
     pending: "bg-amber-100 text-amber-700 border-amber-200",
@@ -201,6 +262,57 @@
 
   let selectedStatusLabel = $derived(
     statusOptions.find((o) => o.value === statusFilter)?.label || "Trạng thái",
+  );
+
+  const TEST_CALENDAR_START_HOUR = 8;
+  const TEST_CALENDAR_END_HOUR = 21;
+  const TEST_CALENDAR_HOUR_HEIGHT = 64;
+  const TEST_CALENDAR_EVENT_HEIGHT = 74;
+  const TEST_CALENDAR_WEEK_EVENT_HEIGHT = TEST_CALENDAR_EVENT_HEIGHT - 14;
+  const DRAG_BOOKING_MIME = "application/x-booking";
+
+  let testCalendarView = $state<"day" | "week" | "month">("day");
+  let testCalendarDate = $state(getDateOnly(new Date()));
+
+  let testCalendarDayStripDays = $derived(
+    Array.from({ length: 7 }, (_, index) => addDays(testCalendarDate, index - 3)),
+  );
+
+  let testCalendarWeekDays = $derived(
+    Array.from({ length: 7 }, (_, index) => addDays(getStartOfWeek(testCalendarDate), index)),
+  );
+
+  let calendarFilteredBookings = $derived(
+    (data.bookings || []).filter((booking: any) =>
+      bookingMatchesCalendarFilters(booking, calendarServiceFilter, calendarStaffFilter),
+    ),
+  );
+
+  let bookingsByDate = $derived(groupBookingsByDate(calendarFilteredBookings));
+
+  let testCalendarDayBookings = $derived(
+    calendarFilteredBookings
+      .filter((booking: any) => isSameDay(new Date(booking.date), testCalendarDate))
+      .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+  );
+
+  let testCalendarMonthDays = $derived(getMonthGridDays(testCalendarDate));
+
+  let testCalendarTimelineHeight = $derived(
+    (TEST_CALENDAR_END_HOUR - TEST_CALENDAR_START_HOUR) * TEST_CALENDAR_HOUR_HEIGHT,
+  );
+
+  let dayCalendarLayout = $derived(
+    buildOverlapLayout(testCalendarDayBookings, TEST_CALENDAR_EVENT_HEIGHT),
+  );
+
+  let weekCalendarLayouts = $derived(
+    Object.fromEntries(
+      Object.entries(bookingsByDate).map(([dayKey, bookings]) => [
+        dayKey,
+        buildOverlapLayout(bookings as any[], TEST_CALENDAR_WEEK_EVENT_HEIGHT),
+      ]),
+    ) as Record<string, Record<number, { leftPct: number; widthPct: number; zIndex: number }>>,
   );
 
   function formatDate(dateStr: string) {
@@ -235,6 +347,119 @@
     return `LH${String(id).padStart(6, "0")}`;
   }
 
+  function getDateOnly(date: Date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  function addDays(date: Date, amount: number) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount);
+  }
+
+  function addMonths(date: Date, amount: number) {
+    return new Date(date.getFullYear(), date.getMonth() + amount, 1);
+  }
+
+  function isSameDay(left: Date, right: Date) {
+    return (
+      left.getFullYear() === right.getFullYear() &&
+      left.getMonth() === right.getMonth() &&
+      left.getDate() === right.getDate()
+    );
+  }
+
+  function isSameMonth(left: Date, right: Date) {
+    return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth();
+  }
+
+  function getStartOfWeek(date: Date) {
+    const result = getDateOnly(date);
+    const day = result.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    result.setDate(result.getDate() + diff);
+    return result;
+  }
+
+  function toDateKey(date: Date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  function groupBookingsByDate(bookings: any[]) {
+    const grouped: Record<string, any[]> = {};
+    for (const booking of bookings) {
+      const key = toDateKey(new Date(booking.date));
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(booking);
+    }
+    for (const key of Object.keys(grouped)) {
+      grouped[key].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }
+    return grouped;
+  }
+
+  function getBookingServiceAndStaffIds(booking: any): {
+    serviceIds: Set<string>;
+    staffIds: Set<string>;
+  } {
+    const serviceIds = new Set<string>();
+    const staffIds = new Set<string>();
+
+    for (const guest of booking?.guests || []) {
+      for (const item of guest?.services || []) {
+        if (item?.serviceId != null) {
+          serviceIds.add(String(item.serviceId));
+        }
+        if (item?.memberId != null) {
+          staffIds.add(String(item.memberId));
+        } else if (item?.staffId != null) {
+          staffIds.add(String(item.staffId));
+        }
+      }
+    }
+
+    // Backward compatibility in case legacy bookingServices still appears in payload.
+    for (const legacy of booking?.bookingServices || []) {
+      if (legacy?.serviceId != null) {
+        serviceIds.add(String(legacy.serviceId));
+      } else if (legacy?.service?.id != null) {
+        serviceIds.add(String(legacy.service.id));
+      }
+      if (legacy?.memberId != null) {
+        staffIds.add(String(legacy.memberId));
+      } else if (legacy?.staffId != null) {
+        staffIds.add(String(legacy.staffId));
+      }
+    }
+
+    return { serviceIds, staffIds };
+  }
+
+  function bookingMatchesCalendarFilters(
+    booking: any,
+    selectedService: string,
+    selectedStaff: string,
+  ) {
+    if (selectedService === "all" && selectedStaff === "all") return true;
+
+    const { serviceIds, staffIds } = getBookingServiceAndStaffIds(booking);
+
+    if (selectedService !== "all" && !serviceIds.has(selectedService)) {
+      return false;
+    }
+    if (selectedStaff !== "all" && !staffIds.has(selectedStaff)) {
+      return false;
+    }
+    return true;
+  }
+
+  function getMonthGridDays(date: Date) {
+    const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    const gridStart = getStartOfWeek(firstDayOfMonth);
+    return Array.from({ length: 42 }, (_, index) => addDays(gridStart, index));
+  }
+
   function isToday(dateStr: string) {
     const date = new Date(dateStr);
     const today = new Date();
@@ -248,6 +473,248 @@
     tomorrow.setDate(tomorrow.getDate() + 1);
     if (date.toDateString() === tomorrow.toDateString()) return "(Ngày mai)";
     return "";
+  }
+
+  function isPastBooking(dateStr: string) {
+    return new Date(dateStr).getTime() < Date.now();
+  }
+
+  function formatCalendarDateHeader(date: Date) {
+    return date.toLocaleDateString("vi-VN", {
+      weekday: "long",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  }
+
+  function formatCalendarWeekday(date: Date) {
+    return date.toLocaleDateString("vi-VN", { weekday: "short" });
+  }
+
+  function formatHourLabel(hour: number) {
+    return `${String(hour).padStart(2, "0")}:00`;
+  }
+
+  function formatMonthLabel(date: Date) {
+    return date.toLocaleDateString("vi-VN", {
+      month: "long",
+      year: "numeric",
+    });
+  }
+
+  function formatWeekRangeLabel(date: Date) {
+    const start = getStartOfWeek(date);
+    const end = addDays(start, 6);
+    return `${start.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" })} - ${end.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })}`;
+  }
+
+  function shiftTestCalendar(amount: number) {
+    if (testCalendarView === "month") {
+      testCalendarDate = addMonths(testCalendarDate, amount);
+      return;
+    }
+    if (testCalendarView === "week") {
+      testCalendarDate = addDays(testCalendarDate, amount * 7);
+      return;
+    }
+    testCalendarDate = addDays(testCalendarDate, amount);
+  }
+
+  function getTestCalendarTop(dateStr: string) {
+    const date = new Date(dateStr);
+    const minutesFromStart = (date.getHours() - TEST_CALENDAR_START_HOUR) * 60 + date.getMinutes();
+    const rawTop = (minutesFromStart / 60) * TEST_CALENDAR_HOUR_HEIGHT;
+    const maxTop = testCalendarTimelineHeight - TEST_CALENDAR_EVENT_HEIGHT;
+    return Math.max(0, Math.min(maxTop, rawTop));
+  }
+
+  function buildOverlapLayout(bookings: any[], eventHeight: number) {
+    type Positioned = { id: number; top: number; bottom: number };
+    const positioned: Positioned[] = bookings
+      .map((booking) => {
+        const top = getTestCalendarTop(booking.date);
+        return {
+          id: booking.id,
+          top,
+          bottom: top + eventHeight,
+        };
+      })
+      .sort((a, b) => (a.top !== b.top ? a.top - b.top : a.id - b.id));
+
+    const columnById: Record<number, number> = {};
+    const totalColumnsById: Record<number, number> = {};
+
+    let active: Array<{ id: number; bottom: number; col: number }> = [];
+    let groupIds: number[] = [];
+    let groupMaxColumns = 1;
+
+    const flushGroup = () => {
+      for (const bookingId of groupIds) {
+        totalColumnsById[bookingId] = Math.max(1, groupMaxColumns);
+      }
+      groupIds = [];
+      groupMaxColumns = 1;
+    };
+
+    for (const event of positioned) {
+      active = active.filter((item) => item.bottom > event.top);
+
+      if (active.length === 0 && groupIds.length > 0) {
+        flushGroup();
+      }
+
+      const usedCols = new Set(active.map((item) => item.col));
+      let col = 0;
+      while (usedCols.has(col)) col += 1;
+
+      active.push({ id: event.id, bottom: event.bottom, col });
+      groupIds.push(event.id);
+      columnById[event.id] = col;
+      groupMaxColumns = Math.max(groupMaxColumns, active.length);
+    }
+
+    if (groupIds.length > 0) {
+      flushGroup();
+    }
+
+    const layout: Record<number, { leftPct: number; widthPct: number; zIndex: number }> = {};
+    for (const booking of bookings) {
+      const total = Math.max(1, totalColumnsById[booking.id] || 1);
+      const col = Math.max(0, columnById[booking.id] || 0);
+      const widthPct = 100 / total;
+      const leftPct = col * widthPct;
+      layout[booking.id] = {
+        leftPct,
+        widthPct,
+        zIndex: col + 1,
+      };
+    }
+
+    return layout;
+  }
+
+  function getDropDateByY(baseDate: Date, clientY: number, containerRect: DOMRect) {
+    const y = Math.max(0, Math.min(containerRect.height, clientY - containerRect.top));
+    const totalMinutes = (y / TEST_CALENDAR_HOUR_HEIGHT) * 60 + TEST_CALENDAR_START_HOUR * 60;
+    const roundedMinutes = Math.round(totalMinutes / 15) * 15;
+    const startMinutes = TEST_CALENDAR_START_HOUR * 60;
+    const endMinutes = TEST_CALENDAR_END_HOUR * 60 - 15;
+    const clampedMinutes = Math.max(startMinutes, Math.min(endMinutes, roundedMinutes));
+    const hour = Math.floor(clampedMinutes / 60);
+    const minute = clampedMinutes % 60;
+
+    return new Date(
+      baseDate.getFullYear(),
+      baseDate.getMonth(),
+      baseDate.getDate(),
+      hour,
+      minute,
+      0,
+      0,
+    );
+  }
+
+  function readDraggedBooking(event: DragEvent): { id: number; date: string } | null {
+    try {
+      const payload = event.dataTransfer?.getData(DRAG_BOOKING_MIME);
+      if (!payload) return null;
+      const parsed = JSON.parse(payload);
+      const id = Number(parsed?.id);
+      const date = parsed?.date?.toString?.() || "";
+      if (!id || !date) return null;
+      return { id, date };
+    } catch {
+      return null;
+    }
+  }
+
+  function handleBookingDragStart(event: DragEvent, booking: any) {
+    if (!data.canUpdate) return;
+    const payload = JSON.stringify({
+      id: booking.id,
+      date: booking.date,
+    });
+    event.dataTransfer?.setData(DRAG_BOOKING_MIME, payload);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = "move";
+    }
+  }
+
+  async function moveBookingByDrop(bookingId: number, nextDate: Date) {
+    const formData = new FormData();
+    formData.set("id", bookingId.toString());
+    formData.set("date", nextDate.toISOString());
+
+    const res = await fetch("?/moveBooking", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (res.ok) {
+      toast.success("Đã di chuyển lịch hẹn");
+      await invalidateAll();
+      return;
+    }
+
+    try {
+      const result = await res.json();
+      toast.error(result?.message || "Không thể di chuyển lịch hẹn");
+    } catch {
+      toast.error("Không thể di chuyển lịch hẹn");
+    }
+  }
+
+  async function handleDropOnDayTimeline(event: DragEvent) {
+    event.preventDefault();
+    if (!data.canUpdate) return;
+
+    const dragged = readDraggedBooking(event);
+    if (!dragged) return;
+
+    const container = event.currentTarget as HTMLDivElement | null;
+    if (!container) return;
+
+    const nextDate = getDropDateByY(
+      testCalendarDate,
+      event.clientY,
+      container.getBoundingClientRect(),
+    );
+    await moveBookingByDrop(dragged.id, nextDate);
+  }
+
+  async function handleDropOnWeekColumn(event: DragEvent, day: Date) {
+    event.preventDefault();
+    if (!data.canUpdate) return;
+
+    const dragged = readDraggedBooking(event);
+    if (!dragged) return;
+
+    const container = event.currentTarget as HTMLDivElement | null;
+    if (!container) return;
+
+    const nextDate = getDropDateByY(day, event.clientY, container.getBoundingClientRect());
+    await moveBookingByDrop(dragged.id, nextDate);
+  }
+
+  async function handleDropOnMonthDay(event: DragEvent, day: Date) {
+    event.preventDefault();
+    if (!data.canUpdate) return;
+
+    const dragged = readDraggedBooking(event);
+    if (!dragged) return;
+
+    const sourceDate = new Date(dragged.date);
+    const nextDate = new Date(
+      day.getFullYear(),
+      day.getMonth(),
+      day.getDate(),
+      sourceDate.getHours(),
+      sourceDate.getMinutes(),
+      0,
+      0,
+    );
+    await moveBookingByDrop(dragged.id, nextDate);
   }
 
   // Group bookings by date
@@ -302,6 +769,11 @@
       const today = new Date().toISOString().split("T")[0];
       params.set("from", today);
       params.set("to", today);
+    } else if (dateFilter === "pastWeek") {
+      const today = getDateOnly(new Date());
+      const pastWeek = addDays(today, -7);
+      params.set("from", pastWeek.toISOString().split("T")[0]);
+      params.set("to", today.toISOString().split("T")[0]);
     } else if (dateFilter === "week") {
       const today = new Date();
       const nextWeek = new Date();
@@ -309,11 +781,11 @@
       params.set("from", today.toISOString().split("T")[0]);
       params.set("to", nextWeek.toISOString().split("T")[0]);
     } else if (dateFilter === "month") {
-      const today = new Date();
-      const nextMonth = new Date();
-      nextMonth.setMonth(today.getMonth() + 1);
-      params.set("from", today.toISOString().split("T")[0]);
-      params.set("to", nextMonth.toISOString().split("T")[0]);
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      params.set("from", firstDay.toISOString().split("T")[0]);
+      params.set("to", lastDay.toISOString().split("T")[0]);
     } else if (fromDate && toDate) {
       params.set("from", fromDate);
       params.set("to", toDate);
@@ -331,7 +803,7 @@
     goto(`/bookings?${params.toString()}`);
   }
 
-  function setDateFilter(filter: "today" | "week" | "month" | "custom") {
+  function setDateFilter(filter: "today" | "pastWeek" | "week" | "month" | "custom") {
     dateFilter = filter;
     if (filter !== "custom") {
       applyFilters();
@@ -558,6 +1030,18 @@
                   variant="ghost"
                   class={cn(
                     "px-3 py-1.5 text-sm font-medium rounded-md transition-colors h-auto",
+                    dateFilter === "pastWeek"
+                      ? "bg-white shadow-sm text-purple-600"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-transparent",
+                  )}
+                  onclick={() => setDateFilter("pastWeek")}
+                >
+                  7 ngày qua
+                </Button>
+                <Button
+                  variant="ghost"
+                  class={cn(
+                    "px-3 py-1.5 text-sm font-medium rounded-md transition-colors h-auto",
                     dateFilter === "week"
                       ? "bg-white shadow-sm text-purple-600"
                       : "text-gray-600 hover:text-gray-900 hover:bg-transparent",
@@ -613,17 +1097,18 @@
                   </Popover.Content>
                 </Popover.Root>
 
-                {#if value && value.start && value.end}
+                {#if value && value.start}
                   <Button
                     variant="outline"
                     size="sm"
                     class="h-9"
                     onclick={() => {
                       dateFilter = "custom";
-                      // Update fromDate and toDate from value
-                      if (value.start && value.end) {
+                      // Support single-date selection by using start as both from/to.
+                      if (value.start) {
+                        const endDate = value.end || value.start;
                         fromDate = value.start.toString();
-                        toDate = value.end.toString();
+                        toDate = endDate.toString();
                         applyFilters();
                       }
                     }}
@@ -847,7 +1332,7 @@
                             {/if}
                             {#if data.canDelete}
                               <DropdownMenu.Item
-                                class="text-red-600 focus:text-red-600"
+                                variant="destructive"
                                 onclick={() => openDeleteDialog(booking)}
                               >
                                 <Trash class="mr-2 h-4 w-4" />
@@ -955,7 +1440,423 @@
 
     <Tabs.Content value="calendar">
       <div class="panel-shell bg-card text-card-foreground p-4">
-        <BookingCalendar bookings={data.bookings} services={data.services} />
+        <div class="rounded-xl border border-border bg-background">
+          <div class="border-b border-border p-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="inline-flex rounded-lg border border-border bg-muted/30 p-1">
+                <button
+                  class={cn(
+                    "h-8 rounded-md px-3 text-sm font-medium transition-colors",
+                    testCalendarView === "day"
+                      ? "bg-background shadow-sm text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  onclick={() => (testCalendarView = "day")}
+                >
+                  Ngày
+                </button>
+                <button
+                  class={cn(
+                    "h-8 rounded-md px-3 text-sm font-medium transition-colors",
+                    testCalendarView === "week"
+                      ? "bg-background shadow-sm text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  onclick={() => (testCalendarView = "week")}
+                >
+                  Tuần
+                </button>
+                <button
+                  class={cn(
+                    "h-8 rounded-md px-3 text-sm font-medium transition-colors",
+                    testCalendarView === "month"
+                      ? "bg-background shadow-sm text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  onclick={() => (testCalendarView = "month")}
+                >
+                  Tháng
+                </button>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  class="h-9 w-9"
+                  onclick={() => shiftTestCalendar(-1)}
+                >
+                  <ChevronLeft class="h-4 w-4" />
+                </Button>
+
+                {#if testCalendarView === "week"}
+                  <Button variant="outline" class="h-9" onclick={() => shiftTestCalendar(-1)}>
+                    Tuần trước
+                  </Button>
+                  <Button
+                    variant="outline"
+                    class="h-9"
+                    onclick={() => (testCalendarDate = getDateOnly(new Date()))}
+                  >
+                    Tuần này
+                  </Button>
+                  <Button variant="outline" class="h-9" onclick={() => shiftTestCalendar(1)}>
+                    Tuần sau
+                  </Button>
+                {:else if testCalendarView === "month"}
+                  <Button variant="outline" class="h-9" onclick={() => shiftTestCalendar(-1)}>
+                    Tháng trước
+                  </Button>
+                  <Button
+                    variant="outline"
+                    class="h-9"
+                    onclick={() => (testCalendarDate = getDateOnly(new Date()))}
+                  >
+                    Tháng này
+                  </Button>
+                  <Button variant="outline" class="h-9" onclick={() => shiftTestCalendar(1)}>
+                    Tháng sau
+                  </Button>
+                {:else}
+                  <Button
+                    variant="outline"
+                    class="h-9"
+                    onclick={() => (testCalendarDate = getDateOnly(new Date()))}
+                  >
+                    Hôm nay
+                  </Button>
+                {/if}
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  class="h-9 w-9"
+                  onclick={() => shiftTestCalendar(1)}
+                >
+                  <ChevronRight class="h-4 w-4" />
+                </Button>
+                {#if testCalendarView === "month"}
+                  <p class="ml-1 text-sm font-medium capitalize">
+                    {formatMonthLabel(testCalendarDate)}
+                  </p>
+                {:else if testCalendarView === "week"}
+                  <p class="ml-1 text-sm font-medium">{formatWeekRangeLabel(testCalendarDate)}</p>
+                {:else}
+                  <p class="ml-1 text-sm font-medium capitalize">
+                    {formatCalendarDateHeader(testCalendarDate)}
+                  </p>
+                {/if}
+              </div>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+              <Select.Root type="single" bind:value={calendarServiceFilter}>
+                <Select.Trigger class="h-9 w-[220px]">
+                  {calendarServiceOptions.find((opt) => opt.value === calendarServiceFilter)
+                    ?.label || "Tất cả dịch vụ"}
+                </Select.Trigger>
+                <Select.Content>
+                  {#each calendarServiceOptions as option}
+                    <Select.Item value={option.value} label={option.label}>
+                      {option.label}
+                    </Select.Item>
+                  {/each}
+                </Select.Content>
+              </Select.Root>
+
+              <Select.Root type="single" bind:value={calendarStaffFilter}>
+                <Select.Trigger class="h-9 w-[220px]">
+                  {calendarStaffOptions.find((opt) => opt.value === calendarStaffFilter)?.label ||
+                    "Tất cả nhân viên"}
+                </Select.Trigger>
+                <Select.Content>
+                  {#each calendarStaffOptions as option}
+                    <Select.Item value={option.value} label={option.label}>
+                      {option.label}
+                    </Select.Item>
+                  {/each}
+                </Select.Content>
+              </Select.Root>
+            </div>
+
+            {#if testCalendarView === "day"}
+              <div class="mt-4 flex gap-2 overflow-x-auto pb-1">
+                {#each testCalendarDayStripDays as day}
+                  <button
+                    class={cn(
+                      "min-w-[72px] rounded-lg border px-3 py-2 text-center transition-colors",
+                      isSameDay(day, testCalendarDate)
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background hover:bg-muted",
+                    )}
+                    onclick={() => (testCalendarDate = day)}
+                  >
+                    <p class="text-[11px] uppercase tracking-wide opacity-80">
+                      {formatCalendarWeekday(day)}
+                    </p>
+                    <p class="text-base font-semibold">{day.getDate()}</p>
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </div>
+
+          {#if testCalendarView === "day"}
+            {#if testCalendarDayBookings.length === 0}
+              <div class="p-8 text-center">
+                <div
+                  class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted"
+                >
+                  <Calendar class="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 class="font-semibold">Không có lịch hẹn</h3>
+                <p class="mt-1 text-sm text-muted-foreground">
+                  Thử chọn ngày khác hoặc đổi bộ lọc để xem thêm lịch hẹn.
+                </p>
+              </div>
+            {:else}
+              <div class="overflow-auto p-4">
+                <div
+                  class="relative min-w-[640px] overflow-hidden rounded-xl border border-border bg-card"
+                  style={`height: ${testCalendarTimelineHeight}px`}
+                  role="application"
+                  aria-label="Lưới kéo thả lịch hẹn theo ngày"
+                  ondragover={(event) => event.preventDefault()}
+                  ondrop={handleDropOnDayTimeline}
+                >
+                  {#each Array.from({ length: TEST_CALENDAR_END_HOUR - TEST_CALENDAR_START_HOUR + 1 }, (_, i) => i) as hourIndex}
+                    {@const hour = TEST_CALENDAR_START_HOUR + hourIndex}
+                    <div
+                      class="absolute inset-x-0"
+                      style={`top: ${hourIndex * TEST_CALENDAR_HOUR_HEIGHT}px`}
+                    >
+                      <div class="grid grid-cols-[68px_1fr]">
+                        <div class="pr-2 pt-1 text-right text-[11px] text-muted-foreground">
+                          {formatHourLabel(hour)}
+                        </div>
+                        <div class="mt-2 border-t border-border"></div>
+                      </div>
+                    </div>
+                  {/each}
+
+                  {#each testCalendarDayBookings as booking}
+                    {@const dayLayout = dayCalendarLayout[booking.id] || {
+                      leftPct: 0,
+                      widthPct: 100,
+                      zIndex: 1,
+                    }}
+                    <button
+                      class={cn(
+                        "absolute rounded-lg border px-3 py-2 text-left shadow-sm transition-colors hover:brightness-95",
+                        isPastBooking(booking.date) ? "opacity-75 saturate-75" : "",
+                        statusStyles[booking.status] || "border-border bg-muted text-foreground",
+                      )}
+                      style={`top: ${getTestCalendarTop(booking.date)}px; left: calc(72px + (100% - 84px) * ${dayLayout.leftPct / 100} + 2px); width: calc((100% - 84px) * ${dayLayout.widthPct / 100} - 4px); min-height: ${TEST_CALENDAR_EVENT_HEIGHT}px; z-index: ${dayLayout.zIndex};`}
+                      draggable={data.canUpdate}
+                      ondragstart={(event) => handleBookingDragStart(event, booking)}
+                      onclick={() => data.canUpdate && openEditDialog(booking)}
+                    >
+                      <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                          <p class="truncate text-sm font-semibold">
+                            {booking.customer?.name || "Khách vãng lai"}
+                          </p>
+                          <p class="text-xs opacity-80">
+                            {formatTime(booking.date)} • {generateBookingCode(booking.id)}
+                          </p>
+                        </div>
+                        <span
+                          class="shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold"
+                        >
+                          {#if isPastBooking(booking.date)}Đã qua •
+                          {/if}{statusLabels[booking.status] || booking.status}
+                        </span>
+                      </div>
+                      <p class="mt-1 truncate text-xs opacity-90">
+                        {booking.bookingServices?.[0]?.service?.name || "Chưa chọn dịch vụ"}
+                      </p>
+                    </button>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+          {:else if testCalendarView === "week"}
+            <div class="overflow-auto p-4">
+              <div class="min-w-[980px] overflow-hidden rounded-xl border border-border bg-card">
+                <div
+                  class="grid grid-cols-[68px_repeat(7,minmax(130px,1fr))] border-b border-border bg-muted/30"
+                >
+                  <div class="h-12 border-r border-border"></div>
+                  {#each testCalendarWeekDays as day}
+                    <button
+                      class={cn(
+                        "h-12 border-r border-border px-2 text-center last:border-r-0",
+                        isSameDay(day, testCalendarDate) ? "bg-primary/10" : "",
+                      )}
+                      onclick={() => {
+                        testCalendarDate = day;
+                        testCalendarView = "day";
+                      }}
+                    >
+                      <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+                        {formatCalendarWeekday(day)}
+                      </p>
+                      <p class="text-sm font-semibold">{day.getDate()}</p>
+                    </button>
+                  {/each}
+                </div>
+
+                <div
+                  class="grid grid-cols-[68px_1fr]"
+                  style={`height: ${testCalendarTimelineHeight}px`}
+                >
+                  <div class="relative border-r border-border">
+                    {#each Array.from({ length: TEST_CALENDAR_END_HOUR - TEST_CALENDAR_START_HOUR + 1 }, (_, i) => i) as hourIndex}
+                      {@const hour = TEST_CALENDAR_START_HOUR + hourIndex}
+                      <div
+                        class="absolute inset-x-0"
+                        style={`top: ${hourIndex * TEST_CALENDAR_HOUR_HEIGHT}px`}
+                      >
+                        <div class="pr-2 pt-1 text-right text-[11px] text-muted-foreground">
+                          {formatHourLabel(hour)}
+                        </div>
+                      </div>
+                    {/each}
+                  </div>
+
+                  <div class="grid grid-cols-7">
+                    {#each testCalendarWeekDays as day}
+                      {@const dayKey = toDateKey(day)}
+                      {@const dayBookings = bookingsByDate[dayKey] || []}
+                      <div
+                        class="relative border-r border-border last:border-r-0"
+                        role="application"
+                        aria-label={`Cột lịch hẹn ${formatCalendarWeekday(day)} ${day.getDate()}`}
+                        ondragover={(event) => event.preventDefault()}
+                        ondrop={(event) => handleDropOnWeekColumn(event, day)}
+                      >
+                        {#each Array.from({ length: TEST_CALENDAR_END_HOUR - TEST_CALENDAR_START_HOUR + 1 }, (_, i) => i) as hourIndex}
+                          <div
+                            class="absolute inset-x-0 border-t border-border"
+                            style={`top: ${hourIndex * TEST_CALENDAR_HOUR_HEIGHT + 8}px`}
+                          ></div>
+                        {/each}
+
+                        {#each dayBookings as booking}
+                          {@const weekLayout = (weekCalendarLayouts[dayKey] &&
+                            weekCalendarLayouts[dayKey][booking.id]) || {
+                            leftPct: 0,
+                            widthPct: 100,
+                            zIndex: 1,
+                          }}
+                          <button
+                            class={cn(
+                              "absolute rounded-md border px-2 py-1 text-left shadow-sm transition-colors hover:brightness-95",
+                              isPastBooking(booking.date) ? "opacity-70 saturate-75" : "",
+                              statusStyles[booking.status] ||
+                                "border-border bg-muted text-foreground",
+                            )}
+                            style={`top: ${getTestCalendarTop(booking.date)}px; left: calc(${weekLayout.leftPct}% + 2px); width: calc(${weekLayout.widthPct}% - 4px); min-height: ${TEST_CALENDAR_WEEK_EVENT_HEIGHT}px; z-index: ${weekLayout.zIndex};`}
+                            draggable={data.canUpdate}
+                            ondragstart={(event) => handleBookingDragStart(event, booking)}
+                            onclick={() => data.canUpdate && openEditDialog(booking)}
+                          >
+                            <p class="truncate text-xs font-semibold">
+                              {booking.customer?.name || "Khách vãng lai"}
+                            </p>
+                            <p class="text-[11px] opacity-80">{formatTime(booking.date)}</p>
+                          </button>
+                        {/each}
+                      </div>
+                    {/each}
+                  </div>
+                </div>
+              </div>
+            </div>
+          {:else}
+            <div class="p-4">
+              <div class="overflow-auto rounded-xl border border-border">
+                <div class="grid min-w-[860px] grid-cols-7 border-b border-border bg-muted/30">
+                  {#each ["T2", "T3", "T4", "T5", "T6", "T7", "CN"] as weekday}
+                    <div
+                      class="border-r border-border px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground last:border-r-0"
+                    >
+                      {weekday}
+                    </div>
+                  {/each}
+                </div>
+
+                <div class="grid min-w-[860px] grid-cols-7">
+                  {#each testCalendarMonthDays as day}
+                    {@const dayKey = toDateKey(day)}
+                    {@const dayBookings = bookingsByDate[dayKey] || []}
+                    <button
+                      class={cn(
+                        "min-h-[130px] border-b border-r border-border p-2 text-left align-top transition-colors hover:bg-muted/40",
+                        !isSameMonth(day, testCalendarDate)
+                          ? "bg-muted/20 text-muted-foreground"
+                          : "bg-background",
+                        isSameDay(day, testCalendarDate) ? "ring-1 ring-inset ring-primary" : "",
+                      )}
+                      ondragover={(event) => event.preventDefault()}
+                      ondrop={(event) => handleDropOnMonthDay(event, day)}
+                      onclick={() => {
+                        testCalendarDate = day;
+                        testCalendarView = "day";
+                      }}
+                    >
+                      <div class="mb-2 flex items-center justify-between">
+                        <span
+                          class={cn(
+                            "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
+                            isSameDay(day, getDateOnly(new Date()))
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-transparent",
+                          )}
+                        >
+                          {day.getDate()}
+                        </span>
+                        {#if dayBookings.length > 0}
+                          <span class="text-[11px] text-muted-foreground"
+                            >{dayBookings.length} lịch</span
+                          >
+                        {/if}
+                      </div>
+
+                      <div class="space-y-1">
+                        {#each dayBookings.slice(0, 2) as booking}
+                          <div
+                            class={cn(
+                              "rounded border border-border bg-card px-2 py-1",
+                              isPastBooking(booking.date) ? "opacity-70" : "",
+                            )}
+                            role="button"
+                            tabindex="-1"
+                            aria-label={`Kéo lịch hẹn ${booking.customer?.name || "Khách vãng lai"} lúc ${formatTime(booking.date)}`}
+                            draggable={data.canUpdate}
+                            ondragstart={(event) => handleBookingDragStart(event, booking)}
+                          >
+                            <p class="truncate text-[11px] font-semibold">
+                              {formatTime(booking.date)}
+                            </p>
+                            <p class="truncate text-[11px] text-muted-foreground">
+                              {booking.customer?.name || "Khách vãng lai"}
+                            </p>
+                          </div>
+                        {/each}
+                        {#if dayBookings.length > 2}
+                          <p class="text-[11px] text-muted-foreground">
+                            +{dayBookings.length - 2} lịch khác
+                          </p>
+                        {/if}
+                      </div>
+                    </button>
+                  {/each}
+                </div>
+              </div>
+            </div>
+          {/if}
+        </div>
       </div>
     </Tabs.Content>
   </Tabs.Root>
@@ -963,13 +1864,20 @@
 
 <!-- Create Booking Dialog -->
 <Dialog.Root bind:open={isCreateOpen}>
-  <Dialog.Content class="sm:max-w-4xl !p-0 !gap-0 overflow-hidden flex flex-col">
-    <Dialog.Header class="p-6 pb-4 border-b border-gray-200">
-      <Dialog.Title class="text-lg font-semibold">Đặt lịch hẹn</Dialog.Title>
+  <Dialog.Content class="sm:max-w-6xl max-h-[92vh] !p-0 !gap-0 overflow-hidden flex flex-col">
+    <Dialog.Header class="border-b border-border bg-muted/30 p-6 pb-4">
+      <Dialog.Title class="text-lg font-semibold">
+        {editingBookingId ? "Chỉnh sửa lịch hẹn" : "Tạo lịch hẹn mới"}
+      </Dialog.Title>
+      <Dialog.Description class="mt-1 text-sm text-muted-foreground">
+        Chọn khách hàng, thời gian và dịch vụ. Thông tin tổng quan được cập nhật trực tiếp khi bạn
+        thay đổi biểu mẫu.
+      </Dialog.Description>
     </Dialog.Header>
     <form
       action={editingBookingId ? "?/update" : "?/create"}
       method="POST"
+      class="flex min-h-0 flex-1 flex-col"
       use:enhance={handleFormResult}
     >
       {#if editingBookingId}
@@ -979,30 +1887,27 @@
       <input type="hidden" name="customerId" bind:value={newBooking.customerId} />
       <input type="hidden" name="customerPhone" bind:value={newBooking.customerPhone} />
       <input type="hidden" name="date" bind:value={newBooking.date} />
-      <div class="flex flex-col sm:flex-row max-h-[70vh]">
-        <!-- Left Panel: Customer & Booking Info -->
-        <div class="w-full sm:w-[340px] shrink-0 p-6 border-r border-gray-200 overflow-y-auto">
-          <!-- Customer Info Section -->
-          <div class="space-y-4 relative">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-medium text-gray-700">Thông tin khách hàng</h3>
-              {#if newBooking.customerId}
-                <Button
-                  type="button"
-                  variant="link"
-                  class="text-xs text-red-500 hover:text-red-600 hover:underline h-auto p-0"
-                  onclick={() => {
-                    newBooking.customerId = "";
-                    newBooking.customerPhone = "";
-                    customerSearchQuery = "";
-                  }}
-                >
-                  Xóa chọn
-                </Button>
-              {/if}
-            </div>
-
-            <div class="relative">
+      <div class="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)]">
+        <div class="min-h-0 overflow-y-auto border-r border-border bg-muted/20 p-5">
+          <div class="space-y-4">
+            <section class="rounded-xl border border-border bg-background p-4">
+              <div class="mb-3 flex items-center justify-between">
+                <h3 class="text-sm font-semibold">1. Khách hàng</h3>
+                {#if newBooking.customerId}
+                  <Button
+                    type="button"
+                    variant="link"
+                    class="h-auto p-0 text-xs text-red-500 hover:text-red-600"
+                    onclick={() => {
+                      newBooking.customerId = "";
+                      newBooking.customerPhone = "";
+                      customerSearchQuery = "";
+                    }}
+                  >
+                    Bỏ chọn
+                  </Button>
+                {/if}
+              </div>
               <div class="flex gap-2">
                 <Combobox
                   items={customerItems}
@@ -1022,162 +1927,190 @@
                   <Plus class="h-4 w-4" />
                 </Button>
               </div>
-            </div>
+            </section>
+
+            <section class="rounded-xl border border-border bg-background p-4 space-y-3">
+              <h3 class="text-sm font-semibold">2. Thông tin lịch hẹn</h3>
+              <div class="space-y-1">
+                <Label for="bookingDateTime" class="text-xs text-muted-foreground">Thời gian</Label>
+                <DateTimePicker bind:value={newBooking.date} />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                  <Label for="guestCount" class="text-xs text-muted-foreground">Số khách</Label>
+                  <Input
+                    type="number"
+                    id="guestCount"
+                    min="1"
+                    name="guestCount"
+                    bind:value={newBooking.guestCount}
+                  />
+                </div>
+                <div class="space-y-1">
+                  <Label for="status" class="text-xs text-muted-foreground">Trạng thái</Label>
+                  <Select.Root type="single" bind:value={newBooking.status} name="status">
+                    <Select.Trigger class="w-full">
+                      {#snippet children()}
+                        {statusLabels[newBooking.status] || "Chọn trạng thái"}
+                      {/snippet}
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Item value="confirmed" label="Đã xác nhận">Đã xác nhận</Select.Item>
+                      <Select.Item value="pending" label="Chờ xác nhận">Chờ xác nhận</Select.Item>
+                      <Select.Item value="checkin" label="Đã check-in">Đã check-in</Select.Item>
+                      <Select.Item value="completed" label="Hoàn thành">Hoàn thành</Select.Item>
+                      <Select.Item value="cancelled" label="Đã hủy">Đã hủy</Select.Item>
+                    </Select.Content>
+                  </Select.Root>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <Label for="notes" class="text-xs text-muted-foreground">Ghi chú</Label>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  placeholder="Nhập ghi chú cho lịch hẹn này..."
+                  rows="3"
+                  class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  bind:value={newBooking.notes}
+                ></textarea>
+              </div>
+            </section>
+
+            <section class="rounded-xl border border-border bg-background p-4">
+              <h3 class="mb-3 text-sm font-semibold">Tổng quan</h3>
+              <div class="grid grid-cols-[110px_1fr] gap-y-2 text-sm">
+                <span class="text-muted-foreground">Khách hàng</span>
+                <span class="font-medium">{selectedCustomer?.name || "Chưa chọn"}</span>
+
+                <span class="text-muted-foreground">SĐT</span>
+                <span>{selectedCustomer?.phone || newBooking.customerPhone || "-"}</span>
+
+                <span class="text-muted-foreground">Thời gian</span>
+                <span
+                  >{newBooking.date
+                    ? `${formatDate(newBooking.date)} ${formatTime(newBooking.date)}`
+                    : "-"}</span
+                >
+
+                <span class="text-muted-foreground">Số khách</span>
+                <span>{newBooking.guestCount || "1"}</span>
+
+                <span class="text-muted-foreground">Dịch vụ đã chọn</span>
+                <span>{totalGuestServices}</span>
+              </div>
+              {#if !canSubmitBooking}
+                <p class="mt-3 text-xs text-amber-600">
+                  Cần chọn khách hàng, thời gian và ít nhất một dịch vụ để lưu.
+                </p>
+              {/if}
+            </section>
           </div>
-
-          <!-- Booking Info Section -->
-          <div class="space-y-4 mt-6">
-            <h3 class="text-sm font-medium text-gray-700">Thông tin lịch hẹn</h3>
-
-            <div class="space-y-1">
-              <Label for="bookingDateTime" class="text-xs text-gray-500">Thời gian:</Label>
-              <DateTimePicker bind:value={newBooking.date} />
-            </div>
-
-            <div class="space-y-1">
-              <Label for="guestCount" class="text-xs text-gray-500">Số khách:</Label>
-              <Input
-                type="number"
-                id="guestCount"
-                min="1"
-                name="guestCount"
-                bind:value={newBooking.guestCount}
-              />
-            </div>
-
-            <div class="space-y-1">
-              <Label for="status" class="text-xs text-gray-500">Trạng thái:</Label>
-              <Select.Root type="single" bind:value={newBooking.status} name="status">
-                <Select.Trigger class="w-full">
-                  {#snippet children()}
-                    {statusLabels[newBooking.status] || "Chọn trạng thái"}
-                  {/snippet}
-                </Select.Trigger>
-                <Select.Content>
-                  <Select.Item value="confirmed" label="Đã xác nhận">Đã xác nhận</Select.Item>
-                  <Select.Item value="pending" label="Chờ xác nhận">Chờ xác nhận</Select.Item>
-                  <Select.Item value="checkin" label="Đã check-in">Đã check-in</Select.Item>
-                  <Select.Item value="completed" label="Hoàn thành">Hoàn thành</Select.Item>
-                  <Select.Item value="cancelled" label="Đã hủy">Đã hủy</Select.Item>
-                </Select.Content>
-              </Select.Root>
-            </div>
-
-            <div class="space-y-1">
-              <Label for="notes" class="text-xs text-gray-500">Ghi chú:</Label>
-              <textarea
-                id="notes"
-                name="notes"
-                placeholder="Nhập ghi chú"
-                rows="3"
-                class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                bind:value={newBooking.notes}
-              ></textarea>
-            </div>
-          </div>
-
-          <!-- Hidden field for combined date/time -->
         </div>
 
-        <!-- Right Panel: Service Selection -->
-        <div class="flex-1 p-6 bg-gray-50 overflow-y-auto">
+        <div class="min-h-0 overflow-y-auto bg-background p-5">
+          <div class="mb-4 flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-semibold">3. Dịch vụ theo từng khách</h3>
+              <p class="text-xs text-muted-foreground">
+                Chọn nhóm, dịch vụ và nhân viên thực hiện.
+              </p>
+            </div>
+            <span class="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+              {totalGuestServices} dịch vụ đã chọn
+            </span>
+          </div>
+
           {#each newBooking.guests as guest, guestIndex}
-            <div class="mb-6 last:mb-0">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-medium text-gray-700">
-                  Khách #{guestIndex + 1}
-                </h3>
-                {#if parseInt(newBooking.guestCount) > 1}
-                  <span class="text-xs text-gray-400">
-                    {guest.services.length} dịch vụ
-                  </span>
-                {/if}
+            <section class="mb-4 rounded-xl border border-border bg-muted/20 p-4 last:mb-0">
+              <div class="mb-3 flex items-center justify-between">
+                <h4 class="text-sm font-semibold">Khách #{guestIndex + 1}</h4>
+                <span class="text-xs text-muted-foreground"
+                  >{guest.services.length} dòng dịch vụ</span
+                >
               </div>
 
-              <!-- Service Rows for this guest -->
               {#each guest.services as service, serviceIndex}
                 <div
-                  class="flex items-center gap-2 mb-3 p-3 bg-white rounded-lg border border-gray-200"
+                  class="mb-2 grid grid-cols-1 gap-2 rounded-lg border border-border bg-background p-3 xl:grid-cols-[26px_160px_minmax(0,1fr)_170px_auto]"
                 >
-                  <div class="min-w-[140px]">
-                    <Combobox
-                      items={(data.serviceCategories || []).map(
-                        (c: { id: number; name: string }) => ({
-                          value: c.id.toString(),
-                          label: c.name,
-                        }),
-                      )}
-                      bind:value={service.categoryId}
-                      placeholder="Nhóm dịch vụ"
-                      searchPlaceholder="Tìm nhóm dịch vụ..."
-                      emptyText="Không tìm thấy nhóm dịch vụ."
-                      onchange={() => {
-                        // Reset service when category changes
-                        service.serviceId = "";
-                      }}
-                    />
+                  <div
+                    class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary"
+                  >
+                    {serviceIndex + 1}
                   </div>
 
-                  <div class="min-w-[160px] flex-1">
-                    <Combobox
-                      class="w-full"
-                      placeholder={service.categoryId
-                        ? "Chọn dịch vụ"
-                        : "Vui lòng chọn nhóm dịch vụ trước"}
-                      searchPlaceholder="Tìm dịch vụ..."
-                      emptyText="Không tìm thấy dịch vụ."
-                      disabled={!service.categoryId}
-                      items={(data.services || [])
-                        .filter(
-                          (s: any) =>
-                            service.categoryId && s.categoryId === parseInt(service.categoryId),
-                        )
-                        .map((s: any) => ({
-                          value: s.id.toString(),
-                          label: s.name,
-                        }))}
-                      bind:value={service.serviceId}
-                    />
-                  </div>
+                  <Combobox
+                    items={(data.serviceCategories || []).map(
+                      (c: { id: number; name: string }) => ({
+                        value: c.id.toString(),
+                        label: c.name,
+                      }),
+                    )}
+                    bind:value={service.categoryId}
+                    placeholder="Nhóm dịch vụ"
+                    searchPlaceholder="Tìm nhóm dịch vụ..."
+                    emptyText="Không tìm thấy nhóm dịch vụ."
+                    onchange={() => {
+                      service.serviceId = "";
+                    }}
+                  />
 
-                  <div class="min-w-[150px]">
-                    <Combobox
-                      items={(data.members || []).map(
-                        (m: { id: string; user?: { name: string }; name?: string }) => ({
-                          value: m.id,
-                          label: m.user?.name || m.name || "",
-                        }),
-                      )}
-                      bind:value={service.memberId}
-                      placeholder="Chọn nhân viên"
-                      searchPlaceholder="Tìm nhân viên..."
-                      emptyText="Không tìm thấy nhân viên."
-                      class="bg-purple-50 text-purple-900 border-purple-200"
-                    />
-                  </div>
+                  <Combobox
+                    class="w-full"
+                    placeholder={service.categoryId ? "Chọn dịch vụ" : "Chọn nhóm trước"}
+                    searchPlaceholder="Tìm dịch vụ..."
+                    emptyText="Không tìm thấy dịch vụ."
+                    disabled={!service.categoryId}
+                    items={(data.services || [])
+                      .filter(
+                        (s: any) =>
+                          service.categoryId && s.categoryId === parseInt(service.categoryId),
+                      )
+                      .map((s: any) => ({
+                        value: s.id.toString(),
+                        label: s.name,
+                      }))}
+                    bind:value={service.serviceId}
+                  />
+
+                  <Combobox
+                    items={(data.members || []).map(
+                      (m: { id: string; user?: { name: string }; name?: string }) => ({
+                        value: m.id,
+                        label: m.user?.name || m.name || "",
+                      }),
+                    )}
+                    bind:value={service.memberId}
+                    placeholder="Nhân viên phụ trách"
+                    searchPlaceholder="Tìm nhân viên..."
+                    emptyText="Không tìm thấy nhân viên."
+                  />
 
                   {#if guest.services.length > 1}
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      class="h-8 w-8 text-gray-400 hover:text-red-500 shrink-0"
+                      class="h-9 w-9 shrink-0 text-muted-foreground hover:text-red-600"
+                      title="Xóa dòng dịch vụ"
                       onclick={() => {
                         guest.services = guest.services.filter((_, i) => i !== serviceIndex);
                       }}
                     >
                       <Trash class="h-4 w-4" />
                     </Button>
+                  {:else}
+                    <div></div>
                   {/if}
                 </div>
               {/each}
 
-              <!-- Add Service Button for this guest -->
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                class="text-blue-600 border-blue-300 hover:bg-blue-50"
+                class="mt-2"
                 onclick={() => {
                   guest.services = [
                     ...guest.services,
@@ -1191,26 +2124,31 @@
               >
                 + Thêm dịch vụ
               </Button>
-            </div>
-
-            {#if guestIndex < newBooking.guests.length - 1}
-              <hr class="my-4 border-gray-300" />
-            {/if}
+            </section>
           {/each}
         </div>
       </div>
 
-      <!-- Footer -->
-      <div class="flex items-center justify-start gap-3 p-4 border-t border-gray-200 bg-gray-50">
-        <Button
-          variant="outline"
-          type="button"
-          class="min-w-[100px]"
-          onclick={() => (isCreateOpen = false)}
-        >
-          Hủy
-        </Button>
-        <Button type="submit" class="min-w-[100px] bg-blue-500 hover:bg-blue-600">Lưu</Button>
+      <div
+        class="shrink-0 flex items-center justify-between gap-3 border-t border-border bg-background/95 p-4 backdrop-blur"
+      >
+        <p class="text-xs text-muted-foreground">
+          {editingBookingId ? "Cập nhật thay đổi lịch hẹn" : "Tạo mới lịch hẹn"} • {totalGuestServices}
+          dịch vụ đã chọn
+        </p>
+        <div class="flex items-center gap-2">
+          <Button
+            variant="outline"
+            type="button"
+            class="min-w-[100px]"
+            onclick={() => (isCreateOpen = false)}
+          >
+            Hủy
+          </Button>
+          <Button type="submit" class="min-w-[140px]" disabled={!canSubmitBooking}>
+            {editingBookingId ? "Lưu thay đổi" : "Tạo lịch hẹn"}
+          </Button>
+        </div>
       </div>
     </form>
   </Dialog.Content>

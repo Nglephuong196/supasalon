@@ -319,6 +319,24 @@ body {
   animation: page-enter 300ms ease-out both;
 }
 
+/* Modal system polish (applies to all shared Dialog / AlertDialog content) */
+.modal-overlay {
+  background:
+    radial-gradient(circle at 20% 8%, hsl(270 95% 70% / 0.18), transparent 40%),
+    radial-gradient(circle at 80% 92%, hsl(225 100% 80% / 0.16), transparent 42%),
+    hsl(250 20% 10% / 0.42);
+  backdrop-filter: blur(4px);
+}
+
+.modal-shell {
+  background:
+    linear-gradient(168deg, hsl(0 0% 100% / 0.97), hsl(262 55% 99% / 0.93)), hsl(var(--background));
+  border: 1px solid hsl(262 32% 86% / 0.95);
+  box-shadow:
+    0 40px 90px -34px hsl(259 45% 18% / 0.45),
+    0 1px 0 hsl(0 0% 100% / 0.85) inset;
+}
+
 /* Premium card treatment */
 .premium-card {
   position: relative;

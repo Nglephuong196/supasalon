@@ -512,12 +512,10 @@
                                   await update()}
                             >
                               <input type="hidden" name="id" value={invoice.id} />
-                              <DropdownMenu.Item
-                                class="w-full text-red-600 transition-colors focus:text-red-600"
-                              >
+                              <DropdownMenu.Item variant="destructive" class="w-full">
                                 {#snippet child({ props })}
-                                  <button {...props} type="submit">
-                                    <Trash2 class="mr-2 h-4 w-4 text-red-600" /> Hủy hóa đơn
+                                  <button {...props} type="submit" class="flex w-full items-center">
+                                    <Trash2 class="mr-2 h-4 w-4" /> Hủy hóa đơn
                                   </button>
                                 {/snippet}
                               </DropdownMenu.Item>

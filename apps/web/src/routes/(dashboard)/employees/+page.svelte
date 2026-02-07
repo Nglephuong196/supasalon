@@ -433,7 +433,7 @@
                         Sửa vai trò
                       </DropdownMenu.Item>
                       <DropdownMenu.Item
-                        class="text-red-600 focus:text-red-600"
+                        variant="destructive"
                         onclick={() => openDeleteDialog(employee)}
                       >
                         <Trash class="mr-2 h-4 w-4" aria-hidden="true" />

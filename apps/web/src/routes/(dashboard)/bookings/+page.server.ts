@@ -280,6 +280,43 @@ export const actions: Actions = {
     }
   },
 
+  moveBooking: async ({ request, fetch, cookies }) => {
+    const organizationId = cookies.get("organizationId");
+    if (!organizationId) return fail(401, { message: "Unauthorized" });
+
+    const data = await request.formData();
+    const id = data.get("id");
+    const date = data.get("date");
+
+    if (!id || !date) return fail(400, { message: "Thiếu thông tin lịch hẹn" });
+
+    const parsedDate = new Date(date.toString());
+    if (Number.isNaN(parsedDate.getTime())) {
+      return fail(400, { message: "Thời gian không hợp lệ" });
+    }
+
+    try {
+      const res = await fetch(`${PUBLIC_API_URL}/bookings/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: parsedDate.toISOString(),
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        return fail(res.status, {
+          message: err.error || "Không thể di chuyển lịch hẹn",
+        });
+      }
+      return { success: true };
+    } catch (e) {
+      console.error("Move booking error:", e);
+      return fail(500, { message: "Lỗi máy chủ" });
+    }
+  },
+
   delete: async ({ request, fetch, cookies }) => {
     const organizationId = cookies.get("organizationId");
     if (!organizationId) return fail(401, { message: "Unauthorized" });

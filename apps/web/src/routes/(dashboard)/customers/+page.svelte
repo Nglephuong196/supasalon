@@ -11,6 +11,7 @@
     Calendar,
     Pencil,
     Trash2,
+    MoreVertical,
     MapPin,
     Wallet,
     X,
@@ -18,6 +19,7 @@
   import { cn } from "$lib/utils";
   import * as Dialog from "$lib/components/ui/dialog";
   import * as AlertDialog from "$lib/components/ui/alert-dialog";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { Label } from "$lib/components/ui/label";
   import { enhance } from "$app/forms";
   import type { SubmitFunction } from "./$types";
@@ -397,32 +399,38 @@
               <!-- Actions -->
               <td class="p-4 align-middle text-right">
                 {#if data.canUpdate || data.canDelete}
-                  <div
-                    class="flex justify-end gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    {#if data.canUpdate}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        class="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
-                        onclick={() => openEditDialog(customer)}
-                        aria-label="Chỉnh sửa {customer.name}"
-                      >
-                        <Pencil class="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                    {/if}
-                    {#if data.canDelete}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        class="h-8 w-8 text-gray-500 hover:text-red-600 hover:bg-red-50"
-                        onclick={() => openDeleteDialog(customer)}
-                        aria-label="Xóa {customer.name}"
-                      >
-                        <Trash2 class="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                    {/if}
-                  </div>
+                  <DropdownMenu.Root>
+                    <DropdownMenu.Trigger>
+                      {#snippet child({ props })}
+                        <Button
+                          {...props}
+                          variant="ghost"
+                          size="icon"
+                          class="h-8 w-8 text-gray-500"
+                          aria-label="Tùy chọn thao tác {customer.name}"
+                        >
+                          <MoreVertical class="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      {/snippet}
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Content align="end" class="border-gray-100 shadow-sm">
+                      {#if data.canUpdate}
+                        <DropdownMenu.Item onclick={() => openEditDialog(customer)}>
+                          <Pencil class="mr-2 h-4 w-4" aria-hidden="true" />
+                          Chỉnh sửa
+                        </DropdownMenu.Item>
+                      {/if}
+                      {#if data.canDelete}
+                        <DropdownMenu.Item
+                          variant="destructive"
+                          onclick={() => openDeleteDialog(customer)}
+                        >
+                          <Trash2 class="mr-2 h-4 w-4" aria-hidden="true" />
+                          Xóa
+                        </DropdownMenu.Item>
+                      {/if}
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Root>
                 {/if}
               </td>
             </tr>

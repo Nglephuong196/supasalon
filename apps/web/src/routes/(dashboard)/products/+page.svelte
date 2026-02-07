@@ -367,7 +367,7 @@
                     Sửa tên
                   </DropdownMenu.Item>
                   <DropdownMenu.Item
-                    class="text-red-600"
+                    variant="destructive"
                     onclick={(e) => openDeleteCategory(category, e)}
                   >
                     <Trash2 class="h-3 w-3 mr-2" aria-hidden="true" />
@@ -572,7 +572,7 @@
                           Sửa sản phẩm
                         </DropdownMenu.Item>
                         <DropdownMenu.Item
-                          class="text-red-600"
+                          variant="destructive"
                           onclick={() => openDeleteProduct(product)}
                         >
                           <Trash2 class="mr-2 h-4 w-4" aria-hidden="true" />
