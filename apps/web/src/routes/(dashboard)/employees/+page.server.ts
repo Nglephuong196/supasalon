@@ -7,7 +7,6 @@ const API_URL = PUBLIC_API_URL || "http://127.0.0.1:8787";
 export const load: PageServerLoad = async ({ fetch }) => {
   try {
     const res = await fetch(`${API_URL}/members`);
-    console.log("res", res);
     if (!res.ok) return { members: [] };
     const members = await res.json();
     return { members };
