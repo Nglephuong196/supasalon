@@ -16,6 +16,11 @@
   import { signUp, organization } from "$lib/auth-client";
   import { goto } from "$app/navigation";
 
+  const AUTH_BASE_URL = import.meta.env.VITE_AUTH_BASE_URL || "http://localhost:8787";
+  const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+  type SlugStatus = "idle" | "checking" | "available" | "taken";
+
   // Initialize state
   let formData = $state({
     ownerName: "",
@@ -23,6 +28,7 @@
     password: "",
     confirmPassword: "",
     salonName: "",
+    salonSlug: "",
     province: "",
     address: "",
     phone: "",
@@ -33,6 +39,19 @@
 
   // Validation errors
   let errors = $state<Record<string, string | null>>({});
+  let slugStatus = $state<SlugStatus>("idle");
+  let slugTouched = $state(false);
+  let lastCheckedSlug = $state("");
+
+  function normalizeSlug(value: string): string {
+    return value
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
 
   function validateOwnerName(value: string): boolean {
     if (!value || value.length < 2) {
@@ -90,6 +109,80 @@
     return true;
   }
 
+  function validateSalonSlug(value: string): boolean {
+    const normalized = normalizeSlug(value);
+    formData.salonSlug = normalized;
+
+    if (!normalized) {
+      errors = { ...errors, salonSlug: "Vui lòng nhập slug cho salon" };
+      return false;
+    }
+    if (normalized.length < 3) {
+      errors = { ...errors, salonSlug: "Slug phải có ít nhất 3 ký tự" };
+      return false;
+    }
+    if (!SLUG_REGEX.test(normalized)) {
+      errors = {
+        ...errors,
+        salonSlug: "Slug chỉ gồm chữ thường, số và dấu gạch ngang (không ở đầu/cuối)",
+      };
+      return false;
+    }
+
+    errors = { ...errors, salonSlug: null };
+    return true;
+  }
+
+  async function checkSalonSlugAvailability(slug: string): Promise<boolean> {
+    if (!validateSalonSlug(slug)) {
+      slugStatus = "idle";
+      return false;
+    }
+
+    if (lastCheckedSlug === slug && slugStatus === "available") {
+      return true;
+    }
+
+    slugStatus = "checking";
+
+    try {
+      const res = await fetch(`${AUTH_BASE_URL}/api/auth/organization/check-slug`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ slug }),
+      });
+
+      if (res.ok) {
+        slugStatus = "available";
+        lastCheckedSlug = slug;
+        errors = { ...errors, salonSlug: null };
+        return true;
+      }
+
+      if (res.status === 400) {
+        slugStatus = "taken";
+        errors = { ...errors, salonSlug: "Slug này đã tồn tại. Vui lòng chọn slug khác." };
+        return false;
+      }
+
+      slugStatus = "idle";
+      errors = { ...errors, salonSlug: "Không kiểm tra được slug. Vui lòng thử lại." };
+      return false;
+    } catch (_err) {
+      slugStatus = "idle";
+      errors = { ...errors, salonSlug: "Không kiểm tra được slug. Vui lòng thử lại." };
+      return false;
+    }
+  }
+
+  $effect(() => {
+    if (slugTouched) return;
+    formData.salonSlug = normalizeSlug(formData.salonName);
+  });
+
   function validateProvince(value: string): boolean {
     if (!value) {
       errors = { ...errors, province: "Vui lòng chọn tỉnh/thành phố" };
@@ -133,6 +226,7 @@
     const isPasswordValid = validatePassword(formData.password);
     const isConfirmPasswordValid = validateConfirmPassword(formData.confirmPassword);
     const isSalonNameValid = validateSalonName(formData.salonName);
+    const isSalonSlugValid = validateSalonSlug(formData.salonSlug);
     const isProvinceValid = validateProvince(formData.province);
     const isAddressValid = validateAddress(formData.address);
     const isPhoneValid = validatePhone(formData.phone);
@@ -143,10 +237,16 @@
       !isPasswordValid ||
       !isConfirmPasswordValid ||
       !isSalonNameValid ||
+      !isSalonSlugValid ||
       !isProvinceValid ||
       !isAddressValid ||
       !isPhoneValid
     ) {
+      return;
+    }
+
+    const isSlugAvailable = await checkSalonSlugAvailability(formData.salonSlug);
+    if (!isSlugAvailable) {
       return;
     }
 
@@ -168,14 +268,9 @@
       }
 
       // 2. Create Organization
-      const slug = formData.salonName
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, "");
-
       const orgRes = await organization.create({
         name: formData.salonName,
-        slug,
+        slug: formData.salonSlug,
       });
 
       if (orgRes.error) {
@@ -329,6 +424,42 @@
             {#if errors.salonName}
               <p class="text-sm text-destructive">
                 {errors.salonName}
+              </p>
+            {/if}
+          </div>
+          <div class="space-y-2">
+            <Label for="salonSlug">Slug Salon (URL đặt lịch công khai)</Label>
+            <Input
+              id="salonSlug"
+              name="salonSlug"
+              placeholder="vd: beauty-spa-nail"
+              disabled={isLoading}
+              bind:value={formData.salonSlug}
+              oninput={() => {
+                slugTouched = true;
+                formData.salonSlug = normalizeSlug(formData.salonSlug);
+                slugStatus = "idle";
+                lastCheckedSlug = "";
+              }}
+              onblur={async () => {
+                const slug = normalizeSlug(formData.salonSlug);
+                formData.salonSlug = slug;
+                if (!slug) return;
+                await checkSalonSlugAvailability(slug);
+              }}
+            />
+            <p class="text-xs text-muted-foreground">
+              URL dự kiến: `/book/{formData.salonSlug || "slug-cua-ban"}`
+            </p>
+            {#if slugStatus === "checking"}
+              <p class="text-sm text-muted-foreground">Đang kiểm tra slug...</p>
+            {/if}
+            {#if slugStatus === "available" && !errors.salonSlug}
+              <p class="text-sm text-emerald-600">Slug này có thể sử dụng.</p>
+            {/if}
+            {#if errors.salonSlug}
+              <p class="text-sm text-destructive">
+                {errors.salonSlug}
               </p>
             {/if}
           </div>

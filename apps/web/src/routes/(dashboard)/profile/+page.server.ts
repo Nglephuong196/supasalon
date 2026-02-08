@@ -4,6 +4,18 @@ import { PUBLIC_API_URL } from "$env/static/public";
 import { ACTIONS, RESOURCES } from "@repo/constants";
 import { checkPermission } from "$lib/permissions";
 
+const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function normalizeSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export const load: PageServerLoad = async ({ parent }) => {
   const { memberRole, memberPermissions } = await parent();
 
@@ -22,18 +34,58 @@ export const actions: Actions = {
     const data = await request.formData();
     const name = data.get("name")?.toString().trim() || "";
     const image = data.get("image")?.toString().trim() || "";
+    const organizationName = data.get("organizationName")?.toString().trim() || "";
+    const rawOrganizationSlug = data.get("organizationSlug")?.toString().trim() || "";
+    const organizationSlug = normalizeSlug(rawOrganizationSlug);
+
+    if (rawOrganizationSlug && !organizationSlug) {
+      return fail(400, { message: "Slug salon không hợp lệ" });
+    }
+
+    if (organizationSlug && !SLUG_REGEX.test(organizationSlug)) {
+      return fail(400, {
+        message: "Slug chỉ gồm chữ thường, số và dấu gạch ngang (không ở đầu/cuối)",
+      });
+    }
 
     try {
-      const res = await fetch(`${PUBLIC_API_URL}/users/me`, {
+      const userRes = await fetch(`${PUBLIC_API_URL}/users/me`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, image }),
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        return fail(res.status, { message: err.error || "Không thể cập nhật hồ sơ" });
+      if (!userRes.ok) {
+        const err = await userRes.json().catch(() => ({}));
+        return fail(userRes.status, { message: err.error || "Không thể cập nhật hồ sơ" });
       }
+
+      const organizationUpdatePayload: Record<string, string> = {};
+      if (organizationName) {
+        organizationUpdatePayload.name = organizationName;
+      }
+      if (organizationSlug) {
+        organizationUpdatePayload.slug = organizationSlug;
+      }
+
+      if (Object.keys(organizationUpdatePayload).length > 0) {
+        const orgRes = await fetch(`${PUBLIC_API_URL}/api/auth/organization/update`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            organizationId,
+            data: organizationUpdatePayload,
+          }),
+        });
+
+        if (!orgRes.ok) {
+          const err = await orgRes.json().catch(() => ({}));
+          const message =
+            err?.message || err?.error || "Không thể cập nhật thông tin salon. Vui lòng thử lại.";
+          return fail(orgRes.status, { message });
+        }
+      }
+
       return { success: true };
     } catch (e) {
       return fail(500, { message: "Lỗi máy chủ" });

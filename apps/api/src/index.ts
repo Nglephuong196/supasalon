@@ -17,6 +17,7 @@ import {
   membersController,
   staffCommissionRulesController,
   dashboardController,
+  publicBookingController,
 } from "./controllers";
 
 type Bindings = {
@@ -56,6 +57,7 @@ app.get("/", (c) => {
 
 // Auth routes (handled by better-auth)
 app.route("/api/auth", authController);
+app.route("/public/booking", publicBookingController);
 
 // Protected routes (require tenancy)
 import { ensureTenant } from "./middleware/tenant";
