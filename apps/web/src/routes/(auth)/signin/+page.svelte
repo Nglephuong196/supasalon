@@ -1,84 +1,84 @@
 <script lang="ts">
-  import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-  } from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
-  import { LogIn, Loader, Sparkles } from "@lucide/svelte";
-  import { signIn, authClient } from "$lib/auth-client";
-  import { goto } from "$app/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "$lib/components/ui/card";
+import { Button } from "$lib/components/ui/button";
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import { LogIn, Loader, Sparkles } from "@lucide/svelte";
+import { signIn, authClient } from "$lib/auth-client";
+import { goto } from "$app/navigation";
 
-  let email = $state("");
-  let password = $state("");
-  let error = $state<string | null>(null);
-  let isLoading = $state(false);
+let email = $state("");
+let password = $state("");
+let error = $state<string | null>(null);
+let isLoading = $state(false);
 
-  // Form validation errors
-  let emailError = $state<string | null>(null);
-  let passwordError = $state<string | null>(null);
+// Form validation errors
+let emailError = $state<string | null>(null);
+let passwordError = $state<string | null>(null);
 
-  function validateEmail(value: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!value) {
-      emailError = "Vui lòng nhập email";
-      return false;
-    }
-    if (!emailRegex.test(value)) {
-      emailError = "Email không hợp lệ";
-      return false;
-    }
-    emailError = null;
-    return true;
+function validateEmail(value: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!value) {
+    emailError = "Vui lòng nhập email";
+    return false;
+  }
+  if (!emailRegex.test(value)) {
+    emailError = "Email không hợp lệ";
+    return false;
+  }
+  emailError = null;
+  return true;
+}
+
+function validatePassword(value: string): boolean {
+  if (!value) {
+    passwordError = "Vui lòng nhập mật khẩu";
+    return false;
+  }
+  if (value.length < 6) {
+    passwordError = "Mật khẩu phải có ít nhất 6 ký tự";
+    return false;
+  }
+  passwordError = null;
+  return true;
+}
+
+async function handleSubmit(e: SubmitEvent) {
+  e.preventDefault();
+  console.log("submit");
+
+  const isEmailValid = validateEmail(email);
+  const isPasswordValid = validatePassword(password);
+
+  if (!isEmailValid || !isPasswordValid) {
+    return;
   }
 
-  function validatePassword(value: string): boolean {
-    if (!value) {
-      passwordError = "Vui lòng nhập mật khẩu";
-      return false;
-    }
-    if (value.length < 6) {
-      passwordError = "Mật khẩu phải có ít nhất 6 ký tự";
-      return false;
-    }
-    passwordError = null;
-    return true;
-  }
+  isLoading = true;
+  error = null;
 
-  async function handleSubmit(e: SubmitEvent) {
-    e.preventDefault();
-    console.log("submit");
-
-    const isEmailValid = validateEmail(email);
-    const isPasswordValid = validatePassword(password);
-
-    if (!isEmailValid || !isPasswordValid) {
-      return;
-    }
-
-    isLoading = true;
-    error = null;
-
-    const result = await signIn.email({
-      email,
-      password,
-      fetchOptions: {
-        onSuccess: async () => {
-          goto("/");
-        },
+  const result = await signIn.email({
+    email,
+    password,
+    fetchOptions: {
+      onSuccess: async () => {
+        goto("/");
       },
-    });
+    },
+  });
 
-    if (result.error) {
-      error = result.error.message || "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.";
-      isLoading = false;
-    }
+  if (result.error) {
+    error = result.error.message || "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.";
+    isLoading = false;
   }
+}
 </script>
 
 <svelte:head>

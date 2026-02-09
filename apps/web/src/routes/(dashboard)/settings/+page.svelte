@@ -1,306 +1,306 @@
 <script lang="ts">
-  import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-  } from "$lib/components/ui/table";
-  import { Button } from "$lib/components/ui/button";
-  import * as Select from "$lib/components/ui/select";
-  import { Input } from "$lib/components/ui/input";
-  import { Checkbox } from "$lib/components/ui/checkbox";
-  import * as Dialog from "$lib/components/ui/dialog";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog";
-  import {
-    Plus,
-    Pencil,
-    Trash2,
-    Crown,
-    Settings2,
-    Users,
-    BadgePercent,
-    Eye,
-    ShieldCheck,
-    ShieldX,
-  } from "@lucide/svelte";
-  import { cn } from "$lib/utils";
-  import { toast } from "svelte-sonner";
-  import { Label } from "$lib/components/ui/label";
-  import { fetchAPI } from "$lib/api";
-  import { invalidateAll } from "$app/navigation";
-  import { enhance } from "$app/forms";
-  import type { MembershipTier, Member } from "./+page.server";
-  import { RESOURCES, ACTIONS } from "@repo/constants";
-  import CommissionSettingsPanel from "$lib/components/settings/CommissionSettingsPanel.svelte";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "$lib/components/ui/table";
+import { Button } from "$lib/components/ui/button";
+import * as Select from "$lib/components/ui/select";
+import { Input } from "$lib/components/ui/input";
+import { Checkbox } from "$lib/components/ui/checkbox";
+import * as Dialog from "$lib/components/ui/dialog";
+import * as AlertDialog from "$lib/components/ui/alert-dialog";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Crown,
+  Settings2,
+  Users,
+  BadgePercent,
+  Eye,
+  ShieldCheck,
+  ShieldX,
+} from "@lucide/svelte";
+import { cn } from "$lib/utils";
+import { toast } from "svelte-sonner";
+import { Label } from "$lib/components/ui/label";
+import { fetchAPI } from "$lib/api";
+import { invalidateAll } from "$app/navigation";
+import { enhance } from "$app/forms";
+import type { MembershipTier, Member } from "./+page.server";
+import { RESOURCES, ACTIONS } from "@repo/constants";
+import CommissionSettingsPanel from "$lib/components/settings/CommissionSettingsPanel.svelte";
 
-  let { data } = $props();
+let { data } = $props();
 
-  // --- State ---
-  let activeTab = $state<"tiers" | "general" | "permissions" | "commissions">("tiers");
-  let rankingMode = $state<"spending" | "points">("spending");
-  let isCreateDialogOpen = $state(false);
-  let isDeleteDialogOpen = $state(false);
-  let editingTier = $state<MembershipTier | null>(null);
-  let tierToDelete = $state<number | null>(null);
-  let isLoading = $state(false);
+// --- State ---
+let activeTab = $state<"tiers" | "general" | "permissions" | "commissions">("tiers");
+let rankingMode = $state<"spending" | "points">("spending");
+let isCreateDialogOpen = $state(false);
+let isDeleteDialogOpen = $state(false);
+let editingTier = $state<MembershipTier | null>(null);
+let tierToDelete = $state<number | null>(null);
+let isLoading = $state(false);
 
-  // Permission State
-  let isPermissionDialogOpen = $state(false);
-  let editingMember = $state<Member | null>(null);
-  type PermissionDraft = Record<string, string[]>;
-  let permissionDraft = $state<PermissionDraft>({});
+// Permission State
+let isPermissionDialogOpen = $state(false);
+let editingMember = $state<Member | null>(null);
+type PermissionDraft = Record<string, string[]>;
+let permissionDraft = $state<PermissionDraft>({});
 
-  const PERMISSION_COLUMNS = [
-    { id: ACTIONS.READ, label: "Xem" },
-    { id: ACTIONS.CREATE, label: "Tạo mới" },
-    { id: ACTIONS.UPDATE, label: "Chỉnh sửa" },
-    { id: ACTIONS.DELETE, label: "Xóa" },
-  ];
+const PERMISSION_COLUMNS = [
+  { id: ACTIONS.READ, label: "Xem" },
+  { id: ACTIONS.CREATE, label: "Tạo mới" },
+  { id: ACTIONS.UPDATE, label: "Chỉnh sửa" },
+  { id: ACTIONS.DELETE, label: "Xóa" },
+];
 
-  const PERMISSION_GROUPS = [
-    {
-      resource: RESOURCES.CUSTOMER,
-      label: "Khách hàng",
-      actions: [
-        { id: ACTIONS.READ, label: "Xem" },
-        { id: ACTIONS.CREATE, label: "Tạo mới" },
-        { id: ACTIONS.UPDATE, label: "Chỉnh sửa" },
-        { id: ACTIONS.DELETE, label: "Xóa" },
-      ],
-    },
-    {
-      resource: RESOURCES.INVOICE,
-      label: "Hóa đơn",
-      actions: [
-        { id: ACTIONS.READ, label: "Xem" },
-        { id: ACTIONS.CREATE, label: "Tạo mới" },
-        { id: ACTIONS.UPDATE, label: "Chỉnh sửa" },
-        { id: ACTIONS.DELETE, label: "Xóa" },
-      ],
-    },
-    {
-      resource: RESOURCES.SERVICE,
-      label: "Dịch vụ",
-      actions: [
-        { id: ACTIONS.READ, label: "Xem" },
-        { id: ACTIONS.CREATE, label: "Tạo mới" },
-        { id: ACTIONS.UPDATE, label: "Chỉnh sửa" },
-        { id: ACTIONS.DELETE, label: "Xóa" },
-      ],
-    },
-    {
-      resource: RESOURCES.BOOKING,
-      label: "Lịch hẹn",
-      actions: [
-        { id: ACTIONS.READ, label: "Xem" },
-        { id: ACTIONS.CREATE, label: "Tạo mới" },
-        { id: ACTIONS.UPDATE, label: "Chỉnh sửa" },
-        { id: ACTIONS.DELETE, label: "Xóa" },
-      ],
-    },
-    {
-      resource: RESOURCES.EMPLOYEE,
-      label: "Nhân viên",
-      actions: [
-        { id: ACTIONS.READ, label: "Xem" },
-        { id: ACTIONS.UPDATE, label: "Chỉnh sửa" },
-      ],
-    },
-    {
-      resource: RESOURCES.REPORT,
-      label: "Báo cáo",
-      actions: [{ id: ACTIONS.READ, label: "Xem" }],
-    },
-  ];
+const PERMISSION_GROUPS = [
+  {
+    resource: RESOURCES.CUSTOMER,
+    label: "Khách hàng",
+    actions: [
+      { id: ACTIONS.READ, label: "Xem" },
+      { id: ACTIONS.CREATE, label: "Tạo mới" },
+      { id: ACTIONS.UPDATE, label: "Chỉnh sửa" },
+      { id: ACTIONS.DELETE, label: "Xóa" },
+    ],
+  },
+  {
+    resource: RESOURCES.INVOICE,
+    label: "Hóa đơn",
+    actions: [
+      { id: ACTIONS.READ, label: "Xem" },
+      { id: ACTIONS.CREATE, label: "Tạo mới" },
+      { id: ACTIONS.UPDATE, label: "Chỉnh sửa" },
+      { id: ACTIONS.DELETE, label: "Xóa" },
+    ],
+  },
+  {
+    resource: RESOURCES.SERVICE,
+    label: "Dịch vụ",
+    actions: [
+      { id: ACTIONS.READ, label: "Xem" },
+      { id: ACTIONS.CREATE, label: "Tạo mới" },
+      { id: ACTIONS.UPDATE, label: "Chỉnh sửa" },
+      { id: ACTIONS.DELETE, label: "Xóa" },
+    ],
+  },
+  {
+    resource: RESOURCES.BOOKING,
+    label: "Lịch hẹn",
+    actions: [
+      { id: ACTIONS.READ, label: "Xem" },
+      { id: ACTIONS.CREATE, label: "Tạo mới" },
+      { id: ACTIONS.UPDATE, label: "Chỉnh sửa" },
+      { id: ACTIONS.DELETE, label: "Xóa" },
+    ],
+  },
+  {
+    resource: RESOURCES.EMPLOYEE,
+    label: "Nhân viên",
+    actions: [
+      { id: ACTIONS.READ, label: "Xem" },
+      { id: ACTIONS.UPDATE, label: "Chỉnh sửa" },
+    ],
+  },
+  {
+    resource: RESOURCES.REPORT,
+    label: "Báo cáo",
+    actions: [{ id: ACTIONS.READ, label: "Xem" }],
+  },
+];
 
-  // Form data
-  let formData = $state({
+// Form data
+let formData = $state({
+  name: "",
+  minSpending: 0,
+  discountPercent: 0,
+  minSpendingToMaintain: null as number | null,
+  sortOrder: 0,
+});
+
+// --- Helper Functions ---
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("vi-VN").format(amount);
+}
+
+// --- Actions ---
+function openCreateDialog() {
+  editingTier = null;
+  formData = {
     name: "",
     minSpending: 0,
     discountPercent: 0,
-    minSpendingToMaintain: null as number | null,
-    sortOrder: 0,
-  });
+    minSpendingToMaintain: null,
+    sortOrder: data.tiers.length,
+  };
+  isCreateDialogOpen = true;
+}
 
-  // --- Helper Functions ---
-  function formatCurrency(amount: number) {
-    return new Intl.NumberFormat("vi-VN").format(amount);
-  }
+function openEditDialog(tier: MembershipTier) {
+  editingTier = tier;
+  formData = {
+    name: tier.name,
+    minSpending: tier.minSpending,
+    discountPercent: tier.discountPercent,
+    minSpendingToMaintain: tier.minSpendingToMaintain,
+    sortOrder: tier.sortOrder,
+  };
+  isCreateDialogOpen = true;
+}
 
-  // --- Actions ---
-  function openCreateDialog() {
-    editingTier = null;
-    formData = {
-      name: "",
-      minSpending: 0,
-      discountPercent: 0,
-      minSpendingToMaintain: null,
-      sortOrder: data.tiers.length,
-    };
-    isCreateDialogOpen = true;
-  }
+function openDeleteDialog(id: number) {
+  tierToDelete = id;
+  isDeleteDialogOpen = true;
+}
 
-  function openEditDialog(tier: MembershipTier) {
-    editingTier = tier;
-    formData = {
-      name: tier.name,
-      minSpending: tier.minSpending,
-      discountPercent: tier.discountPercent,
-      minSpendingToMaintain: tier.minSpendingToMaintain,
-      sortOrder: tier.sortOrder,
-    };
-    isCreateDialogOpen = true;
-  }
-
-  function openDeleteDialog(id: number) {
-    tierToDelete = id;
-    isDeleteDialogOpen = true;
-  }
-
-  async function handleSave() {
-    isLoading = true;
-    try {
-      if (editingTier) {
-        // Update
-        await fetchAPI(`/membership-tiers/${editingTier.id}`, {
-          method: "PUT",
-          body: JSON.stringify(formData),
-        });
-        toast.success("Hạng khách hàng đã được cập nhật!");
-      } else {
-        // Create
-        await fetchAPI("/membership-tiers", {
-          method: "POST",
-          body: JSON.stringify(formData),
-        });
-        toast.success("Hạng khách hàng mới đã được tạo!");
-      }
-      isCreateDialogOpen = false;
-      await invalidateAll();
-    } catch (error) {
-      toast.error("Có lỗi xảy ra, vui lòng thử lại");
-    } finally {
-      isLoading = false;
-    }
-  }
-
-  async function handleDelete() {
-    if (!tierToDelete) return;
-
-    isLoading = true;
-    try {
-      await fetchAPI(`/membership-tiers/${tierToDelete}`, {
-        method: "DELETE",
+async function handleSave() {
+  isLoading = true;
+  try {
+    if (editingTier) {
+      // Update
+      await fetchAPI(`/membership-tiers/${editingTier.id}`, {
+        method: "PUT",
+        body: JSON.stringify(formData),
       });
-      toast.success("Đã xóa hạng khách hàng thành công.");
-      tierToDelete = null;
-      isDeleteDialogOpen = false;
-      await invalidateAll();
-    } catch (error) {
-      toast.error("Có lỗi xảy ra khi xóa, vui lòng thử lại");
-    } finally {
-      isLoading = false;
+      toast.success("Hạng khách hàng đã được cập nhật!");
+    } else {
+      // Create
+      await fetchAPI("/membership-tiers", {
+        method: "POST",
+        body: JSON.stringify(formData),
+      });
+      toast.success("Hạng khách hàng mới đã được tạo!");
+    }
+    isCreateDialogOpen = false;
+    await invalidateAll();
+  } catch (error) {
+    toast.error("Có lỗi xảy ra, vui lòng thử lại");
+  } finally {
+    isLoading = false;
+  }
+}
+
+async function handleDelete() {
+  if (!tierToDelete) return;
+
+  isLoading = true;
+  try {
+    await fetchAPI(`/membership-tiers/${tierToDelete}`, {
+      method: "DELETE",
+    });
+    toast.success("Đã xóa hạng khách hàng thành công.");
+    tierToDelete = null;
+    isDeleteDialogOpen = false;
+    await invalidateAll();
+  } catch (error) {
+    toast.error("Có lỗi xảy ra khi xóa, vui lòng thử lại");
+  } finally {
+    isLoading = false;
+  }
+}
+
+function openPermissionDialog(member: Member) {
+  editingMember = member;
+  permissionDraft = buildPermissionDraft(member);
+  isPermissionDialogOpen = true;
+}
+
+function buildPermissionDraft(member: Member | null): PermissionDraft {
+  if (!member?.permissions?.[0]?.permissions) return {};
+  const raw = member.permissions[0].permissions;
+  const draft: PermissionDraft = {};
+  for (const [resource, actions] of Object.entries(raw)) {
+    draft[resource] = [...actions];
+  }
+  return draft;
+}
+
+function hasDraftPermission(resource: string, action: string): boolean {
+  return (permissionDraft[resource] || []).includes(action);
+}
+
+function setDraftPermission(resource: string, action: string, enabled: boolean) {
+  const current = new Set(permissionDraft[resource] || []);
+  if (enabled) current.add(action);
+  else current.delete(action);
+
+  permissionDraft = {
+    ...permissionDraft,
+    [resource]: Array.from(current),
+  };
+}
+
+function setResourcePermissions(resource: string, actions: string[], enabled: boolean) {
+  permissionDraft = {
+    ...permissionDraft,
+    [resource]: enabled ? [...actions] : [],
+  };
+}
+
+function applyPermissionPreset(preset: "read" | "full" | "clear") {
+  const next: PermissionDraft = {};
+  for (const group of PERMISSION_GROUPS) {
+    if (preset === "clear") {
+      next[group.resource] = [];
+    } else if (preset === "read") {
+      next[group.resource] = group.actions
+        .filter((action) => action.id === ACTIONS.READ)
+        .map((action) => action.id);
+    } else {
+      next[group.resource] = group.actions.map((action) => action.id);
     }
   }
+  permissionDraft = next;
+}
 
-  function openPermissionDialog(member: Member) {
-    editingMember = member;
-    permissionDraft = buildPermissionDraft(member);
-    isPermissionDialogOpen = true;
-  }
+function isResourceFullySelected(group: (typeof PERMISSION_GROUPS)[number]): boolean {
+  const allowedActions = group.actions.map((action) => action.id);
+  if (allowedActions.length === 0) return false;
+  return allowedActions.every((action) => hasDraftPermission(group.resource, action));
+}
 
-  function buildPermissionDraft(member: Member | null): PermissionDraft {
-    if (!member?.permissions?.[0]?.permissions) return {};
-    const raw = member.permissions[0].permissions;
-    const draft: PermissionDraft = {};
-    for (const [resource, actions] of Object.entries(raw)) {
-      draft[resource] = [...actions];
-    }
-    return draft;
-  }
+function isResourcePartiallySelected(group: (typeof PERMISSION_GROUPS)[number]): boolean {
+  const allowedActions = group.actions.map((action) => action.id);
+  if (allowedActions.length === 0) return false;
+  const selectedCount = allowedActions.filter((action) =>
+    hasDraftPermission(group.resource, action),
+  ).length;
+  return selectedCount > 0 && selectedCount < allowedActions.length;
+}
 
-  function hasDraftPermission(resource: string, action: string): boolean {
-    return (permissionDraft[resource] || []).includes(action);
-  }
+function getSelectedCountForResource(resource: string): number {
+  return (permissionDraft[resource] || []).length;
+}
 
-  function setDraftPermission(resource: string, action: string, enabled: boolean) {
-    const current = new Set(permissionDraft[resource] || []);
-    if (enabled) current.add(action);
-    else current.delete(action);
+function isActionAvailable(group: (typeof PERMISSION_GROUPS)[number], actionId: string): boolean {
+  return group.actions.some((action) => action.id === actionId);
+}
 
-    permissionDraft = {
-      ...permissionDraft,
-      [resource]: Array.from(current),
-    };
-  }
+let totalPermissionOptions = $derived(
+  PERMISSION_GROUPS.reduce((total, group) => total + group.actions.length, 0),
+);
+let grantedPermissionCount = $derived(
+  Object.values(permissionDraft).reduce((total, actions) => total + actions.length, 0),
+);
 
-  function setResourcePermissions(resource: string, actions: string[], enabled: boolean) {
-    permissionDraft = {
-      ...permissionDraft,
-      [resource]: enabled ? [...actions] : [],
-    };
-  }
+function getTotalPermissions(member: Member): number {
+  if (!member.permissions || member.permissions.length === 0) return 0;
 
-  function applyPermissionPreset(preset: "read" | "full" | "clear") {
-    const next: PermissionDraft = {};
-    for (const group of PERMISSION_GROUPS) {
-      if (preset === "clear") {
-        next[group.resource] = [];
-      } else if (preset === "read") {
-        next[group.resource] = group.actions
-          .filter((action) => action.id === ACTIONS.READ)
-          .map((action) => action.id);
-      } else {
-        next[group.resource] = group.actions.map((action) => action.id);
-      }
-    }
-    permissionDraft = next;
-  }
+  const permRecord = member.permissions[0];
+  if (!permRecord || !permRecord.permissions) return 0;
 
-  function isResourceFullySelected(group: (typeof PERMISSION_GROUPS)[number]): boolean {
-    const allowedActions = group.actions.map((action) => action.id);
-    if (allowedActions.length === 0) return false;
-    return allowedActions.every((action) => hasDraftPermission(group.resource, action));
-  }
-
-  function isResourcePartiallySelected(group: (typeof PERMISSION_GROUPS)[number]): boolean {
-    const allowedActions = group.actions.map((action) => action.id);
-    if (allowedActions.length === 0) return false;
-    const selectedCount = allowedActions.filter((action) =>
-      hasDraftPermission(group.resource, action),
-    ).length;
-    return selectedCount > 0 && selectedCount < allowedActions.length;
-  }
-
-  function getSelectedCountForResource(resource: string): number {
-    return (permissionDraft[resource] || []).length;
-  }
-
-  function isActionAvailable(group: (typeof PERMISSION_GROUPS)[number], actionId: string): boolean {
-    return group.actions.some((action) => action.id === actionId);
-  }
-
-  let totalPermissionOptions = $derived(
-    PERMISSION_GROUPS.reduce((total, group) => total + group.actions.length, 0),
+  // Count total number of actions across all resources
+  return Object.values(permRecord.permissions).reduce(
+    (total, actions) => total + actions.length,
+    0,
   );
-  let grantedPermissionCount = $derived(
-    Object.values(permissionDraft).reduce((total, actions) => total + actions.length, 0),
-  );
-
-  function getTotalPermissions(member: Member): number {
-    if (!member.permissions || member.permissions.length === 0) return 0;
-
-    const permRecord = member.permissions[0];
-    if (!permRecord || !permRecord.permissions) return 0;
-
-    // Count total number of actions across all resources
-    return Object.values(permRecord.permissions).reduce(
-      (total, actions) => total + actions.length,
-      0,
-    );
-  }
+}
 </script>
 
 <svelte:head>

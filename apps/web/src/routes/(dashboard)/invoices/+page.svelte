@@ -1,246 +1,245 @@
 <script lang="ts">
-  import { untrack } from "svelte";
-  import { Button } from "$lib/components/ui/button";
-  import * as Tabs from "$lib/components/ui/tabs";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-  import { Input } from "$lib/components/ui/input";
-  import {
-    Plus,
-    Search,
-    X,
-    History,
-    FileText,
-    LayoutGrid,
-    CheckCircle2,
-    ExternalLink,
-    Trash2,
-    CheckCircle,
-    MoreHorizontal,
-    RotateCcw,
-  } from "@lucide/svelte";
-  import { cn } from "$lib/utils";
-  import InvoiceBuilder from "$lib/components/invoices/InvoiceBuilder.svelte";
-  import { Badge } from "$lib/components/ui/badge";
-  import { ScrollArea } from "$lib/components/ui/scroll-area";
-  import { Separator } from "$lib/components/ui/separator";
-  import { DatePicker } from "$lib/components/ui/date-picker";
-  import { Checkbox } from "$lib/components/ui/checkbox";
-  import { toast } from "svelte-sonner";
-  import { PUBLIC_API_URL } from "$env/static/public";
+import { untrack } from "svelte";
+import { Button } from "$lib/components/ui/button";
+import * as Tabs from "$lib/components/ui/tabs";
+import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+import { Input } from "$lib/components/ui/input";
+import {
+  Plus,
+  Search,
+  X,
+  History,
+  FileText,
+  LayoutGrid,
+  CheckCircle2,
+  ExternalLink,
+  Trash2,
+  CheckCircle,
+  MoreHorizontal,
+  RotateCcw,
+} from "@lucide/svelte";
+import { cn } from "$lib/utils";
+import InvoiceBuilder from "$lib/components/invoices/InvoiceBuilder.svelte";
+import { Badge } from "$lib/components/ui/badge";
+import { ScrollArea } from "$lib/components/ui/scroll-area";
+import { Separator } from "$lib/components/ui/separator";
+import { DatePicker } from "$lib/components/ui/date-picker";
+import { Checkbox } from "$lib/components/ui/checkbox";
+import { toast } from "svelte-sonner";
+import { PUBLIC_API_URL } from "$env/static/public";
 
-  import type { Invoice } from "$lib/types";
+import type { Invoice } from "$lib/types";
 
-  let { data } = $props();
+let { data } = $props();
 
-  // -- STATE --
-  let activeTab = $state("history");
+// -- STATE --
+let activeTab = $state("history");
 
-  // Initialize drafts from openInvoices
-  // Helper to map invoice to draft format
-  function mapInvoiceToDraft(inv: any, index: number) {
-    return {
-      id: inv.id.toString(),
-      idx: index,
-      data: {
-        ...inv,
-        customerId: inv.customerId ? inv.customerId.toString() : "",
-        // Ensure formatting matches builder expectations
-        invoiceDate:
-          inv.invoiceDate ||
-          (inv.createdAt
-            ? new Date(inv.createdAt).toISOString().split("T")[0]
-            : new Date().toISOString().split("T")[0]),
-        items: (inv.items || []).map((item: any) => ({
-          ...item,
-          // Map API staffCommissions to builder staffTechnicians/staffSellers
-          staffTechnicians: (item.staffCommissions || [])
-            .filter((s: any) => s.role === "technician")
-            .map((s: any) => ({ ...s.staff, ...s })),
-          staffSellers: (item.staffCommissions || [])
-            .filter((s: any) => s.role === "seller")
-            .map((s: any) => ({ ...s.staff, ...s })),
-        })),
-        discountValue: inv.discountValue || 0,
-        discountType: inv.discountType || "percent",
-        amountPaid: inv.amountPaid || 0,
-        paymentMethod: inv.paymentMethod || "cash",
-        notes: inv.notes || "",
-      },
-    };
-  }
+// Initialize drafts from openInvoices
+// Helper to map invoice to draft format
+function mapInvoiceToDraft(inv: any, index: number) {
+  return {
+    id: inv.id.toString(),
+    idx: index,
+    data: {
+      ...inv,
+      customerId: inv.customerId ? inv.customerId.toString() : "",
+      // Ensure formatting matches builder expectations
+      invoiceDate:
+        inv.invoiceDate ||
+        (inv.createdAt
+          ? new Date(inv.createdAt).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0]),
+      items: (inv.items || []).map((item: any) => ({
+        ...item,
+        // Map API staffCommissions to builder staffTechnicians/staffSellers
+        staffTechnicians: (item.staffCommissions || [])
+          .filter((s: any) => s.role === "technician")
+          .map((s: any) => ({ ...s.staff, ...s })),
+        staffSellers: (item.staffCommissions || [])
+          .filter((s: any) => s.role === "seller")
+          .map((s: any) => ({ ...s.staff, ...s })),
+      })),
+      discountValue: inv.discountValue || 0,
+      discountType: inv.discountType || "percent",
+      amountPaid: inv.amountPaid || 0,
+      paymentMethod: inv.paymentMethod || "cash",
+      notes: inv.notes || "",
+    },
+  };
+}
 
-  // Initialize drafts from openInvoices
+// Initialize drafts from openInvoices
 
-  const initialDrafts = untrack(() =>
-    (data.openInvoices || []).map((inv: any, i: number) => mapInvoiceToDraft(inv, i + 1)),
-  );
-  let drafts = $state<{ id: string; idx: number; data: any }[]>(initialDrafts);
-  let nextDraftId = initialDrafts.length + 1;
+const initialDrafts = untrack(() =>
+  (data.openInvoices || []).map((inv: any, i: number) => mapInvoiceToDraft(inv, i + 1)),
+);
+let drafts = $state<{ id: string; idx: number; data: any }[]>(initialDrafts);
+let nextDraftId = initialDrafts.length + 1;
 
-  // Sync drafts when data.openInvoices changes (e.g. after bulk open)
-  $effect(() => {
-    const serverOpenIds = new Set((data.openInvoices || []).map((i: any) => i.id.toString()));
+// Sync drafts when data.openInvoices changes (e.g. after bulk open)
+$effect(() => {
+  const serverOpenIds = new Set((data.openInvoices || []).map((i: any) => i.id.toString()));
 
-    untrack(() => {
-      // 1. Remove drafts that are no longer in openInvoices AND aren't new local drafts
-      // Note: We deliberately keep new local drafts that start with "new-"
-      drafts = drafts.filter((d) => d.id.startsWith("new-") || serverOpenIds.has(d.id));
+  untrack(() => {
+    // 1. Remove drafts that are no longer in openInvoices AND aren't new local drafts
+    // Note: We deliberately keep new local drafts that start with "new-"
+    drafts = drafts.filter((d) => d.id.startsWith("new-") || serverOpenIds.has(d.id));
 
-      // 2. Add any openInvoices that aren't in drafts yet
-      for (const inv of data.openInvoices || []) {
-        const idStr = inv.id.toString();
-        if (!drafts.find((d) => d.id === idStr)) {
-          // We use nextDraftId++ to ensure uniqueness for keys usually
-          drafts.push(mapInvoiceToDraft(inv, nextDraftId++));
-        }
-      }
-    });
-  });
-
-  // History Filter
-  let historyDate = $state(new Date().toISOString().split("T")[0]); // DatePicker expects string binding
-  let historySearch = $state("");
-
-  // Sidebar Filter
-  let itemSearch = $state("");
-
-  // Multi-Selection
-  let selectedIds = $state(new Set<number>());
-
-  function toggleSelect(id: number) {
-    if (selectedIds.has(id)) {
-      selectedIds.delete(id);
-    } else {
-      selectedIds.add(id);
-    }
-  }
-
-  function toggleSelectAll() {
-    if (selectedIds.size === filteredHistory.length) {
-      selectedIds = new Set();
-    } else {
-      selectedIds = new Set(filteredHistory.map((inv: any) => inv.id));
-    }
-  }
-
-  async function handleBulkAction(actionType: string) {
-    // Implementation for the bulk action form submission
-    // We'll use a dynamic form submit since we are in script
-  }
-
-  // -- DERIVED --
-
-  // Filtered History
-  let filteredHistory = $derived.by(() => {
-    let res = data.invoices;
-    if (historySearch) {
-      const q = historySearch.toLowerCase();
-      res = res.filter(
-        (inv: any) =>
-          inv.id.toString().includes(q) || inv.customer?.name?.toLowerCase().includes(q),
-      );
-    }
-    // TODO: Filter by historyDate if implemented
-    return res;
-  });
-
-  // -- ACTIONS --
-  import { enhance } from "$app/forms";
-
-  let createSubmit: () => void;
-
-  // We can't really "bind" the submit function easily from a hidden form to a button outside without a trigger
-  // A clean way: use a form for the "Create Invoice" button.
-
-  // However, the button is in the header.
-  // Let's make the button a form trigger or call a hidden form submit.
-  // Simpler: Just make the button a submit button inside a form.
-
-  import { invalidateAll } from "$app/navigation";
-
-  async function closeDraft(dId: string, event?: Event) {
-    event?.stopPropagation();
-
-    // Find draft
-    const draft = drafts.find((d) => d.id === dId);
-
-    // Optimistic UI update
-    if (activeTab === dId) {
-      activeTab = "history";
-    }
-    drafts = drafts.filter((d) => d.id !== dId);
-
-    // If it's a saved invoice (not a new local draft), call server to close tab
-    if (draft && !dId.startsWith("new-")) {
-      const formData = new FormData();
-      formData.append("id", dId);
-
-      try {
-        // Call the close action
-        await fetch("?/close", {
-          method: "POST",
-          body: formData,
-        });
-        await invalidateAll();
-      } catch (e) {
-        console.error("Failed to close tab on server", e);
+    // 2. Add any openInvoices that aren't in drafts yet
+    for (const inv of data.openInvoices || []) {
+      const idStr = inv.id.toString();
+      if (!drafts.find((d) => d.id === idStr)) {
+        // We use nextDraftId++ to ensure uniqueness for keys usually
+        drafts.push(mapInvoiceToDraft(inv, nextDraftId++));
       }
     }
+  });
+});
+
+// History Filter
+let historyDate = $state(new Date().toISOString().split("T")[0]); // DatePicker expects string binding
+let historySearch = $state("");
+
+// Sidebar Filter
+let itemSearch = $state("");
+
+// Multi-Selection
+let selectedIds = $state(new Set<number>());
+
+function toggleSelect(id: number) {
+  if (selectedIds.has(id)) {
+    selectedIds.delete(id);
+  } else {
+    selectedIds.add(id);
   }
+}
 
-  async function showInvoiceInTab(invoice: any) {
-    const idStr = invoice.id.toString();
+function toggleSelectAll() {
+  if (selectedIds.size === filteredHistory.length) {
+    selectedIds = new Set();
+  } else {
+    selectedIds = new Set(filteredHistory.map((inv: any) => inv.id));
+  }
+}
 
-    if (!drafts.find((d) => d.id === idStr)) {
-      drafts = [...drafts, mapInvoiceToDraft(invoice, nextDraftId++)];
-    }
+async function handleBulkAction(actionType: string) {
+  // Implementation for the bulk action form submission
+  // We'll use a dynamic form submit since we are in script
+}
 
-    activeTab = idStr;
+// -- DERIVED --
 
-    if (invoice.isOpenInTab) return;
-
-    const formData = new FormData();
-    formData.append("id", idStr);
-    formData.append(
-      "payload",
-      JSON.stringify({
-        isOpenInTab: true,
-      }),
+// Filtered History
+let filteredHistory = $derived.by(() => {
+  let res = data.invoices;
+  if (historySearch) {
+    const q = historySearch.toLowerCase();
+    res = res.filter(
+      (inv: any) => inv.id.toString().includes(q) || inv.customer?.name?.toLowerCase().includes(q),
     );
+  }
+  // TODO: Filter by historyDate if implemented
+  return res;
+});
+
+// -- ACTIONS --
+import { enhance } from "$app/forms";
+
+let createSubmit: () => void;
+
+// We can't really "bind" the submit function easily from a hidden form to a button outside without a trigger
+// A clean way: use a form for the "Create Invoice" button.
+
+// However, the button is in the header.
+// Let's make the button a form trigger or call a hidden form submit.
+// Simpler: Just make the button a submit button inside a form.
+
+import { invalidateAll } from "$app/navigation";
+
+async function closeDraft(dId: string, event?: Event) {
+  event?.stopPropagation();
+
+  // Find draft
+  const draft = drafts.find((d) => d.id === dId);
+
+  // Optimistic UI update
+  if (activeTab === dId) {
+    activeTab = "history";
+  }
+  drafts = drafts.filter((d) => d.id !== dId);
+
+  // If it's a saved invoice (not a new local draft), call server to close tab
+  if (draft && !dId.startsWith("new-")) {
+    const formData = new FormData();
+    formData.append("id", dId);
 
     try {
-      await fetch("?/update", {
+      // Call the close action
+      await fetch("?/close", {
         method: "POST",
         body: formData,
       });
       await invalidateAll();
-    } catch (error) {
-      toast.error("Không thể đồng bộ trạng thái tab");
-      console.error("Failed to mark invoice tab as open", error);
+    } catch (e) {
+      console.error("Failed to close tab on server", e);
     }
   }
-  // -- HELPERS --
-  function formatPrice(price: number) {
-    return new Intl.NumberFormat("vi-VN").format(price) + "đ";
+}
+
+async function showInvoiceInTab(invoice: any) {
+  const idStr = invoice.id.toString();
+
+  if (!drafts.find((d) => d.id === idStr)) {
+    drafts = [...drafts, mapInvoiceToDraft(invoice, nextDraftId++)];
   }
 
-  function formatDate(dateStr: string | Date | null) {
-    if (!dateStr) return "";
-    return new Date(dateStr).toLocaleDateString("vi-VN");
+  activeTab = idStr;
+
+  if (invoice.isOpenInTab) return;
+
+  const formData = new FormData();
+  formData.append("id", idStr);
+  formData.append(
+    "payload",
+    JSON.stringify({
+      isOpenInTab: true,
+    }),
+  );
+
+  try {
+    await fetch("?/update", {
+      method: "POST",
+      body: formData,
+    });
+    await invalidateAll();
+  } catch (error) {
+    toast.error("Không thể đồng bộ trạng thái tab");
+    console.error("Failed to mark invoice tab as open", error);
   }
+}
+// -- HELPERS --
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("vi-VN").format(price) + "đ";
+}
 
-  // Status map
-  const statusStyles: Record<string, string> = {
-    paid: "bg-green-100 text-green-700",
-    pending: "bg-yellow-100 text-yellow-700",
-    cancelled: "bg-red-100 text-red-700",
-  };
+function formatDate(dateStr: string | Date | null) {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleDateString("vi-VN");
+}
 
-  const statusLabels: Record<string, string> = {
-    paid: "Đã thanh toán",
-    pending: "Chờ thanh toán",
-    cancelled: "Đã hủy",
-  };
+// Status map
+const statusStyles: Record<string, string> = {
+  paid: "bg-green-100 text-green-700",
+  pending: "bg-yellow-100 text-yellow-700",
+  cancelled: "bg-red-100 text-red-700",
+};
+
+const statusLabels: Record<string, string> = {
+  paid: "Đã thanh toán",
+  pending: "Chờ thanh toán",
+  cancelled: "Đã hủy",
+};
 </script>
 
 <svelte:head>

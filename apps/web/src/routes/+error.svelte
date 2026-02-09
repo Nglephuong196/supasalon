@@ -1,29 +1,29 @@
 <script lang="ts">
-  import { page } from "$app/stores";
-  import { Button } from "$lib/components/ui/button";
-  import { FileQuestion, ServerCrash, Home, ArrowLeft, ShieldAlert, LogIn } from "@lucide/svelte";
+import { page } from "$app/stores";
+import { Button } from "$lib/components/ui/button";
+import { FileQuestion, ServerCrash, Home, ArrowLeft, ShieldAlert, LogIn } from "@lucide/svelte";
 
-  let status = $derived($page.status);
-  let error = $derived($page.error);
+let status = $derived($page.status);
+let error = $derived($page.error);
 
-  let title = $derived.by(() => {
-    if (status === 404) return "Không tìm thấy trang";
-    if (status === 401) return "Yêu cầu đăng nhập";
-    return "Đã xảy ra lỗi";
-  });
+let title = $derived.by(() => {
+  if (status === 404) return "Không tìm thấy trang";
+  if (status === 401) return "Yêu cầu đăng nhập";
+  return "Đã xảy ra lỗi";
+});
 
-  let description = $derived.by(() => {
-    if (status === 404) return "Trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.";
-    if (status === 401)
-      return "Phiên đăng nhập của bạn đã hết hạn hoặc bạn cần đăng nhập để truy cập trang này.";
-    return error?.message || "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.";
-  });
+let description = $derived.by(() => {
+  if (status === 404) return "Trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.";
+  if (status === 401)
+    return "Phiên đăng nhập của bạn đã hết hạn hoặc bạn cần đăng nhập để truy cập trang này.";
+  return error?.message || "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.";
+});
 
-  let iconColorClass = $derived.by(() => {
-    if (status === 404) return "bg-blue-50 text-blue-500";
-    if (status === 401) return "bg-amber-50 text-amber-500";
-    return "bg-red-50 text-red-500";
-  });
+let iconColorClass = $derived.by(() => {
+  if (status === 404) return "bg-blue-50 text-blue-500";
+  if (status === 401) return "bg-amber-50 text-amber-500";
+  return "bg-red-50 text-red-500";
+});
 </script>
 
 <svelte:head>

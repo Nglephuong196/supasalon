@@ -1,0 +1,691 @@
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CalendarDays, Check, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { queryKeys } from "@/lib/query-client";
+import {
+  bookingsService,
+  type BookingItem,
+  type BookingStatus,
+  type BookingPayload,
+  type BookingStats,
+} from "@/services/bookings.service";
+
+function Modal(props: {
+  title: string;
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  if (!props.open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={props.onClose}
+    >
+      <div
+        className="w-full max-w-2xl rounded-xl border border-border bg-white p-5 shadow-xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <h3 className="text-lg font-semibold">{props.title}</h3>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={props.onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        {props.children}
+      </div>
+    </div>
+  );
+}
+
+const statusText: Record<BookingStatus, string> = {
+  pending: "Chờ xác nhận",
+  confirmed: "Đã xác nhận",
+  checkin: "Đã check-in",
+  completed: "Hoàn thành",
+  cancelled: "Đã hủy",
+};
+
+const statusClass: Record<BookingStatus, string> = {
+  pending: "bg-amber-100 text-amber-700",
+  confirmed: "bg-emerald-100 text-emerald-700",
+  checkin: "bg-purple-100 text-purple-700",
+  completed: "bg-blue-100 text-blue-700",
+  cancelled: "bg-rose-100 text-rose-700",
+};
+
+const emptyStats: BookingStats = {
+  total: 0,
+  pending: 0,
+  confirmed: 0,
+  completed: 0,
+  cancelled: 0,
+  cancelRate: 0,
+};
+
+function todayString() {
+  return new Date().toISOString().split("T")[0] ?? "";
+}
+
+export function BookingsPage() {
+  const queryClient = useQueryClient();
+
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [fromDate, setFromDate] = useState(todayString());
+  const [toDate, setToDate] = useState(todayString());
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const [selectedBooking, setSelectedBooking] = useState<BookingItem | null>(null);
+
+  const [formCustomerId, setFormCustomerId] = useState("");
+  const [formDate, setFormDate] = useState("");
+  const [formGuestCount, setFormGuestCount] = useState("1");
+  const [formServiceId, setFormServiceId] = useState("");
+  const [formMemberId, setFormMemberId] = useState("");
+  const [formStatus, setFormStatus] = useState<BookingStatus>("pending");
+  const [formNotes, setFormNotes] = useState("");
+
+  useEffect(() => {
+    document.title = "Lịch hẹn | SupaSalon";
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const filters = useMemo(
+    () => ({
+      from: fromDate,
+      to: toDate,
+      status: statusFilter,
+      search: debouncedSearchQuery,
+      page: 1,
+      limit: 100,
+    }),
+    [debouncedSearchQuery, fromDate, statusFilter, toDate],
+  );
+
+  const dependenciesQuery = useQuery({
+    queryKey: queryKeys.bookingDependencies,
+    queryFn: () => bookingsService.listDependencies(),
+  });
+
+  const bookingsQuery = useQuery({
+    queryKey: queryKeys.bookings(filters),
+    queryFn: () => bookingsService.list(filters),
+  });
+
+  const statsQuery = useQuery({
+    queryKey: queryKeys.bookingStats(fromDate, toDate),
+    queryFn: () => bookingsService.stats(fromDate, toDate),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (payload: BookingPayload) => bookingsService.create(payload),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["booking-stats"] }),
+      ]);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: Partial<BookingPayload> }) =>
+      bookingsService.update(id, payload),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["booking-stats"] }),
+      ]);
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: BookingStatus }) =>
+      bookingsService.updateStatus(id, status),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["booking-stats"] }),
+      ]);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => bookingsService.remove(id),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["bookings"] }),
+        queryClient.invalidateQueries({ queryKey: ["booking-stats"] }),
+      ]);
+    },
+  });
+
+  const customers = dependenciesQuery.data?.[0] ?? [];
+  const services = dependenciesQuery.data?.[1] ?? [];
+  const members = dependenciesQuery.data?.[2] ?? [];
+
+  const bookings = bookingsQuery.data?.data ?? [];
+  const stats = statsQuery.data ?? emptyStats;
+
+  const loading = dependenciesQuery.isLoading || bookingsQuery.isLoading || statsQuery.isLoading;
+  const saving =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    updateStatusMutation.isPending ||
+    deleteMutation.isPending;
+
+  const error =
+    actionError ??
+    (dependenciesQuery.error instanceof Error ? dependenciesQuery.error.message : null) ??
+    (bookingsQuery.error instanceof Error ? bookingsQuery.error.message : null) ??
+    (statsQuery.error instanceof Error ? statsQuery.error.message : null) ??
+    (createMutation.error instanceof Error ? createMutation.error.message : null) ??
+    (updateMutation.error instanceof Error ? updateMutation.error.message : null) ??
+    (updateStatusMutation.error instanceof Error ? updateStatusMutation.error.message : null) ??
+    (deleteMutation.error instanceof Error ? deleteMutation.error.message : null);
+
+  function resetForm() {
+    setFormCustomerId("");
+    setFormDate("");
+    setFormGuestCount("1");
+    setFormServiceId("");
+    setFormMemberId("");
+    setFormStatus("pending");
+    setFormNotes("");
+  }
+
+  const customerById = useMemo(
+    () => new Map(customers.map((item) => [String(item.id), item])),
+    [customers],
+  );
+
+  const serviceById = useMemo(() => new Map(services.map((item) => [item.id, item])), [services]);
+
+  const memberById = useMemo(() => {
+    return new Map(
+      members.map((item) => [item.id, item.user?.name ?? item.user?.email ?? item.id]),
+    );
+  }, [members]);
+
+  function buildPayload(): BookingPayload | null {
+    const customerId = Number(formCustomerId);
+    const guestCount = Number(formGuestCount);
+    const serviceId = Number(formServiceId);
+
+    if (!Number.isInteger(customerId) || customerId <= 0) {
+      setActionError("Vui lòng chọn khách hàng");
+      return null;
+    }
+    if (!formDate) {
+      setActionError("Vui lòng chọn ngày giờ");
+      return null;
+    }
+    if (!Number.isInteger(guestCount) || guestCount <= 0) {
+      setActionError("Số lượng khách không hợp lệ");
+      return null;
+    }
+    if (!Number.isInteger(serviceId) || serviceId <= 0) {
+      setActionError("Vui lòng chọn dịch vụ");
+      return null;
+    }
+
+    const service = serviceById.get(serviceId);
+    if (!service) {
+      setActionError("Dịch vụ không tồn tại");
+      return null;
+    }
+
+    const guests = Array.from({ length: guestCount }, () => ({
+      services: [
+        {
+          categoryId: service.categoryId,
+          serviceId,
+          memberId: formMemberId || undefined,
+          price: service.price,
+        },
+      ],
+    }));
+
+    return {
+      customerId,
+      guests,
+      guestCount,
+      date: new Date(formDate).toISOString(),
+      status: formStatus,
+      notes: formNotes,
+    };
+  }
+
+  async function createBooking(event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) {
+    event.preventDefault();
+    const payload = buildPayload();
+    if (!payload) return;
+
+    setActionError(null);
+    try {
+      await createMutation.mutateAsync(payload);
+      setCreateOpen(false);
+      resetForm();
+    } catch {
+      // handled by mutation state
+    }
+  }
+
+  function openEdit(booking: BookingItem) {
+    setSelectedBooking(booking);
+    setFormCustomerId(String(booking.customerId));
+    const iso = new Date(booking.date).toISOString();
+    setFormDate(iso.slice(0, 16));
+    setFormGuestCount(String(booking.guestCount));
+    const firstService = booking.guests?.[0]?.services?.[0];
+    setFormServiceId(firstService?.serviceId ? String(firstService.serviceId) : "");
+    setFormMemberId(firstService?.memberId || "");
+    setFormStatus(booking.status);
+    setFormNotes(booking.notes ?? "");
+    setEditOpen(true);
+  }
+
+  async function updateBooking(event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) {
+    event.preventDefault();
+    if (!selectedBooking) return;
+
+    const payload = buildPayload();
+    if (!payload) return;
+
+    setActionError(null);
+    try {
+      await updateMutation.mutateAsync({ id: selectedBooking.id, payload });
+      setEditOpen(false);
+      setSelectedBooking(null);
+      resetForm();
+    } catch {
+      // handled by mutation state
+    }
+  }
+
+  async function quickStatus(id: number, status: BookingStatus) {
+    setActionError(null);
+    try {
+      await updateStatusMutation.mutateAsync({ id, status });
+    } catch {
+      // handled by mutation state
+    }
+  }
+
+  function openDelete(booking: BookingItem) {
+    setSelectedBooking(booking);
+    setDeleteOpen(true);
+  }
+
+  async function deleteBooking() {
+    if (!selectedBooking) return;
+    setActionError(null);
+    try {
+      await deleteMutation.mutateAsync(selectedBooking.id);
+      setDeleteOpen(false);
+      setSelectedBooking(null);
+    } catch {
+      // handled by mutation state
+    }
+  }
+
+  function renderForm(
+    onSubmit: (event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) => void,
+  ) {
+    return (
+      <form className="grid gap-4" onSubmit={onSubmit}>
+        <div className="grid gap-2">
+          <Label>Khách hàng</Label>
+          <select
+            className="h-10 rounded-md border px-3 text-sm"
+            value={formCustomerId}
+            onChange={(event) => setFormCustomerId(event.target.value)}
+          >
+            <option value="">Chọn khách hàng</option>
+            {customers.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name} - {item.phone}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <Label>Ngày giờ</Label>
+            <Input
+              type="datetime-local"
+              value={formDate}
+              onChange={(event) => setFormDate(event.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label>Số khách</Label>
+            <Input
+              type="number"
+              min={1}
+              max={10}
+              value={formGuestCount}
+              onChange={(event) => setFormGuestCount(event.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <Label>Dịch vụ</Label>
+            <select
+              className="h-10 rounded-md border px-3 text-sm"
+              value={formServiceId}
+              onChange={(event) => setFormServiceId(event.target.value)}
+            >
+              <option value="">Chọn dịch vụ</option>
+              {services.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name} - {item.price.toLocaleString("vi-VN")}đ
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid gap-2">
+            <Label>Nhân viên (tuỳ chọn)</Label>
+            <select
+              className="h-10 rounded-md border px-3 text-sm"
+              value={formMemberId}
+              onChange={(event) => setFormMemberId(event.target.value)}
+            >
+              <option value="">Không chỉ định</option>
+              {members.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.user?.name || item.user?.email || item.id}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <Label>Trạng thái</Label>
+          <select
+            className="h-10 rounded-md border px-3 text-sm"
+            value={formStatus}
+            onChange={(event) => setFormStatus(event.target.value as BookingStatus)}
+          >
+            {Object.entries(statusText).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid gap-2">
+          <Label>Ghi chú</Label>
+          <textarea
+            className="min-h-20 rounded-md border px-3 py-2 text-sm"
+            value={formNotes}
+            onChange={(event) => setFormNotes(event.target.value)}
+          />
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setCreateOpen(false);
+              setEditOpen(false);
+            }}
+          >
+            Hủy
+          </Button>
+          <Button type="submit" disabled={saving}>
+            {saving ? "Đang lưu..." : "Lưu"}
+          </Button>
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="rounded-2xl border border-border/70 bg-linear-to-br from-white to-secondary/30 p-5 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Lịch hẹn</h1>
+            <p className="text-muted-foreground">
+              Quản lý lịch hẹn, trạng thái và điều phối dịch vụ
+            </p>
+          </div>
+          <Button
+            onClick={() => {
+              resetForm();
+              setActionError(null);
+              setCreateOpen(true);
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Tạo lịch hẹn
+          </Button>
+        </div>
+      </div>
+
+      {error ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </div>
+      ) : null}
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="rounded-xl border bg-white p-3">
+          <div className="text-xs text-muted-foreground">Tổng</div>
+          <div className="text-xl font-semibold">{stats.total}</div>
+        </div>
+        <div className="rounded-xl border bg-white p-3">
+          <div className="text-xs text-muted-foreground">Chờ xác nhận</div>
+          <div className="text-xl font-semibold text-amber-700">{stats.pending}</div>
+        </div>
+        <div className="rounded-xl border bg-white p-3">
+          <div className="text-xs text-muted-foreground">Đã xác nhận</div>
+          <div className="text-xl font-semibold text-emerald-700">{stats.confirmed}</div>
+        </div>
+        <div className="rounded-xl border bg-white p-3">
+          <div className="text-xs text-muted-foreground">Hoàn thành</div>
+          <div className="text-xl font-semibold text-blue-700">{stats.completed}</div>
+        </div>
+        <div className="rounded-xl border bg-white p-3">
+          <div className="text-xs text-muted-foreground">Tỷ lệ huỷ</div>
+          <div className="text-xl font-semibold text-rose-700">{stats.cancelRate.toFixed(1)}%</div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-white p-3">
+        <div className="relative w-full max-w-md">
+          <Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Tìm khách hàng, số điện thoại"
+            className="pl-9"
+          />
+        </div>
+        <select
+          className="h-10 rounded-md border px-3 text-sm"
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+        >
+          <option value="all">Tất cả trạng thái</option>
+          {Object.entries(statusText).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <Input
+          type="date"
+          value={fromDate}
+          onChange={(event) => setFromDate(event.target.value)}
+          className="w-auto"
+        />
+        <Input
+          type="date"
+          value={toDate}
+          onChange={(event) => setToDate(event.target.value)}
+          className="w-auto"
+        />
+      </div>
+
+      <div className="overflow-auto rounded-lg border border-border/70 bg-white">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/40">
+            <tr>
+              <th className="px-3 py-2 text-left">Khách hàng</th>
+              <th className="px-3 py-2 text-left">Ngày giờ</th>
+              <th className="px-3 py-2 text-left">Dịch vụ</th>
+              <th className="px-3 py-2 text-left">Trạng thái</th>
+              <th className="px-3 py-2 text-right">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-3 py-4 text-center text-muted-foreground">
+                  Đang tải...
+                </td>
+              </tr>
+            ) : bookings.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-3 py-4 text-center text-muted-foreground">
+                  Không có lịch hẹn
+                </td>
+              </tr>
+            ) : (
+              bookings.map((item) => {
+                const firstService = item.guests?.[0]?.services?.[0];
+                const serviceName = firstService?.serviceId
+                  ? serviceById.get(firstService.serviceId)?.name || `#${firstService.serviceId}`
+                  : "-";
+                return (
+                  <tr key={item.id} className="border-t">
+                    <td className="px-3 py-2">
+                      <div className="font-medium">
+                        {item.customer?.name ||
+                          customerById.get(String(item.customerId))?.name ||
+                          `KH #${item.customerId}`}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {item.customer?.phone ||
+                          customerById.get(String(item.customerId))?.phone ||
+                          ""}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="inline-flex items-center gap-2">
+                        <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                        {new Date(item.date).toLocaleString("vi-VN")}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div>{serviceName}</div>
+                      {firstService?.memberId ? (
+                        <div className="text-xs text-muted-foreground">
+                          {memberById.get(firstService.memberId) || firstService.memberId}
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-2">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClass[item.status]}`}
+                      >
+                        {statusText[item.status]}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <div className="flex justify-end gap-1">
+                        <select
+                          className="h-8 rounded-md border px-2 text-xs"
+                          value={item.status}
+                          onChange={(event) =>
+                            void quickStatus(item.id, event.target.value as BookingStatus)
+                          }
+                        >
+                          {Object.entries(statusText).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => openEdit(item)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => openDelete(item)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <Modal title="Tạo lịch hẹn" open={createOpen} onClose={() => setCreateOpen(false)}>
+        {renderForm(createBooking)}
+      </Modal>
+
+      <Modal title="Cập nhật lịch hẹn" open={editOpen} onClose={() => setEditOpen(false)}>
+        {renderForm(updateBooking)}
+      </Modal>
+
+      <Modal title="Xóa lịch hẹn" open={deleteOpen} onClose={() => setDeleteOpen(false)}>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">Bạn có chắc muốn xóa lịch hẹn này?</p>
+          <div className="rounded-md border bg-muted/30 p-3 text-sm">
+            <div className="font-medium">
+              {selectedBooking?.customer?.name || `KH #${selectedBooking?.customerId ?? ""}`}
+            </div>
+            <div className="text-muted-foreground">
+              {selectedBooking?.date ? new Date(selectedBooking.date).toLocaleString("vi-VN") : ""}
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+              Hủy
+            </Button>
+            <Button disabled={saving} onClick={() => void deleteBooking()}>
+              <Check className="mr-2 h-4 w-4" />
+              Xác nhận xóa
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}

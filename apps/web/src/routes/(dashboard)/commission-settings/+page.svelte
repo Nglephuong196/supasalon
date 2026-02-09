@@ -1,7 +1,7 @@
 <script lang="ts">
-  import CommissionSettingsPanel from "$lib/components/settings/CommissionSettingsPanel.svelte";
+import CommissionSettingsPanel from "$lib/components/settings/CommissionSettingsPanel.svelte";
 
-  let { data } = $props();
+let { data } = $props();
 </script>
 
 <svelte:head>

@@ -1,26 +1,26 @@
 <script lang="ts">
-  import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
-  import { ArrowUpRight } from "@lucide/svelte";
-  import { Button } from "$lib/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
+import { ArrowUpRight } from "@lucide/svelte";
+import { Button } from "$lib/components/ui/button";
 
-  interface Props {
-    contextLabel?: string;
-    items?: Array<{
-      id: string;
-      name: string;
-      revenue: number;
-      revenuePercent: number;
-      appointments: number;
-      avatar: string;
-    }>;
-    loading?: boolean;
-  }
+interface Props {
+  contextLabel?: string;
+  items?: Array<{
+    id: string;
+    name: string;
+    revenue: number;
+    revenuePercent: number;
+    appointments: number;
+    avatar: string;
+  }>;
+  loading?: boolean;
+}
 
-  let { contextLabel = "Tháng này", items = [], loading = false }: Props = $props();
+let { contextLabel = "Tháng này", items = [], loading = false }: Props = $props();
 
-  function formatCurrency(value: number) {
-    return value.toLocaleString("vi-VN") + " ₫";
-  }
+function formatCurrency(value: number) {
+  return value.toLocaleString("vi-VN") + " ₫";
+}
 </script>
 
 <Card class="premium-card border border-border/60 shadow-sm rounded-xl bg-white overflow-hidden">

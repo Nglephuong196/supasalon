@@ -1,133 +1,133 @@
 <script lang="ts">
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
-  import * as Dialog from "$lib/components/ui/dialog";
-  import * as Select from "$lib/components/ui/select";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog";
-  import { Plus, Search, Mail, MoreVertical, Loader2, Trash, Pencil, X } from "@lucide/svelte";
-  import { cn } from "$lib/utils";
-  import { enhance } from "$app/forms";
-  import { toast } from "svelte-sonner";
-  import type { PageData } from "./$types";
-  import { page } from "$app/stores";
-  import { goto } from "$app/navigation";
+import * as Card from "$lib/components/ui/card";
+import { Button } from "$lib/components/ui/button";
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import * as Dialog from "$lib/components/ui/dialog";
+import * as Select from "$lib/components/ui/select";
+import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+import * as AlertDialog from "$lib/components/ui/alert-dialog";
+import { Plus, Search, Mail, MoreVertical, Loader2, Trash, Pencil, X } from "@lucide/svelte";
+import { cn } from "$lib/utils";
+import { enhance } from "$app/forms";
+import { toast } from "svelte-sonner";
+import type { PageData } from "./$types";
+import { page } from "$app/stores";
+import { goto } from "$app/navigation";
 
-  let { data }: { data: PageData } = $props();
+let { data }: { data: PageData } = $props();
 
-  // Employee management (create/update/delete) is restricted to owner/admin only
-  // since those actions are N/A for regular members in the permission system
-  let canManageEmployees = $derived(
-    $page.data.memberRole === "owner" || $page.data.memberRole === "admin",
-  );
+// Employee management (create/update/delete) is restricted to owner/admin only
+// since those actions are N/A for regular members in the permission system
+let canManageEmployees = $derived(
+  $page.data.memberRole === "owner" || $page.data.memberRole === "admin",
+);
 
-  // Search state with URL sync
-  let searchQuery = $state($page.url.searchParams.get("q") || "");
-  let searchTimeout: ReturnType<typeof setTimeout>;
+// Search state with URL sync
+let searchQuery = $state($page.url.searchParams.get("q") || "");
+let searchTimeout: ReturnType<typeof setTimeout>;
 
-  function updateSearchUrl() {
-    const url = new URL($page.url);
-    if (searchQuery) {
-      url.searchParams.set("q", searchQuery);
-    } else {
-      url.searchParams.delete("q");
+function updateSearchUrl() {
+  const url = new URL($page.url);
+  if (searchQuery) {
+    url.searchParams.set("q", searchQuery);
+  } else {
+    url.searchParams.delete("q");
+  }
+  goto(url.toString(), { replaceState: true, keepFocus: true });
+}
+
+function handleSearchInput(event: Event) {
+  const target = event.target as HTMLInputElement;
+  searchQuery = target.value;
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(updateSearchUrl, 300);
+}
+
+function clearSearch() {
+  searchQuery = "";
+  updateSearchUrl();
+}
+let isAddOpen = $state(false);
+
+// Add Member Form
+// (We rely on form submission now, so local binding only for UI if needed, or just regular inputs)
+// But keeping bindings is fine for clearing.
+let name = $state("");
+let email = $state("");
+let password = $state("");
+let role = $state("member");
+
+// Edit Role Form
+let isEditRoleOpen = $state(false);
+let editingEmployee = $state<any>(null);
+let editRoleValue = $state("member");
+
+// Delete State
+let isDeleteDialogOpen = $state(false);
+let deletingEmployee = $state<any>(null);
+
+// Form Validation Errors
+let empNameError = $state("");
+let empEmailError = $state("");
+let empPasswordError = $state("");
+
+// Map members for display
+let allEmployees = $derived(
+  data.members
+    .map((m: any) => ({
+      id: m.id,
+      type: "member",
+      name: m.user?.name || "Unknown",
+      email: m.user?.email || "No Email",
+      image: m.user?.image,
+      role: m.role,
+      phone: "",
+      status: "active",
+    }))
+    .filter(
+      (e: any) =>
+        e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        e.email.toLowerCase().includes(searchQuery.toLowerCase()),
+    ),
+);
+
+const roleColors: Record<string, string> = {
+  admin: "bg-purple-100 text-purple-700",
+  owner: "bg-orange-100 text-orange-700",
+  member: "bg-blue-100 text-blue-700",
+  user: "bg-gray-100 text-gray-700",
+};
+
+function handleFormSubmit() {
+  return async ({ result, update }: any) => {
+    if (result.type === "success") {
+      toast.success("Thao tác thành công");
+      isAddOpen = false;
+      isEditRoleOpen = false;
+      isDeleteDialogOpen = false;
+      // Reset inputs
+      name = "";
+      email = "";
+      password = "";
+      role = "member";
+    } else if (result.type === "failure") {
+      toast.error(result.data?.message || "Có lỗi xảy ra");
     }
-    goto(url.toString(), { replaceState: true, keepFocus: true });
-  }
-
-  function handleSearchInput(event: Event) {
-    const target = event.target as HTMLInputElement;
-    searchQuery = target.value;
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(updateSearchUrl, 300);
-  }
-
-  function clearSearch() {
-    searchQuery = "";
-    updateSearchUrl();
-  }
-  let isAddOpen = $state(false);
-
-  // Add Member Form
-  // (We rely on form submission now, so local binding only for UI if needed, or just regular inputs)
-  // But keeping bindings is fine for clearing.
-  let name = $state("");
-  let email = $state("");
-  let password = $state("");
-  let role = $state("member");
-
-  // Edit Role Form
-  let isEditRoleOpen = $state(false);
-  let editingEmployee = $state<any>(null);
-  let editRoleValue = $state("member");
-
-  // Delete State
-  let isDeleteDialogOpen = $state(false);
-  let deletingEmployee = $state<any>(null);
-
-  // Form Validation Errors
-  let empNameError = $state("");
-  let empEmailError = $state("");
-  let empPasswordError = $state("");
-
-  // Map members for display
-  let allEmployees = $derived(
-    data.members
-      .map((m: any) => ({
-        id: m.id,
-        type: "member",
-        name: m.user?.name || "Unknown",
-        email: m.user?.email || "No Email",
-        image: m.user?.image,
-        role: m.role,
-        phone: "",
-        status: "active",
-      }))
-      .filter(
-        (e: any) =>
-          e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          e.email.toLowerCase().includes(searchQuery.toLowerCase()),
-      ),
-  );
-
-  const roleColors: Record<string, string> = {
-    admin: "bg-purple-100 text-purple-700",
-    owner: "bg-orange-100 text-orange-700",
-    member: "bg-blue-100 text-blue-700",
-    user: "bg-gray-100 text-gray-700",
+    await update();
   };
+}
 
-  function handleFormSubmit() {
-    return async ({ result, update }: any) => {
-      if (result.type === "success") {
-        toast.success("Thao tác thành công");
-        isAddOpen = false;
-        isEditRoleOpen = false;
-        isDeleteDialogOpen = false;
-        // Reset inputs
-        name = "";
-        email = "";
-        password = "";
-        role = "member";
-      } else if (result.type === "failure") {
-        toast.error(result.data?.message || "Có lỗi xảy ra");
-      }
-      await update();
-    };
-  }
+function openEditRole(employee: any) {
+  editingEmployee = employee;
+  editRoleValue = employee.role;
+  isEditRoleOpen = true;
+}
 
-  function openEditRole(employee: any) {
-    editingEmployee = employee;
-    editRoleValue = employee.role;
-    isEditRoleOpen = true;
-  }
-
-  function openDeleteDialog(employee: any) {
-    deletingEmployee = employee;
-    isDeleteDialogOpen = true;
-  }
+function openDeleteDialog(employee: any) {
+  deletingEmployee = employee;
+  isDeleteDialogOpen = true;
+}
 </script>
 
 <svelte:head>

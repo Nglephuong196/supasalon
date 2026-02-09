@@ -1,911 +1,911 @@
 <script lang="ts">
-  import { Card, CardContent } from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
-  import * as Dialog from "$lib/components/ui/dialog";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-  import * as Tabs from "$lib/components/ui/tabs";
-  import {
-    CalendarCheck,
-    Clock,
-    UserCheck,
-    UserX,
-    Plus,
-    Search,
-    Calendar,
-    Download,
-    ChevronLeft,
-    ChevronRight,
-    MoreVertical,
-    Pencil,
-    Trash,
-    Filter,
-    Check,
-    Calendar as CalendarIcon,
-  } from "@lucide/svelte";
-  import { cn } from "$lib/utils";
-  import { goto, invalidateAll } from "$app/navigation";
-  import { page } from "$app/stores";
-  import { get } from "svelte/store";
-  import { enhance } from "$app/forms";
-  import DateTimePicker from "$lib/components/ui/date-time-picker/date-time-picker.svelte";
-  import { RangeCalendar } from "$lib/components/ui/range-calendar/index.js";
-  import * as Popover from "$lib/components/ui/popover/index.js";
-  import Combobox from "$lib/components/ui/combobox/combobox.svelte";
-  import * as Select from "$lib/components/ui/select";
-  import { toast } from "svelte-sonner";
-  import type { PageData } from "./$types";
-  import {
-    DateFormatter,
-    getLocalTimeZone,
-    today,
-    type DateValue,
-    parseDate,
-  } from "@internationalized/date";
+import { Card, CardContent } from "$lib/components/ui/card";
+import { Button } from "$lib/components/ui/button";
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import * as Dialog from "$lib/components/ui/dialog";
+import * as AlertDialog from "$lib/components/ui/alert-dialog";
+import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+import * as Tabs from "$lib/components/ui/tabs";
+import {
+  CalendarCheck,
+  Clock,
+  UserCheck,
+  UserX,
+  Plus,
+  Search,
+  Calendar,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  MoreVertical,
+  Pencil,
+  Trash,
+  Filter,
+  Check,
+  Calendar as CalendarIcon,
+} from "@lucide/svelte";
+import { cn } from "$lib/utils";
+import { goto, invalidateAll } from "$app/navigation";
+import { page } from "$app/stores";
+import { get } from "svelte/store";
+import { enhance } from "$app/forms";
+import DateTimePicker from "$lib/components/ui/date-time-picker/date-time-picker.svelte";
+import { RangeCalendar } from "$lib/components/ui/range-calendar/index.js";
+import * as Popover from "$lib/components/ui/popover/index.js";
+import Combobox from "$lib/components/ui/combobox/combobox.svelte";
+import * as Select from "$lib/components/ui/select";
+import { toast } from "svelte-sonner";
+import type { PageData } from "./$types";
+import {
+  DateFormatter,
+  getLocalTimeZone,
+  today,
+  type DateValue,
+  parseDate,
+} from "@internationalized/date";
 
-  let { data }: { data: PageData } = $props();
+let { data }: { data: PageData } = $props();
 
-  let activeTab = $state("list");
+let activeTab = $state("list");
 
-  // Filter states
-  let dateFilter = $state<"today" | "pastWeek" | "week" | "month" | "custom">("today");
+// Filter states
+let dateFilter = $state<"today" | "pastWeek" | "week" | "month" | "custom">("today");
 
-  // Date Range State
-  const df = new DateFormatter("vi-VN", {
-    dateStyle: "medium",
-  });
+// Date Range State
+const df = new DateFormatter("vi-VN", {
+  dateStyle: "medium",
+});
 
-  let value = $state<{
-    start: DateValue | undefined;
-    end: DateValue | undefined;
-  }>({
-    start: undefined,
-    end: undefined,
-  });
+let value = $state<{
+  start: DateValue | undefined;
+  end: DateValue | undefined;
+}>({
+  start: undefined,
+  end: undefined,
+});
 
-  let fromDate = $state("");
-  let toDate = $state("");
-  let statusFilter = $state("all");
-  let searchQuery = $state("");
-  let currentPage = $state(1);
-  let pageSize = $state(20);
-  let calendarServiceFilter = $state("all");
-  let calendarStaffFilter = $state("all");
+let fromDate = $state("");
+let toDate = $state("");
+let statusFilter = $state("all");
+let searchQuery = $state("");
+let currentPage = $state(1);
+let pageSize = $state(20);
+let calendarServiceFilter = $state("all");
+let calendarStaffFilter = $state("all");
 
-  // Sync filter states from URL on data change
-  $effect(() => {
-    const filters = data.filters as any;
-    if (filters) {
-      fromDate = filters.from || "";
-      toDate = filters.to || "";
-      const today = getDateOnly(new Date());
-      const todayStr = today.toISOString().split("T")[0];
-      const sevenDaysAgoStr = addDays(today, -7).toISOString().split("T")[0];
-      const nextWeekStr = addDays(today, 7).toISOString().split("T")[0];
-      const firstDayOfMonthStr = new Date(today.getFullYear(), today.getMonth(), 1)
-        .toISOString()
-        .split("T")[0];
-      const lastDayOfMonthStr = new Date(today.getFullYear(), today.getMonth() + 1, 0)
-        .toISOString()
-        .split("T")[0];
+// Sync filter states from URL on data change
+$effect(() => {
+  const filters = data.filters as any;
+  if (filters) {
+    fromDate = filters.from || "";
+    toDate = filters.to || "";
+    const today = getDateOnly(new Date());
+    const todayStr = today.toISOString().split("T")[0];
+    const sevenDaysAgoStr = addDays(today, -7).toISOString().split("T")[0];
+    const nextWeekStr = addDays(today, 7).toISOString().split("T")[0];
+    const firstDayOfMonthStr = new Date(today.getFullYear(), today.getMonth(), 1)
+      .toISOString()
+      .split("T")[0];
+    const lastDayOfMonthStr = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+      .toISOString()
+      .split("T")[0];
 
-      if (fromDate === todayStr && toDate === todayStr) {
-        dateFilter = "today";
-      } else if (fromDate === sevenDaysAgoStr && toDate === todayStr) {
-        dateFilter = "pastWeek";
-      } else if (fromDate === todayStr && toDate === nextWeekStr) {
-        dateFilter = "week";
-      } else if (fromDate === firstDayOfMonthStr && toDate === lastDayOfMonthStr) {
-        dateFilter = "month";
-      } else {
-        dateFilter = "custom";
-      }
-
-      // Parse existing dates into RangeCalendar value if present
-      if (fromDate && toDate) {
-        try {
-          value = {
-            start: parseDate(fromDate),
-            end: parseDate(toDate),
-          };
-        } catch (e) {
-          // ignore parse error
-        }
-      } else if (!fromDate && !toDate && dateFilter === "today") {
-        // Default to today if nothing set? Or leave undefined?
-        // The original code had init logic maybe?
-        // Let's rely on dateFilter logic or user input.
-      }
-
-      statusFilter = filters.status || "all";
-      searchQuery = filters.search || "";
-    }
-    if (data.pagination) {
-      currentPage = data.pagination.page || 1;
-      pageSize = data.pagination.limit || 20;
-    }
-  });
-
-  // Dialog states
-  let isCreateOpen = $state(false);
-  let isDeleteOpen = $state(false);
-  let deletingBooking = $state<any>(null);
-  let isQuickCreateOpen = $state(false);
-
-  // Customer Autocomplete state
-  let customerSearchQuery = $state("");
-  let showCustomerResults = $state(false);
-
-  // Quick Create Validation Errors
-  let quickNameError = $state("");
-  let quickPhoneError = $state("");
-
-  let customerItems = $derived(
-    (data.customers || []).map((c: any) => ({
-      value: c.id.toString(),
-      label: `${c.name} - ${c.phone}`,
-    })),
-  );
-
-  let calendarServiceOptions = $derived([
-    { value: "all", label: "Tất cả dịch vụ" },
-    ...(data.services || []).map((service: any) => ({
-      value: service.id.toString(),
-      label: service.name,
-    })),
-  ]);
-
-  let calendarStaffOptions = $derived([
-    { value: "all", label: "Tất cả nhân viên" },
-    ...(data.members || []).map((member: any) => ({
-      value: member.id.toString(),
-      label: member.user?.name || member.name || `NV #${member.id}`,
-    })),
-  ]);
-
-  $effect(() => {
-    if (newBooking.customerId) {
-      const customer = data.customers?.find((c: any) => c.id.toString() === newBooking.customerId);
-      if (customer) {
-        newBooking.customerPhone = customer.phone;
-      }
-    }
-  });
-
-  function selectCustomer(customer: any) {
-    newBooking.customerId = customer.id.toString();
-    newBooking.customerPhone = customer.phone;
-    customerSearchQuery = `${customer.name} - ${customer.phone}`;
-    showCustomerResults = false;
-  }
-
-  // Form states for create/edit
-  let editingBookingId = $state<number | null>(null);
-  let newBooking = $state({
-    customerId: "",
-    customerPhone: "",
-    date: "",
-    guestCount: "1",
-    status: "confirmed",
-    notes: "",
-    guests: [{ services: [{ categoryId: "", serviceId: "", memberId: "" }] }],
-  });
-
-  // Sync guest count with guests array
-  $effect(() => {
-    const count = parseInt(newBooking.guestCount) || 1;
-    const currentGuests = newBooking.guests.length;
-
-    if (count > currentGuests) {
-      // Add new guest areas
-      for (let i = currentGuests; i < count; i++) {
-        newBooking.guests = [
-          ...newBooking.guests,
-          {
-            services: [{ categoryId: "", serviceId: "", memberId: "" }],
-          },
-        ];
-      }
-    } else if (count < currentGuests) {
-      // Remove extra guest areas
-      newBooking.guests = newBooking.guests.slice(0, count);
-    }
-  });
-
-  let selectedCustomer = $derived(
-    (data.customers || []).find((c: any) => c.id.toString() === newBooking.customerId),
-  );
-
-  let totalGuestServices = $derived(
-    (newBooking.guests || []).reduce(
-      (total: number, guest: any) =>
-        total + (guest.services || []).filter((service: any) => service.serviceId).length,
-      0,
-    ),
-  );
-
-  let canSubmitBooking = $derived(
-    Boolean(
-      newBooking.customerId &&
-      newBooking.date &&
-      (parseInt(newBooking.guestCount) || 0) > 0 &&
-      totalGuestServices > 0,
-    ),
-  );
-
-  const statusStyles: Record<string, string> = {
-    confirmed: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    pending: "bg-amber-100 text-amber-700 border-amber-200",
-    completed: "bg-blue-100 text-blue-700 border-blue-200",
-    cancelled: "bg-rose-100 text-rose-700 border-rose-200",
-    checkin: "bg-purple-100 text-purple-700 border-purple-200",
-  };
-
-  const statusLabels: Record<string, string> = {
-    confirmed: "Đã xác nhận",
-    pending: "Chờ xác nhận",
-    completed: "Hoàn thành",
-    cancelled: "Đã hủy",
-    checkin: "Đã check-in",
-  };
-
-  const statusOptions = [
-    { value: "all", label: "Tất cả" },
-    { value: "pending", label: "Chờ xác nhận" },
-    { value: "confirmed", label: "Đã xác nhận" },
-    { value: "checkin", label: "Đã check-in" },
-    { value: "completed", label: "Hoàn thành" },
-    { value: "cancelled", label: "Đã hủy" },
-  ];
-
-  let selectedStatusLabel = $derived(
-    statusOptions.find((o) => o.value === statusFilter)?.label || "Trạng thái",
-  );
-
-  const TEST_CALENDAR_START_HOUR = 8;
-  const TEST_CALENDAR_END_HOUR = 21;
-  const TEST_CALENDAR_HOUR_HEIGHT = 64;
-  const TEST_CALENDAR_EVENT_HEIGHT = 74;
-  const TEST_CALENDAR_WEEK_EVENT_HEIGHT = TEST_CALENDAR_EVENT_HEIGHT - 14;
-  const DRAG_BOOKING_MIME = "application/x-booking";
-
-  let testCalendarView = $state<"day" | "week" | "month">("day");
-  let testCalendarDate = $state(getDateOnly(new Date()));
-
-  let testCalendarDayStripDays = $derived(
-    Array.from({ length: 7 }, (_, index) => addDays(testCalendarDate, index - 3)),
-  );
-
-  let testCalendarWeekDays = $derived(
-    Array.from({ length: 7 }, (_, index) => addDays(getStartOfWeek(testCalendarDate), index)),
-  );
-
-  let calendarFilteredBookings = $derived(
-    (data.bookings || []).filter((booking: any) =>
-      bookingMatchesCalendarFilters(booking, calendarServiceFilter, calendarStaffFilter),
-    ),
-  );
-
-  let bookingsByDate = $derived(groupBookingsByDate(calendarFilteredBookings));
-
-  let testCalendarDayBookings = $derived(
-    calendarFilteredBookings
-      .filter((booking: any) => isSameDay(new Date(booking.date), testCalendarDate))
-      .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()),
-  );
-
-  let testCalendarMonthDays = $derived(getMonthGridDays(testCalendarDate));
-
-  let testCalendarTimelineHeight = $derived(
-    (TEST_CALENDAR_END_HOUR - TEST_CALENDAR_START_HOUR) * TEST_CALENDAR_HOUR_HEIGHT,
-  );
-
-  let dayCalendarLayout = $derived(
-    buildOverlapLayout(testCalendarDayBookings, TEST_CALENDAR_EVENT_HEIGHT),
-  );
-
-  let weekCalendarLayouts = $derived(
-    Object.fromEntries(
-      Object.entries(bookingsByDate).map(([dayKey, bookings]) => [
-        dayKey,
-        buildOverlapLayout(bookings as any[], TEST_CALENDAR_WEEK_EVENT_HEIGHT),
-      ]),
-    ) as Record<string, Record<number, { leftPct: number; widthPct: number; zIndex: number }>>,
-  );
-
-  function formatDate(dateStr: string) {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("vi-VN", {
-      weekday: "short",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  }
-
-  function formatShortDate(dateStr: string) {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-    });
-  }
-
-  function formatTime(dateStr: string) {
-    if (!dateStr) return "";
-    return new Date(dateStr).toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-
-  function generateBookingCode(id: number) {
-    return `LH${String(id).padStart(6, "0")}`;
-  }
-
-  function getDateOnly(date: Date) {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  }
-
-  function addDays(date: Date, amount: number) {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount);
-  }
-
-  function addMonths(date: Date, amount: number) {
-    return new Date(date.getFullYear(), date.getMonth() + amount, 1);
-  }
-
-  function isSameDay(left: Date, right: Date) {
-    return (
-      left.getFullYear() === right.getFullYear() &&
-      left.getMonth() === right.getMonth() &&
-      left.getDate() === right.getDate()
-    );
-  }
-
-  function isSameMonth(left: Date, right: Date) {
-    return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth();
-  }
-
-  function getStartOfWeek(date: Date) {
-    const result = getDateOnly(date);
-    const day = result.getDay();
-    const diff = day === 0 ? -6 : 1 - day;
-    result.setDate(result.getDate() + diff);
-    return result;
-  }
-
-  function toDateKey(date: Date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
-
-  function groupBookingsByDate(bookings: any[]) {
-    const grouped: Record<string, any[]> = {};
-    for (const booking of bookings) {
-      const key = toDateKey(new Date(booking.date));
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(booking);
-    }
-    for (const key of Object.keys(grouped)) {
-      grouped[key].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    }
-    return grouped;
-  }
-
-  function getBookingServiceAndStaffIds(booking: any): {
-    serviceIds: Set<string>;
-    staffIds: Set<string>;
-  } {
-    const serviceIds = new Set<string>();
-    const staffIds = new Set<string>();
-
-    for (const guest of booking?.guests || []) {
-      for (const item of guest?.services || []) {
-        if (item?.serviceId != null) {
-          serviceIds.add(String(item.serviceId));
-        }
-        if (item?.memberId != null) {
-          staffIds.add(String(item.memberId));
-        } else if (item?.staffId != null) {
-          staffIds.add(String(item.staffId));
-        }
-      }
+    if (fromDate === todayStr && toDate === todayStr) {
+      dateFilter = "today";
+    } else if (fromDate === sevenDaysAgoStr && toDate === todayStr) {
+      dateFilter = "pastWeek";
+    } else if (fromDate === todayStr && toDate === nextWeekStr) {
+      dateFilter = "week";
+    } else if (fromDate === firstDayOfMonthStr && toDate === lastDayOfMonthStr) {
+      dateFilter = "month";
+    } else {
+      dateFilter = "custom";
     }
 
-    // Backward compatibility in case legacy bookingServices still appears in payload.
-    for (const legacy of booking?.bookingServices || []) {
-      if (legacy?.serviceId != null) {
-        serviceIds.add(String(legacy.serviceId));
-      } else if (legacy?.service?.id != null) {
-        serviceIds.add(String(legacy.service.id));
-      }
-      if (legacy?.memberId != null) {
-        staffIds.add(String(legacy.memberId));
-      } else if (legacy?.staffId != null) {
-        staffIds.add(String(legacy.staffId));
-      }
-    }
-
-    return { serviceIds, staffIds };
-  }
-
-  function bookingMatchesCalendarFilters(
-    booking: any,
-    selectedService: string,
-    selectedStaff: string,
-  ) {
-    if (selectedService === "all" && selectedStaff === "all") return true;
-
-    const { serviceIds, staffIds } = getBookingServiceAndStaffIds(booking);
-
-    if (selectedService !== "all" && !serviceIds.has(selectedService)) {
-      return false;
-    }
-    if (selectedStaff !== "all" && !staffIds.has(selectedStaff)) {
-      return false;
-    }
-    return true;
-  }
-
-  function getMonthGridDays(date: Date) {
-    const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-    const gridStart = getStartOfWeek(firstDayOfMonth);
-    return Array.from({ length: 42 }, (_, index) => addDays(gridStart, index));
-  }
-
-  function isToday(dateStr: string) {
-    const date = new Date(dateStr);
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
-  }
-
-  function getDateLabel(dateStr: string) {
-    if (isToday(dateStr)) return "(Hôm nay)";
-    const date = new Date(dateStr);
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    if (date.toDateString() === tomorrow.toDateString()) return "(Ngày mai)";
-    return "";
-  }
-
-  function isPastBooking(dateStr: string) {
-    return new Date(dateStr).getTime() < Date.now();
-  }
-
-  function formatCalendarDateHeader(date: Date) {
-    return date.toLocaleDateString("vi-VN", {
-      weekday: "long",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  }
-
-  function formatCalendarWeekday(date: Date) {
-    return date.toLocaleDateString("vi-VN", { weekday: "short" });
-  }
-
-  function formatHourLabel(hour: number) {
-    return `${String(hour).padStart(2, "0")}:00`;
-  }
-
-  function formatMonthLabel(date: Date) {
-    return date.toLocaleDateString("vi-VN", {
-      month: "long",
-      year: "numeric",
-    });
-  }
-
-  function formatWeekRangeLabel(date: Date) {
-    const start = getStartOfWeek(date);
-    const end = addDays(start, 6);
-    return `${start.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" })} - ${end.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })}`;
-  }
-
-  function shiftTestCalendar(amount: number) {
-    if (testCalendarView === "month") {
-      testCalendarDate = addMonths(testCalendarDate, amount);
-      return;
-    }
-    if (testCalendarView === "week") {
-      testCalendarDate = addDays(testCalendarDate, amount * 7);
-      return;
-    }
-    testCalendarDate = addDays(testCalendarDate, amount);
-  }
-
-  function getTestCalendarTop(dateStr: string) {
-    const date = new Date(dateStr);
-    const minutesFromStart = (date.getHours() - TEST_CALENDAR_START_HOUR) * 60 + date.getMinutes();
-    const rawTop = (minutesFromStart / 60) * TEST_CALENDAR_HOUR_HEIGHT;
-    const maxTop = testCalendarTimelineHeight - TEST_CALENDAR_EVENT_HEIGHT;
-    return Math.max(0, Math.min(maxTop, rawTop));
-  }
-
-  function buildOverlapLayout(bookings: any[], eventHeight: number) {
-    type Positioned = { id: number; top: number; bottom: number };
-    const positioned: Positioned[] = bookings
-      .map((booking) => {
-        const top = getTestCalendarTop(booking.date);
-        return {
-          id: booking.id,
-          top,
-          bottom: top + eventHeight,
+    // Parse existing dates into RangeCalendar value if present
+    if (fromDate && toDate) {
+      try {
+        value = {
+          start: parseDate(fromDate),
+          end: parseDate(toDate),
         };
-      })
-      .sort((a, b) => (a.top !== b.top ? a.top - b.top : a.id - b.id));
-
-    const columnById: Record<number, number> = {};
-    const totalColumnsById: Record<number, number> = {};
-
-    let active: Array<{ id: number; bottom: number; col: number }> = [];
-    let groupIds: number[] = [];
-    let groupMaxColumns = 1;
-
-    const flushGroup = () => {
-      for (const bookingId of groupIds) {
-        totalColumnsById[bookingId] = Math.max(1, groupMaxColumns);
+      } catch (e) {
+        // ignore parse error
       }
-      groupIds = [];
-      groupMaxColumns = 1;
-    };
-
-    for (const event of positioned) {
-      active = active.filter((item) => item.bottom > event.top);
-
-      if (active.length === 0 && groupIds.length > 0) {
-        flushGroup();
-      }
-
-      const usedCols = new Set(active.map((item) => item.col));
-      let col = 0;
-      while (usedCols.has(col)) col += 1;
-
-      active.push({ id: event.id, bottom: event.bottom, col });
-      groupIds.push(event.id);
-      columnById[event.id] = col;
-      groupMaxColumns = Math.max(groupMaxColumns, active.length);
+    } else if (!fromDate && !toDate && dateFilter === "today") {
+      // Default to today if nothing set? Or leave undefined?
+      // The original code had init logic maybe?
+      // Let's rely on dateFilter logic or user input.
     }
 
-    if (groupIds.length > 0) {
-      flushGroup();
-    }
-
-    const layout: Record<number, { leftPct: number; widthPct: number; zIndex: number }> = {};
-    for (const booking of bookings) {
-      const total = Math.max(1, totalColumnsById[booking.id] || 1);
-      const col = Math.max(0, columnById[booking.id] || 0);
-      const widthPct = 100 / total;
-      const leftPct = col * widthPct;
-      layout[booking.id] = {
-        leftPct,
-        widthPct,
-        zIndex: col + 1,
-      };
-    }
-
-    return layout;
+    statusFilter = filters.status || "all";
+    searchQuery = filters.search || "";
   }
-
-  function getDropDateByY(baseDate: Date, clientY: number, containerRect: DOMRect) {
-    const y = Math.max(0, Math.min(containerRect.height, clientY - containerRect.top));
-    const totalMinutes = (y / TEST_CALENDAR_HOUR_HEIGHT) * 60 + TEST_CALENDAR_START_HOUR * 60;
-    const roundedMinutes = Math.round(totalMinutes / 15) * 15;
-    const startMinutes = TEST_CALENDAR_START_HOUR * 60;
-    const endMinutes = TEST_CALENDAR_END_HOUR * 60 - 15;
-    const clampedMinutes = Math.max(startMinutes, Math.min(endMinutes, roundedMinutes));
-    const hour = Math.floor(clampedMinutes / 60);
-    const minute = clampedMinutes % 60;
-
-    return new Date(
-      baseDate.getFullYear(),
-      baseDate.getMonth(),
-      baseDate.getDate(),
-      hour,
-      minute,
-      0,
-      0,
-    );
+  if (data.pagination) {
+    currentPage = data.pagination.page || 1;
+    pageSize = data.pagination.limit || 20;
   }
+});
 
-  function readDraggedBooking(event: DragEvent): { id: number; date: string } | null {
-    try {
-      const payload = event.dataTransfer?.getData(DRAG_BOOKING_MIME);
-      if (!payload) return null;
-      const parsed = JSON.parse(payload);
-      const id = Number(parsed?.id);
-      const date = parsed?.date?.toString?.() || "";
-      if (!id || !date) return null;
-      return { id, date };
-    } catch {
-      return null;
-    }
-  }
+// Dialog states
+let isCreateOpen = $state(false);
+let isDeleteOpen = $state(false);
+let deletingBooking = $state<any>(null);
+let isQuickCreateOpen = $state(false);
 
-  function handleBookingDragStart(event: DragEvent, booking: any) {
-    if (!data.canUpdate) return;
-    const payload = JSON.stringify({
-      id: booking.id,
-      date: booking.date,
-    });
-    event.dataTransfer?.setData(DRAG_BOOKING_MIME, payload);
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = "move";
+// Customer Autocomplete state
+let customerSearchQuery = $state("");
+let showCustomerResults = $state(false);
+
+// Quick Create Validation Errors
+let quickNameError = $state("");
+let quickPhoneError = $state("");
+
+let customerItems = $derived(
+  (data.customers || []).map((c: any) => ({
+    value: c.id.toString(),
+    label: `${c.name} - ${c.phone}`,
+  })),
+);
+
+let calendarServiceOptions = $derived([
+  { value: "all", label: "Tất cả dịch vụ" },
+  ...(data.services || []).map((service: any) => ({
+    value: service.id.toString(),
+    label: service.name,
+  })),
+]);
+
+let calendarStaffOptions = $derived([
+  { value: "all", label: "Tất cả nhân viên" },
+  ...(data.members || []).map((member: any) => ({
+    value: member.id.toString(),
+    label: member.user?.name || member.name || `NV #${member.id}`,
+  })),
+]);
+
+$effect(() => {
+  if (newBooking.customerId) {
+    const customer = data.customers?.find((c: any) => c.id.toString() === newBooking.customerId);
+    if (customer) {
+      newBooking.customerPhone = customer.phone;
     }
   }
+});
 
-  async function moveBookingByDrop(bookingId: number, nextDate: Date) {
-    const formData = new FormData();
-    formData.set("id", bookingId.toString());
-    formData.set("date", nextDate.toISOString());
+function selectCustomer(customer: any) {
+  newBooking.customerId = customer.id.toString();
+  newBooking.customerPhone = customer.phone;
+  customerSearchQuery = `${customer.name} - ${customer.phone}`;
+  showCustomerResults = false;
+}
 
-    const res = await fetch("?/moveBooking", {
-      method: "POST",
-      body: formData,
-    });
+// Form states for create/edit
+let editingBookingId = $state<number | null>(null);
+let newBooking = $state({
+  customerId: "",
+  customerPhone: "",
+  date: "",
+  guestCount: "1",
+  status: "confirmed",
+  notes: "",
+  guests: [{ services: [{ categoryId: "", serviceId: "", memberId: "" }] }],
+});
 
-    if (res.ok) {
-      toast.success("Đã di chuyển lịch hẹn");
-      await invalidateAll();
-      return;
-    }
+// Sync guest count with guests array
+$effect(() => {
+  const count = parseInt(newBooking.guestCount) || 1;
+  const currentGuests = newBooking.guests.length;
 
-    try {
-      const result = await res.json();
-      toast.error(result?.message || "Không thể di chuyển lịch hẹn");
-    } catch {
-      toast.error("Không thể di chuyển lịch hẹn");
-    }
-  }
-
-  async function handleDropOnDayTimeline(event: DragEvent) {
-    event.preventDefault();
-    if (!data.canUpdate) return;
-
-    const dragged = readDraggedBooking(event);
-    if (!dragged) return;
-
-    const container = event.currentTarget as HTMLDivElement | null;
-    if (!container) return;
-
-    const nextDate = getDropDateByY(
-      testCalendarDate,
-      event.clientY,
-      container.getBoundingClientRect(),
-    );
-    await moveBookingByDrop(dragged.id, nextDate);
-  }
-
-  async function handleDropOnWeekColumn(event: DragEvent, day: Date) {
-    event.preventDefault();
-    if (!data.canUpdate) return;
-
-    const dragged = readDraggedBooking(event);
-    if (!dragged) return;
-
-    const container = event.currentTarget as HTMLDivElement | null;
-    if (!container) return;
-
-    const nextDate = getDropDateByY(day, event.clientY, container.getBoundingClientRect());
-    await moveBookingByDrop(dragged.id, nextDate);
-  }
-
-  async function handleDropOnMonthDay(event: DragEvent, day: Date) {
-    event.preventDefault();
-    if (!data.canUpdate) return;
-
-    const dragged = readDraggedBooking(event);
-    if (!dragged) return;
-
-    const sourceDate = new Date(dragged.date);
-    const nextDate = new Date(
-      day.getFullYear(),
-      day.getMonth(),
-      day.getDate(),
-      sourceDate.getHours(),
-      sourceDate.getMinutes(),
-      0,
-      0,
-    );
-    await moveBookingByDrop(dragged.id, nextDate);
-  }
-
-  // Group bookings by date
-  function groupByDate(bookings: any[]) {
-    const groups: Record<string, any[]> = {};
-    for (const booking of bookings) {
-      const dateKey = new Date(booking.date).toDateString();
-      if (!groups[dateKey]) groups[dateKey] = [];
-      groups[dateKey].push(booking);
-    }
-    return Object.entries(groups).map(([dateKey, items]) => ({
-      date: items[0].date,
-      bookings: items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
-    }));
-  }
-
-  let groupedBookings = $derived(groupByDate(data.bookings || []));
-
-  function getNowLocalDateTimeString() {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, "0");
-    const d = String(now.getDate()).padStart(2, "0");
-    const h = String(now.getHours()).padStart(2, "0");
-    const min = String(now.getMinutes()).padStart(2, "0");
-    return `${y}-${m}-${d}T${h}:${min}`;
-  }
-
-  function openCreateDialog() {
-    editingBookingId = null;
-    newBooking = {
-      customerId: "",
-      customerPhone: "",
-      date: getNowLocalDateTimeString(),
-      guestCount: "1",
-      status: "confirmed",
-      notes: "",
-      guests: [
+  if (count > currentGuests) {
+    // Add new guest areas
+    for (let i = currentGuests; i < count; i++) {
+      newBooking.guests = [
+        ...newBooking.guests,
         {
           services: [{ categoryId: "", serviceId: "", memberId: "" }],
         },
-      ],
-    };
-    isCreateOpen = true;
-  }
-
-  // Apply filters
-  function applyFilters() {
-    const params = new URLSearchParams();
-
-    if (dateFilter === "today") {
-      const today = new Date().toISOString().split("T")[0];
-      params.set("from", today);
-      params.set("to", today);
-    } else if (dateFilter === "pastWeek") {
-      const today = getDateOnly(new Date());
-      const pastWeek = addDays(today, -7);
-      params.set("from", pastWeek.toISOString().split("T")[0]);
-      params.set("to", today.toISOString().split("T")[0]);
-    } else if (dateFilter === "week") {
-      const today = new Date();
-      const nextWeek = new Date();
-      nextWeek.setDate(today.getDate() + 7);
-      params.set("from", today.toISOString().split("T")[0]);
-      params.set("to", nextWeek.toISOString().split("T")[0]);
-    } else if (dateFilter === "month") {
-      const now = new Date();
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      params.set("from", firstDay.toISOString().split("T")[0]);
-      params.set("to", lastDay.toISOString().split("T")[0]);
-    } else if (fromDate && toDate) {
-      params.set("from", fromDate);
-      params.set("to", toDate);
+      ];
     }
-
-    if (statusFilter && statusFilter !== "all") {
-      params.set("status", statusFilter);
-    }
-    if (searchQuery) {
-      params.set("search", searchQuery);
-    }
-    params.set("page", "1");
-    params.set("limit", pageSize.toString());
-
-    goto(`/bookings?${params.toString()}`);
+  } else if (count < currentGuests) {
+    // Remove extra guest areas
+    newBooking.guests = newBooking.guests.slice(0, count);
   }
+});
 
-  function setDateFilter(filter: "today" | "pastWeek" | "week" | "month" | "custom") {
-    dateFilter = filter;
-    if (filter !== "custom") {
-      applyFilters();
-    }
+let selectedCustomer = $derived(
+  (data.customers || []).find((c: any) => c.id.toString() === newBooking.customerId),
+);
+
+let totalGuestServices = $derived(
+  (newBooking.guests || []).reduce(
+    (total: number, guest: any) =>
+      total + (guest.services || []).filter((service: any) => service.serviceId).length,
+    0,
+  ),
+);
+
+let canSubmitBooking = $derived(
+  Boolean(
+    newBooking.customerId &&
+      newBooking.date &&
+      (parseInt(newBooking.guestCount) || 0) > 0 &&
+      totalGuestServices > 0,
+  ),
+);
+
+const statusStyles: Record<string, string> = {
+  confirmed: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  pending: "bg-amber-100 text-amber-700 border-amber-200",
+  completed: "bg-blue-100 text-blue-700 border-blue-200",
+  cancelled: "bg-rose-100 text-rose-700 border-rose-200",
+  checkin: "bg-purple-100 text-purple-700 border-purple-200",
+};
+
+const statusLabels: Record<string, string> = {
+  confirmed: "Đã xác nhận",
+  pending: "Chờ xác nhận",
+  completed: "Hoàn thành",
+  cancelled: "Đã hủy",
+  checkin: "Đã check-in",
+};
+
+const statusOptions = [
+  { value: "all", label: "Tất cả" },
+  { value: "pending", label: "Chờ xác nhận" },
+  { value: "confirmed", label: "Đã xác nhận" },
+  { value: "checkin", label: "Đã check-in" },
+  { value: "completed", label: "Hoàn thành" },
+  { value: "cancelled", label: "Đã hủy" },
+];
+
+let selectedStatusLabel = $derived(
+  statusOptions.find((o) => o.value === statusFilter)?.label || "Trạng thái",
+);
+
+const TEST_CALENDAR_START_HOUR = 8;
+const TEST_CALENDAR_END_HOUR = 21;
+const TEST_CALENDAR_HOUR_HEIGHT = 64;
+const TEST_CALENDAR_EVENT_HEIGHT = 74;
+const TEST_CALENDAR_WEEK_EVENT_HEIGHT = TEST_CALENDAR_EVENT_HEIGHT - 14;
+const DRAG_BOOKING_MIME = "application/x-booking";
+
+let testCalendarView = $state<"day" | "week" | "month">("day");
+let testCalendarDate = $state(getDateOnly(new Date()));
+
+let testCalendarDayStripDays = $derived(
+  Array.from({ length: 7 }, (_, index) => addDays(testCalendarDate, index - 3)),
+);
+
+let testCalendarWeekDays = $derived(
+  Array.from({ length: 7 }, (_, index) => addDays(getStartOfWeek(testCalendarDate), index)),
+);
+
+let calendarFilteredBookings = $derived(
+  (data.bookings || []).filter((booking: any) =>
+    bookingMatchesCalendarFilters(booking, calendarServiceFilter, calendarStaffFilter),
+  ),
+);
+
+let bookingsByDate = $derived(groupBookingsByDate(calendarFilteredBookings));
+
+let testCalendarDayBookings = $derived(
+  calendarFilteredBookings
+    .filter((booking: any) => isSameDay(new Date(booking.date), testCalendarDate))
+    .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+);
+
+let testCalendarMonthDays = $derived(getMonthGridDays(testCalendarDate));
+
+let testCalendarTimelineHeight = $derived(
+  (TEST_CALENDAR_END_HOUR - TEST_CALENDAR_START_HOUR) * TEST_CALENDAR_HOUR_HEIGHT,
+);
+
+let dayCalendarLayout = $derived(
+  buildOverlapLayout(testCalendarDayBookings, TEST_CALENDAR_EVENT_HEIGHT),
+);
+
+let weekCalendarLayouts = $derived(
+  Object.fromEntries(
+    Object.entries(bookingsByDate).map(([dayKey, bookings]) => [
+      dayKey,
+      buildOverlapLayout(bookings as any[], TEST_CALENDAR_WEEK_EVENT_HEIGHT),
+    ]),
+  ) as Record<string, Record<number, { leftPct: number; widthPct: number; zIndex: number }>>,
+);
+
+function formatDate(dateStr: string) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("vi-VN", {
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function formatShortDate(dateStr: string) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+}
+
+function formatTime(dateStr: string) {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function generateBookingCode(id: number) {
+  return `LH${String(id).padStart(6, "0")}`;
+}
+
+function getDateOnly(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function addDays(date: Date, amount: number) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount);
+}
+
+function addMonths(date: Date, amount: number) {
+  return new Date(date.getFullYear(), date.getMonth() + amount, 1);
+}
+
+function isSameDay(left: Date, right: Date) {
+  return (
+    left.getFullYear() === right.getFullYear() &&
+    left.getMonth() === right.getMonth() &&
+    left.getDate() === right.getDate()
+  );
+}
+
+function isSameMonth(left: Date, right: Date) {
+  return left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth();
+}
+
+function getStartOfWeek(date: Date) {
+  const result = getDateOnly(date);
+  const day = result.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  result.setDate(result.getDate() + diff);
+  return result;
+}
+
+function toDateKey(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function groupBookingsByDate(bookings: any[]) {
+  const grouped: Record<string, any[]> = {};
+  for (const booking of bookings) {
+    const key = toDateKey(new Date(booking.date));
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(booking);
   }
-
-  function goToPage(pageNum: number) {
-    const currentPage = get(page);
-    const params = new URLSearchParams(currentPage.url.searchParams);
-    params.set("page", pageNum.toString());
-    goto(`/bookings?${params.toString()}`);
+  for (const key of Object.keys(grouped)) {
+    grouped[key].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }
+  return grouped;
+}
 
-  function handleFormResult() {
-    return async ({ result, update }: any) => {
-      if (result.type === "success") {
-        toast.success(editingBookingId ? "Đã cập nhật lịch hẹn" : "Thao tác thành công");
-        isCreateOpen = false;
-        isDeleteOpen = false;
-        editingBookingId = null;
-        // Force reload
-        await invalidateAll();
+function getBookingServiceAndStaffIds(booking: any): {
+  serviceIds: Set<string>;
+  staffIds: Set<string>;
+} {
+  const serviceIds = new Set<string>();
+  const staffIds = new Set<string>();
 
-        newBooking = {
-          customerId: "",
-          customerPhone: "",
-          date: getNowLocalDateTimeString(),
-          guestCount: "1",
-          status: "confirmed",
-          notes: "",
-          guests: [
-            {
-              services: [{ categoryId: "", serviceId: "", memberId: "" }],
-            },
-          ],
-        };
-      } else if (result.type === "failure") {
-        const errorMessage =
-          typeof result.data?.message === "string"
-            ? result.data.message
-            : "Có lỗi xảy ra khi lưu lịch hẹn (Lỗi dữ liệu)";
-        toast.error(errorMessage);
-        console.error("Booking save error:", result);
+  for (const guest of booking?.guests || []) {
+    for (const item of guest?.services || []) {
+      if (item?.serviceId != null) {
+        serviceIds.add(String(item.serviceId));
       }
-      await update();
-    };
-  }
-
-  async function handleStatusChange(bookingId: number, newStatus: string) {
-    const formData = new FormData();
-    formData.set("id", bookingId.toString());
-    formData.set("status", newStatus);
-
-    const res = await fetch("?/updateStatus", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (res.ok) {
-      toast.success("Đã cập nhật trạng thái");
-      // Refresh the page to get updated data
-      goto($page.url.toString(), { invalidateAll: true });
-    } else {
-      toast.error("Không thể cập nhật trạng thái");
+      if (item?.memberId != null) {
+        staffIds.add(String(item.memberId));
+      } else if (item?.staffId != null) {
+        staffIds.add(String(item.staffId));
+      }
     }
   }
 
-  function openDeleteDialog(booking: any) {
-    deletingBooking = booking;
-    isDeleteOpen = true;
+  // Backward compatibility in case legacy bookingServices still appears in payload.
+  for (const legacy of booking?.bookingServices || []) {
+    if (legacy?.serviceId != null) {
+      serviceIds.add(String(legacy.serviceId));
+    } else if (legacy?.service?.id != null) {
+      serviceIds.add(String(legacy.service.id));
+    }
+    if (legacy?.memberId != null) {
+      staffIds.add(String(legacy.memberId));
+    } else if (legacy?.staffId != null) {
+      staffIds.add(String(legacy.staffId));
+    }
   }
 
-  function openEditDialog(booking: any) {
-    editingBookingId = booking.id;
+  return { serviceIds, staffIds };
+}
 
-    let guests = booking.guests || [];
+function bookingMatchesCalendarFilters(
+  booking: any,
+  selectedService: string,
+  selectedStaff: string,
+) {
+  if (selectedService === "all" && selectedStaff === "all") return true;
 
-    if (!guests.length || guests.length === 0) {
-      guests = [{ services: [{ categoryId: "", serviceId: "", memberId: "" }] }];
-    } else {
-      // Map JSON structure to Form structure (strings)
-      guests = guests.map((g: any) => ({
-        services: (g.services || []).map((s: any) => ({
-          categoryId: s.categoryId?.toString() || "",
-          serviceId: s.serviceId?.toString() || "",
-          memberId: s.memberId?.toString() || s.staffId?.toString() || "",
-        })),
-      }));
+  const { serviceIds, staffIds } = getBookingServiceAndStaffIds(booking);
+
+  if (selectedService !== "all" && !serviceIds.has(selectedService)) {
+    return false;
+  }
+  if (selectedStaff !== "all" && !staffIds.has(selectedStaff)) {
+    return false;
+  }
+  return true;
+}
+
+function getMonthGridDays(date: Date) {
+  const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+  const gridStart = getStartOfWeek(firstDayOfMonth);
+  return Array.from({ length: 42 }, (_, index) => addDays(gridStart, index));
+}
+
+function isToday(dateStr: string) {
+  const date = new Date(dateStr);
+  const today = new Date();
+  return date.toDateString() === today.toDateString();
+}
+
+function getDateLabel(dateStr: string) {
+  if (isToday(dateStr)) return "(Hôm nay)";
+  const date = new Date(dateStr);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  if (date.toDateString() === tomorrow.toDateString()) return "(Ngày mai)";
+  return "";
+}
+
+function isPastBooking(dateStr: string) {
+  return new Date(dateStr).getTime() < Date.now();
+}
+
+function formatCalendarDateHeader(date: Date) {
+  return date.toLocaleDateString("vi-VN", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function formatCalendarWeekday(date: Date) {
+  return date.toLocaleDateString("vi-VN", { weekday: "short" });
+}
+
+function formatHourLabel(hour: number) {
+  return `${String(hour).padStart(2, "0")}:00`;
+}
+
+function formatMonthLabel(date: Date) {
+  return date.toLocaleDateString("vi-VN", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function formatWeekRangeLabel(date: Date) {
+  const start = getStartOfWeek(date);
+  const end = addDays(start, 6);
+  return `${start.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" })} - ${end.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })}`;
+}
+
+function shiftTestCalendar(amount: number) {
+  if (testCalendarView === "month") {
+    testCalendarDate = addMonths(testCalendarDate, amount);
+    return;
+  }
+  if (testCalendarView === "week") {
+    testCalendarDate = addDays(testCalendarDate, amount * 7);
+    return;
+  }
+  testCalendarDate = addDays(testCalendarDate, amount);
+}
+
+function getTestCalendarTop(dateStr: string) {
+  const date = new Date(dateStr);
+  const minutesFromStart = (date.getHours() - TEST_CALENDAR_START_HOUR) * 60 + date.getMinutes();
+  const rawTop = (minutesFromStart / 60) * TEST_CALENDAR_HOUR_HEIGHT;
+  const maxTop = testCalendarTimelineHeight - TEST_CALENDAR_EVENT_HEIGHT;
+  return Math.max(0, Math.min(maxTop, rawTop));
+}
+
+function buildOverlapLayout(bookings: any[], eventHeight: number) {
+  type Positioned = { id: number; top: number; bottom: number };
+  const positioned: Positioned[] = bookings
+    .map((booking) => {
+      const top = getTestCalendarTop(booking.date);
+      return {
+        id: booking.id,
+        top,
+        bottom: top + eventHeight,
+      };
+    })
+    .sort((a, b) => (a.top !== b.top ? a.top - b.top : a.id - b.id));
+
+  const columnById: Record<number, number> = {};
+  const totalColumnsById: Record<number, number> = {};
+
+  let active: Array<{ id: number; bottom: number; col: number }> = [];
+  let groupIds: number[] = [];
+  let groupMaxColumns = 1;
+
+  const flushGroup = () => {
+    for (const bookingId of groupIds) {
+      totalColumnsById[bookingId] = Math.max(1, groupMaxColumns);
+    }
+    groupIds = [];
+    groupMaxColumns = 1;
+  };
+
+  for (const event of positioned) {
+    active = active.filter((item) => item.bottom > event.top);
+
+    if (active.length === 0 && groupIds.length > 0) {
+      flushGroup();
     }
 
-    newBooking = {
-      customerId: booking.customerId.toString(),
-      customerPhone: booking.customer?.phone || "",
-      date: booking.date,
-      guestCount: booking.guestCount?.toString() || "1",
-      status: booking.status,
-      notes: booking.notes || "",
-      guests: guests,
-    };
+    const usedCols = new Set(active.map((item) => item.col));
+    let col = 0;
+    while (usedCols.has(col)) col += 1;
 
-    isCreateOpen = true;
+    active.push({ id: event.id, bottom: event.bottom, col });
+    groupIds.push(event.id);
+    columnById[event.id] = col;
+    groupMaxColumns = Math.max(groupMaxColumns, active.length);
   }
+
+  if (groupIds.length > 0) {
+    flushGroup();
+  }
+
+  const layout: Record<number, { leftPct: number; widthPct: number; zIndex: number }> = {};
+  for (const booking of bookings) {
+    const total = Math.max(1, totalColumnsById[booking.id] || 1);
+    const col = Math.max(0, columnById[booking.id] || 0);
+    const widthPct = 100 / total;
+    const leftPct = col * widthPct;
+    layout[booking.id] = {
+      leftPct,
+      widthPct,
+      zIndex: col + 1,
+    };
+  }
+
+  return layout;
+}
+
+function getDropDateByY(baseDate: Date, clientY: number, containerRect: DOMRect) {
+  const y = Math.max(0, Math.min(containerRect.height, clientY - containerRect.top));
+  const totalMinutes = (y / TEST_CALENDAR_HOUR_HEIGHT) * 60 + TEST_CALENDAR_START_HOUR * 60;
+  const roundedMinutes = Math.round(totalMinutes / 15) * 15;
+  const startMinutes = TEST_CALENDAR_START_HOUR * 60;
+  const endMinutes = TEST_CALENDAR_END_HOUR * 60 - 15;
+  const clampedMinutes = Math.max(startMinutes, Math.min(endMinutes, roundedMinutes));
+  const hour = Math.floor(clampedMinutes / 60);
+  const minute = clampedMinutes % 60;
+
+  return new Date(
+    baseDate.getFullYear(),
+    baseDate.getMonth(),
+    baseDate.getDate(),
+    hour,
+    minute,
+    0,
+    0,
+  );
+}
+
+function readDraggedBooking(event: DragEvent): { id: number; date: string } | null {
+  try {
+    const payload = event.dataTransfer?.getData(DRAG_BOOKING_MIME);
+    if (!payload) return null;
+    const parsed = JSON.parse(payload);
+    const id = Number(parsed?.id);
+    const date = parsed?.date?.toString?.() || "";
+    if (!id || !date) return null;
+    return { id, date };
+  } catch {
+    return null;
+  }
+}
+
+function handleBookingDragStart(event: DragEvent, booking: any) {
+  if (!data.canUpdate) return;
+  const payload = JSON.stringify({
+    id: booking.id,
+    date: booking.date,
+  });
+  event.dataTransfer?.setData(DRAG_BOOKING_MIME, payload);
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+  }
+}
+
+async function moveBookingByDrop(bookingId: number, nextDate: Date) {
+  const formData = new FormData();
+  formData.set("id", bookingId.toString());
+  formData.set("date", nextDate.toISOString());
+
+  const res = await fetch("?/moveBooking", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (res.ok) {
+    toast.success("Đã di chuyển lịch hẹn");
+    await invalidateAll();
+    return;
+  }
+
+  try {
+    const result = await res.json();
+    toast.error(result?.message || "Không thể di chuyển lịch hẹn");
+  } catch {
+    toast.error("Không thể di chuyển lịch hẹn");
+  }
+}
+
+async function handleDropOnDayTimeline(event: DragEvent) {
+  event.preventDefault();
+  if (!data.canUpdate) return;
+
+  const dragged = readDraggedBooking(event);
+  if (!dragged) return;
+
+  const container = event.currentTarget as HTMLDivElement | null;
+  if (!container) return;
+
+  const nextDate = getDropDateByY(
+    testCalendarDate,
+    event.clientY,
+    container.getBoundingClientRect(),
+  );
+  await moveBookingByDrop(dragged.id, nextDate);
+}
+
+async function handleDropOnWeekColumn(event: DragEvent, day: Date) {
+  event.preventDefault();
+  if (!data.canUpdate) return;
+
+  const dragged = readDraggedBooking(event);
+  if (!dragged) return;
+
+  const container = event.currentTarget as HTMLDivElement | null;
+  if (!container) return;
+
+  const nextDate = getDropDateByY(day, event.clientY, container.getBoundingClientRect());
+  await moveBookingByDrop(dragged.id, nextDate);
+}
+
+async function handleDropOnMonthDay(event: DragEvent, day: Date) {
+  event.preventDefault();
+  if (!data.canUpdate) return;
+
+  const dragged = readDraggedBooking(event);
+  if (!dragged) return;
+
+  const sourceDate = new Date(dragged.date);
+  const nextDate = new Date(
+    day.getFullYear(),
+    day.getMonth(),
+    day.getDate(),
+    sourceDate.getHours(),
+    sourceDate.getMinutes(),
+    0,
+    0,
+  );
+  await moveBookingByDrop(dragged.id, nextDate);
+}
+
+// Group bookings by date
+function groupByDate(bookings: any[]) {
+  const groups: Record<string, any[]> = {};
+  for (const booking of bookings) {
+    const dateKey = new Date(booking.date).toDateString();
+    if (!groups[dateKey]) groups[dateKey] = [];
+    groups[dateKey].push(booking);
+  }
+  return Object.entries(groups).map(([dateKey, items]) => ({
+    date: items[0].date,
+    bookings: items.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+  }));
+}
+
+let groupedBookings = $derived(groupByDate(data.bookings || []));
+
+function getNowLocalDateTimeString() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  const h = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+  return `${y}-${m}-${d}T${h}:${min}`;
+}
+
+function openCreateDialog() {
+  editingBookingId = null;
+  newBooking = {
+    customerId: "",
+    customerPhone: "",
+    date: getNowLocalDateTimeString(),
+    guestCount: "1",
+    status: "confirmed",
+    notes: "",
+    guests: [
+      {
+        services: [{ categoryId: "", serviceId: "", memberId: "" }],
+      },
+    ],
+  };
+  isCreateOpen = true;
+}
+
+// Apply filters
+function applyFilters() {
+  const params = new URLSearchParams();
+
+  if (dateFilter === "today") {
+    const today = new Date().toISOString().split("T")[0];
+    params.set("from", today);
+    params.set("to", today);
+  } else if (dateFilter === "pastWeek") {
+    const today = getDateOnly(new Date());
+    const pastWeek = addDays(today, -7);
+    params.set("from", pastWeek.toISOString().split("T")[0]);
+    params.set("to", today.toISOString().split("T")[0]);
+  } else if (dateFilter === "week") {
+    const today = new Date();
+    const nextWeek = new Date();
+    nextWeek.setDate(today.getDate() + 7);
+    params.set("from", today.toISOString().split("T")[0]);
+    params.set("to", nextWeek.toISOString().split("T")[0]);
+  } else if (dateFilter === "month") {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    params.set("from", firstDay.toISOString().split("T")[0]);
+    params.set("to", lastDay.toISOString().split("T")[0]);
+  } else if (fromDate && toDate) {
+    params.set("from", fromDate);
+    params.set("to", toDate);
+  }
+
+  if (statusFilter && statusFilter !== "all") {
+    params.set("status", statusFilter);
+  }
+  if (searchQuery) {
+    params.set("search", searchQuery);
+  }
+  params.set("page", "1");
+  params.set("limit", pageSize.toString());
+
+  goto(`/bookings?${params.toString()}`);
+}
+
+function setDateFilter(filter: "today" | "pastWeek" | "week" | "month" | "custom") {
+  dateFilter = filter;
+  if (filter !== "custom") {
+    applyFilters();
+  }
+}
+
+function goToPage(pageNum: number) {
+  const currentPage = get(page);
+  const params = new URLSearchParams(currentPage.url.searchParams);
+  params.set("page", pageNum.toString());
+  goto(`/bookings?${params.toString()}`);
+}
+
+function handleFormResult() {
+  return async ({ result, update }: any) => {
+    if (result.type === "success") {
+      toast.success(editingBookingId ? "Đã cập nhật lịch hẹn" : "Thao tác thành công");
+      isCreateOpen = false;
+      isDeleteOpen = false;
+      editingBookingId = null;
+      // Force reload
+      await invalidateAll();
+
+      newBooking = {
+        customerId: "",
+        customerPhone: "",
+        date: getNowLocalDateTimeString(),
+        guestCount: "1",
+        status: "confirmed",
+        notes: "",
+        guests: [
+          {
+            services: [{ categoryId: "", serviceId: "", memberId: "" }],
+          },
+        ],
+      };
+    } else if (result.type === "failure") {
+      const errorMessage =
+        typeof result.data?.message === "string"
+          ? result.data.message
+          : "Có lỗi xảy ra khi lưu lịch hẹn (Lỗi dữ liệu)";
+      toast.error(errorMessage);
+      console.error("Booking save error:", result);
+    }
+    await update();
+  };
+}
+
+async function handleStatusChange(bookingId: number, newStatus: string) {
+  const formData = new FormData();
+  formData.set("id", bookingId.toString());
+  formData.set("status", newStatus);
+
+  const res = await fetch("?/updateStatus", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (res.ok) {
+    toast.success("Đã cập nhật trạng thái");
+    // Refresh the page to get updated data
+    goto($page.url.toString(), { invalidateAll: true });
+  } else {
+    toast.error("Không thể cập nhật trạng thái");
+  }
+}
+
+function openDeleteDialog(booking: any) {
+  deletingBooking = booking;
+  isDeleteOpen = true;
+}
+
+function openEditDialog(booking: any) {
+  editingBookingId = booking.id;
+
+  let guests = booking.guests || [];
+
+  if (!guests.length || guests.length === 0) {
+    guests = [{ services: [{ categoryId: "", serviceId: "", memberId: "" }] }];
+  } else {
+    // Map JSON structure to Form structure (strings)
+    guests = guests.map((g: any) => ({
+      services: (g.services || []).map((s: any) => ({
+        categoryId: s.categoryId?.toString() || "",
+        serviceId: s.serviceId?.toString() || "",
+        memberId: s.memberId?.toString() || s.staffId?.toString() || "",
+      })),
+    }));
+  }
+
+  newBooking = {
+    customerId: booking.customerId.toString(),
+    customerPhone: booking.customer?.phone || "",
+    date: booking.date,
+    guestCount: booking.guestCount?.toString() || "1",
+    status: booking.status,
+    notes: booking.notes || "",
+    guests: guests,
+  };
+
+  isCreateOpen = true;
+}
 </script>
 
 <svelte:head>

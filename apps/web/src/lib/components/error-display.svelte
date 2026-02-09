@@ -1,17 +1,17 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
-  import { AlertTriangle, RefreshCw } from "@lucide/svelte";
+import { Button } from "$lib/components/ui/button";
+import { AlertTriangle, RefreshCw } from "@lucide/svelte";
 
-  interface Props {
-    /** The error to display */
-    error?: Error | null;
-    /** Optional title for the error card */
-    title?: string;
-    /** Optional callback when retry button is clicked */
-    onRetry?: () => void;
-  }
+interface Props {
+  /** The error to display */
+  error?: Error | null;
+  /** Optional title for the error card */
+  title?: string;
+  /** Optional callback when retry button is clicked */
+  onRetry?: () => void;
+}
 
-  let { error = null, title = "Something went wrong", onRetry }: Props = $props();
+let { error = null, title = "Something went wrong", onRetry }: Props = $props();
 </script>
 
 {#if error}

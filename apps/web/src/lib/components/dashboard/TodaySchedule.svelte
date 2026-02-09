@@ -1,33 +1,33 @@
 <script lang="ts">
-  import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
-  import { CalendarRange } from "@lucide/svelte";
-  import { cn } from "$lib/utils";
-  import { Button } from "$lib/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
+import { CalendarRange } from "@lucide/svelte";
+import { cn } from "$lib/utils";
+import { Button } from "$lib/components/ui/button";
 
-  interface Props {
-    contextLabel?: string;
-    items?: Array<{
-      id: number | string;
-      time: string;
-      customer: string;
-      service: string;
-      staff: string;
-      status: string;
-    }>;
-    loading?: boolean;
-  }
+interface Props {
+  contextLabel?: string;
+  items?: Array<{
+    id: number | string;
+    time: string;
+    customer: string;
+    service: string;
+    staff: string;
+    status: string;
+  }>;
+  loading?: boolean;
+}
 
-  let { contextLabel = "Hôm nay", items = [], loading = false }: Props = $props();
+let { contextLabel = "Hôm nay", items = [], loading = false }: Props = $props();
 
-  const statusLabel: Record<string, string> = {
-    confirmed: "Đã xác nhận",
-    pending: "Chờ xác nhận",
-  };
+const statusLabel: Record<string, string> = {
+  confirmed: "Đã xác nhận",
+  pending: "Chờ xác nhận",
+};
 
-  const statusBadge: Record<string, string> = {
-    confirmed: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    pending: "bg-amber-50 text-amber-700 border-amber-200",
-  };
+const statusBadge: Record<string, string> = {
+  confirmed: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  pending: "bg-amber-50 text-amber-700 border-amber-200",
+};
 </script>
 
 <Card

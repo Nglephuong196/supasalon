@@ -1,127 +1,127 @@
 <script lang="ts">
-  import { page } from "$app/stores";
-  import { cn } from "$lib/utils";
-  import { Button } from "$lib/components/ui/button";
-  import {
-    checkPermission,
-    RESOURCES,
-    ACTIONS,
-    type Permissions,
-    type Resource,
-    type Action,
-  } from "$lib/permissions";
-  import {
-    LayoutDashboard,
-    CalendarDays,
-    Users,
-    Receipt,
-    UserCog,
-    Settings,
-    Scissors,
-    PanelLeftClose,
-    PanelLeft,
-    Package,
-    Command,
-    LifeBuoy,
-    LogOut,
-  } from "@lucide/svelte";
+import { page } from "$app/stores";
+import { cn } from "$lib/utils";
+import { Button } from "$lib/components/ui/button";
+import {
+  checkPermission,
+  RESOURCES,
+  ACTIONS,
+  type Permissions,
+  type Resource,
+  type Action,
+} from "$lib/permissions";
+import {
+  LayoutDashboard,
+  CalendarDays,
+  Users,
+  Receipt,
+  UserCog,
+  Settings,
+  Scissors,
+  PanelLeftClose,
+  PanelLeft,
+  Package,
+  Command,
+  LifeBuoy,
+  LogOut,
+} from "@lucide/svelte";
 
-  interface NavItem {
-    title: string;
-    href: string;
-    icon: any;
-    permission?: { resource: Resource; action: Action };
-  }
+interface NavItem {
+  title: string;
+  href: string;
+  icon: any;
+  permission?: { resource: Resource; action: Action };
+}
 
-  interface Props {
-    class?: string;
-    collapsed?: boolean;
-    onToggle?: () => void;
-    organization?: {
-      id: string;
-      name: string;
-      slug?: string | null;
-      logo?: string | null;
-    } | null;
-    user?: {
-      id: string;
-      name: string;
-      email: string;
-      image?: string | null;
-    } | null;
-    role?: string | null;
-    permissions?: Permissions | null;
-  }
+interface Props {
+  class?: string;
+  collapsed?: boolean;
+  onToggle?: () => void;
+  organization?: {
+    id: string;
+    name: string;
+    slug?: string | null;
+    logo?: string | null;
+  } | null;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    image?: string | null;
+  } | null;
+  role?: string | null;
+  permissions?: Permissions | null;
+}
 
-  let {
-    class: className = "",
-    collapsed = false,
-    onToggle,
-    organization = null,
-    user = null,
-    role = null,
-    permissions = null,
-  }: Props = $props();
+let {
+  class: className = "",
+  collapsed = false,
+  onToggle,
+  organization = null,
+  user = null,
+  role = null,
+  permissions = null,
+}: Props = $props();
 
-  const mainNav: NavItem[] = [
-    { title: "Tổng quan", href: "/", icon: LayoutDashboard },
-    {
-      title: "Lịch hẹn",
-      href: "/bookings",
-      icon: CalendarDays,
-      permission: { resource: RESOURCES.BOOKING, action: ACTIONS.READ },
-    },
-  ];
+const mainNav: NavItem[] = [
+  { title: "Tổng quan", href: "/", icon: LayoutDashboard },
+  {
+    title: "Lịch hẹn",
+    href: "/bookings",
+    icon: CalendarDays,
+    permission: { resource: RESOURCES.BOOKING, action: ACTIONS.READ },
+  },
+];
 
-  const managementNav: NavItem[] = [
-    {
-      title: "Dịch vụ",
-      href: "/services",
-      icon: Scissors,
-      permission: { resource: RESOURCES.SERVICE, action: ACTIONS.READ },
-    },
-    {
-      title: "Sản phẩm",
-      href: "/products",
-      icon: Package,
-      permission: { resource: RESOURCES.PRODUCT, action: ACTIONS.READ },
-    },
-    {
-      title: "Khách hàng",
-      href: "/customers",
-      icon: Users,
-      permission: { resource: RESOURCES.CUSTOMER, action: ACTIONS.READ },
-    },
-    {
-      title: "Nhân viên",
-      href: "/employees",
-      icon: UserCog,
-      permission: { resource: RESOURCES.EMPLOYEE, action: ACTIONS.READ },
-    },
-  ];
+const managementNav: NavItem[] = [
+  {
+    title: "Dịch vụ",
+    href: "/services",
+    icon: Scissors,
+    permission: { resource: RESOURCES.SERVICE, action: ACTIONS.READ },
+  },
+  {
+    title: "Sản phẩm",
+    href: "/products",
+    icon: Package,
+    permission: { resource: RESOURCES.PRODUCT, action: ACTIONS.READ },
+  },
+  {
+    title: "Khách hàng",
+    href: "/customers",
+    icon: Users,
+    permission: { resource: RESOURCES.CUSTOMER, action: ACTIONS.READ },
+  },
+  {
+    title: "Nhân viên",
+    href: "/employees",
+    icon: UserCog,
+    permission: { resource: RESOURCES.EMPLOYEE, action: ACTIONS.READ },
+  },
+];
 
-  const financeNav: NavItem[] = [
-    {
-      title: "Hóa đơn",
-      href: "/invoices",
-      icon: Receipt,
-      permission: { resource: RESOURCES.INVOICE, action: ACTIONS.READ },
-    },
-    { title: "Cài đặt", href: "/settings", icon: Settings },
-  ];
+const financeNav: NavItem[] = [
+  {
+    title: "Hóa đơn",
+    href: "/invoices",
+    icon: Receipt,
+    permission: { resource: RESOURCES.INVOICE, action: ACTIONS.READ },
+  },
+  { title: "Cài đặt", href: "/settings", icon: Settings },
+];
 
-  // Filter nav items based on permissions
-  function filterNavItems(items: NavItem[]): NavItem[] {
-    return items.filter((item) => {
-      if (!item.permission) return true;
-      return checkPermission(role, permissions, item.permission.resource, item.permission.action);
-    });
-  }
+// Filter nav items based on permissions
+function filterNavItems(items: NavItem[]): NavItem[] {
+  return items.filter((item) => {
+    if (!item.permission) return true;
+    return checkPermission(role, permissions, item.permission.resource, item.permission.action);
+  });
+}
 
-  // Reactive filtered nav items
-  let filteredMainNav = $derived(filterNavItems(mainNav));
-  let filteredManagementNav = $derived(filterNavItems(managementNav));
-  let filteredFinanceNav = $derived(filterNavItems(financeNav));
+// Reactive filtered nav items
+let filteredMainNav = $derived(filterNavItems(mainNav));
+let filteredManagementNav = $derived(filterNavItems(managementNav));
+let filteredFinanceNav = $derived(filterNavItems(financeNav));
 </script>
 
 <div

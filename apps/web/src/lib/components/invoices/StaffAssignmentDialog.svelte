@@ -1,169 +1,169 @@
 <script lang="ts">
-  import * as Dialog from "$lib/components/ui/dialog";
-  import { Button } from "$lib/components/ui/button";
-  import { Separator } from "$lib/components/ui/separator";
-  import { Switch } from "$lib/components/ui/switch";
-  import {
-    Users,
-    Plus,
-    X,
-    Gift,
-    Sparkles,
-    ShoppingBag,
-    Percent,
-    UserCircle,
-    ChevronDown,
-    Search,
-  } from "@lucide/svelte";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
-  import { Badge } from "$lib/components/ui/badge";
-  import * as Popover from "$lib/components/ui/popover";
-  import { fly, slide } from "svelte/transition";
+import * as Dialog from "$lib/components/ui/dialog";
+import { Button } from "$lib/components/ui/button";
+import { Separator } from "$lib/components/ui/separator";
+import { Switch } from "$lib/components/ui/switch";
+import {
+  Users,
+  Plus,
+  X,
+  Gift,
+  Sparkles,
+  ShoppingBag,
+  Percent,
+  UserCircle,
+  ChevronDown,
+  Search,
+} from "@lucide/svelte";
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import { Badge } from "$lib/components/ui/badge";
+import * as Popover from "$lib/components/ui/popover";
+import { fly, slide } from "svelte/transition";
 
-  interface Props {
-    open: boolean;
-    items: any[];
-    staff: any[];
-    commissionRules?: any[];
-    onConfirm: () => void;
+interface Props {
+  open: boolean;
+  items: any[];
+  staff: any[];
+  commissionRules?: any[];
+  onConfirm: () => void;
+}
+
+let {
+  open = $bindable(false),
+  items = $bindable([]),
+  staff = [],
+  commissionRules = [],
+  onConfirm,
+}: Props = $props();
+type IndexedAssignmentItem = { item: any; index: number };
+let staffSearchQuery = $state("");
+let filteredStaff = $derived.by(() => {
+  const normalized = staffSearchQuery.trim().toLowerCase();
+  if (!normalized) return staff;
+  return staff.filter((member: any) => member.name?.toLowerCase().includes(normalized));
+});
+let serviceAssignments = $derived.by(() =>
+  items
+    .map((item: any, index: number): IndexedAssignmentItem => ({ item, index }))
+    .filter((entry: IndexedAssignmentItem) => entry.item.type === "service"),
+);
+let productAssignments = $derived.by(() =>
+  items
+    .map((item: any, index: number): IndexedAssignmentItem => ({ item, index }))
+    .filter((entry: IndexedAssignmentItem) => entry.item.type === "product"),
+);
+let orderedAssignments = $derived([...serviceAssignments, ...productAssignments]);
+let totalAssigned = $derived(
+  items.reduce(
+    (sum: number, item: any) =>
+      sum +
+      (item.staffTechnicians || []).filter((s: any) => s.staffId).length +
+      (item.staffSellers || []).filter((s: any) => s.staffId).length,
+    0,
+  ),
+);
+let itemWithAssignments = $derived(
+  items.filter(
+    (item: any) =>
+      (item.staffTechnicians || []).some((s: any) => s.staffId) ||
+      (item.staffSellers || []).some((s: any) => s.staffId),
+  ).length,
+);
+
+function addStaff(item: any, role: "technician" | "seller") {
+  const newEntry = {
+    staffId: "",
+    commissionValue: 0,
+    commissionType: "percent" as "percent" | "fixed",
+    bonus: 0,
+    showBonus: false,
+    role: role,
+  };
+  if (role === "technician") {
+    item.staffTechnicians = [...(item.staffTechnicians || []), newEntry];
+  } else {
+    item.staffSellers = [...(item.staffSellers || []), newEntry];
   }
+}
 
-  let {
-    open = $bindable(false),
-    items = $bindable([]),
-    staff = [],
-    commissionRules = [],
-    onConfirm,
-  }: Props = $props();
-  type IndexedAssignmentItem = { item: any; index: number };
-  let staffSearchQuery = $state("");
-  let filteredStaff = $derived.by(() => {
-    const normalized = staffSearchQuery.trim().toLowerCase();
-    if (!normalized) return staff;
-    return staff.filter((member: any) => member.name?.toLowerCase().includes(normalized));
-  });
-  let serviceAssignments = $derived.by(() =>
-    items
-      .map((item: any, index: number): IndexedAssignmentItem => ({ item, index }))
-      .filter((entry: IndexedAssignmentItem) => entry.item.type === "service"),
+function removeStaff(item: any, role: "technician" | "seller", index: number) {
+  if (role === "technician") {
+    item.staffTechnicians = item.staffTechnicians.filter((_: any, i: number) => i !== index);
+  } else {
+    item.staffSellers = item.staffSellers.filter((_: any, i: number) => i !== index);
+  }
+}
+
+function getStaffInitials(name: string): string {
+  if (!name) return "?";
+  const parts = name.split(" ");
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
+function getStaffName(staffId: string): string {
+  return staff.find((s) => s.id === staffId)?.name || "";
+}
+
+function getCommissionRule(item: any, staffId: string) {
+  if (!item?.referenceId || !staffId) return null;
+
+  return (
+    commissionRules.find(
+      (rule: any) =>
+        rule.staffId === staffId &&
+        rule.itemType === item.type &&
+        Number(rule.itemId) === Number(item.referenceId),
+    ) || null
   );
-  let productAssignments = $derived.by(() =>
-    items
-      .map((item: any, index: number): IndexedAssignmentItem => ({ item, index }))
-      .filter((entry: IndexedAssignmentItem) => entry.item.type === "product"),
-  );
-  let orderedAssignments = $derived([...serviceAssignments, ...productAssignments]);
-  let totalAssigned = $derived(
-    items.reduce(
-      (sum: number, item: any) =>
-        sum +
-        (item.staffTechnicians || []).filter((s: any) => s.staffId).length +
-        (item.staffSellers || []).filter((s: any) => s.staffId).length,
-      0,
-    ),
-  );
-  let itemWithAssignments = $derived(
-    items.filter(
-      (item: any) =>
-        (item.staffTechnicians || []).some((s: any) => s.staffId) ||
-        (item.staffSellers || []).some((s: any) => s.staffId),
-    ).length,
-  );
+}
 
-  function addStaff(item: any, role: "technician" | "seller") {
-    const newEntry = {
-      staffId: "",
-      commissionValue: 0,
-      commissionType: "percent" as "percent" | "fixed",
-      bonus: 0,
-      showBonus: false,
-      role: role,
-    };
-    if (role === "technician") {
-      item.staffTechnicians = [...(item.staffTechnicians || []), newEntry];
-    } else {
-      item.staffSellers = [...(item.staffSellers || []), newEntry];
-    }
+function applyCommissionFromRule(item: any, staffEntry: any, staffId: string) {
+  staffEntry.staffId = staffId;
+
+  const matchedRule = getCommissionRule(item, staffId);
+  if (!matchedRule) {
+    staffEntry.commissionType = "percent";
+    staffEntry.commissionValue = 0;
+    staffEntry.ruleApplied = false;
+    return;
   }
 
-  function removeStaff(item: any, role: "technician" | "seller", index: number) {
-    if (role === "technician") {
-      item.staffTechnicians = item.staffTechnicians.filter((_: any, i: number) => i !== index);
-    } else {
-      item.staffSellers = item.staffSellers.filter((_: any, i: number) => i !== index);
-    }
-  }
+  staffEntry.commissionType = matchedRule.commissionType;
+  staffEntry.commissionValue = Number(matchedRule.commissionValue) || 0;
+  staffEntry.ruleApplied = true;
+}
 
-  function getStaffInitials(name: string): string {
-    if (!name) return "?";
-    const parts = name.split(" ");
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return name.slice(0, 2).toUpperCase();
-  }
+function getRuleLabel(staffEntry: any) {
+  const value = Number(staffEntry.commissionValue || 0);
+  if (staffEntry.commissionType === "percent") return `Theo quy tắc: ${value}%`;
+  return `Theo quy tắc: ${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+}
 
-  function getStaffName(staffId: string): string {
-    return staff.find((s) => s.id === staffId)?.name || "";
-  }
-
-  function getCommissionRule(item: any, staffId: string) {
-    if (!item?.referenceId || !staffId) return null;
-
-    return (
-      commissionRules.find(
-        (rule: any) =>
-          rule.staffId === staffId &&
-          rule.itemType === item.type &&
-          Number(rule.itemId) === Number(item.referenceId),
-      ) || null
-    );
-  }
-
-  function applyCommissionFromRule(item: any, staffEntry: any, staffId: string) {
-    staffEntry.staffId = staffId;
-
-    const matchedRule = getCommissionRule(item, staffId);
-    if (!matchedRule) {
-      staffEntry.commissionType = "percent";
-      staffEntry.commissionValue = 0;
-      staffEntry.ruleApplied = false;
-      return;
-    }
-
-    staffEntry.commissionType = matchedRule.commissionType;
-    staffEntry.commissionValue = Number(matchedRule.commissionValue) || 0;
-    staffEntry.ruleApplied = true;
-  }
-
-  function getRuleLabel(staffEntry: any) {
-    const value = Number(staffEntry.commissionValue || 0);
-    if (staffEntry.commissionType === "percent") return `Theo quy tắc: ${value}%`;
-    return `Theo quy tắc: ${new Intl.NumberFormat("vi-VN").format(value)}đ`;
-  }
-
-  // Normalize staff entries when dialog opens
-  $effect(() => {
-    if (open) {
-      for (const item of items) {
-        for (const s of item.staffTechnicians || []) {
-          if (s.showBonus === undefined) {
-            s.showBonus = (s.bonus || 0) > 0;
-          }
-          if (s.ruleApplied === undefined) s.ruleApplied = false;
+// Normalize staff entries when dialog opens
+$effect(() => {
+  if (open) {
+    for (const item of items) {
+      for (const s of item.staffTechnicians || []) {
+        if (s.showBonus === undefined) {
+          s.showBonus = (s.bonus || 0) > 0;
         }
-        for (const s of item.staffSellers || []) {
-          if (s.showBonus === undefined) {
-            s.showBonus = (s.bonus || 0) > 0;
-          }
-          if (s.ruleApplied === undefined) s.ruleApplied = false;
-        }
+        if (s.ruleApplied === undefined) s.ruleApplied = false;
       }
-    } else {
-      staffSearchQuery = "";
+      for (const s of item.staffSellers || []) {
+        if (s.showBonus === undefined) {
+          s.showBonus = (s.bonus || 0) > 0;
+        }
+        if (s.ruleApplied === undefined) s.ruleApplied = false;
+      }
     }
-  });
+  } else {
+    staffSearchQuery = "";
+  }
+});
 </script>
 
 <Dialog.Root bind:open>

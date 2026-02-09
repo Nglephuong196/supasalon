@@ -1,77 +1,72 @@
 <script lang="ts">
-  import {
-    CalendarDate,
-    DateFormatter,
-    getLocalTimeZone,
-    parseDate,
-  } from "@internationalized/date";
-  import { untrack } from "svelte";
-  import Calendar from "$lib/components/ui/calendar/calendar.svelte";
-  import * as Popover from "$lib/components/ui/popover/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import { cn } from "$lib/utils";
-  import CalendarIcon from "@lucide/svelte/icons/calendar";
+import { CalendarDate, DateFormatter, getLocalTimeZone, parseDate } from "@internationalized/date";
+import { untrack } from "svelte";
+import Calendar from "$lib/components/ui/calendar/calendar.svelte";
+import * as Popover from "$lib/components/ui/popover/index.js";
+import { Button } from "$lib/components/ui/button/index.js";
+import { cn } from "$lib/utils";
+import CalendarIcon from "@lucide/svelte/icons/calendar";
 
-  let {
-    value = $bindable(""),
-    placeholder = "Chọn ngày",
-    class: className,
-    disabled = false,
-  } = $props<{
-    value?: string;
-    placeholder?: string;
-    class?: string;
-    disabled?: boolean;
-  }>();
+let {
+  value = $bindable(""),
+  placeholder = "Chọn ngày",
+  class: className,
+  disabled = false,
+} = $props<{
+  value?: string;
+  placeholder?: string;
+  class?: string;
+  disabled?: boolean;
+}>();
 
-  let date = $state<CalendarDate | undefined>(undefined);
-  let isOpen = $state(false);
+let date = $state<CalendarDate | undefined>(undefined);
+let isOpen = $state(false);
 
-  const df = new DateFormatter("vi-VN", {
-    dateStyle: "short",
-  });
+const df = new DateFormatter("vi-VN", {
+  dateStyle: "short",
+});
 
-  // Sync value -> internal state
-  $effect(() => {
-    const val = value;
-    untrack(() => {
-      if (val) {
-        try {
-          // Parse YYYY-MM-DD format
-          const parsed = parseDate(val);
-          if (
-            date?.year !== parsed.year ||
-            date?.month !== parsed.month ||
-            date?.day !== parsed.day
-          ) {
-            date = parsed;
-          }
-        } catch {
-          date = undefined;
+// Sync value -> internal state
+$effect(() => {
+  const val = value;
+  untrack(() => {
+    if (val) {
+      try {
+        // Parse YYYY-MM-DD format
+        const parsed = parseDate(val);
+        if (
+          date?.year !== parsed.year ||
+          date?.month !== parsed.month ||
+          date?.day !== parsed.day
+        ) {
+          date = parsed;
         }
-      } else {
+      } catch {
         date = undefined;
       }
-    });
-  });
-
-  // Sync internal -> value
-  $effect(() => {
-    if (date) {
-      const y = date.year;
-      const m = date.month.toString().padStart(2, "0");
-      const d = date.day.toString().padStart(2, "0");
-      const newValue = `${y}-${m}-${d}`;
-
-      untrack(() => {
-        if (value !== newValue) {
-          value = newValue;
-        }
-      });
+    } else {
+      date = undefined;
     }
   });
+});
 
-  let displayDate = $derived(date ? df.format(date.toDate(getLocalTimeZone())) : placeholder);
+// Sync internal -> value
+$effect(() => {
+  if (date) {
+    const y = date.year;
+    const m = date.month.toString().padStart(2, "0");
+    const d = date.day.toString().padStart(2, "0");
+    const newValue = `${y}-${m}-${d}`;
+
+    untrack(() => {
+      if (value !== newValue) {
+        value = newValue;
+      }
+    });
+  }
+});
+
+let displayDate = $derived(date ? df.format(date.toDate(getLocalTimeZone())) : placeholder);
 </script>
 
 <Popover.Root bind:open={isOpen}>

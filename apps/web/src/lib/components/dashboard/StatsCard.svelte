@@ -1,34 +1,34 @@
 <script lang="ts">
-  import { Card, CardContent } from "$lib/components/ui/card";
-  import { cn } from "$lib/utils";
-  import type { Component } from "svelte";
-  import { TrendingUp, TrendingDown } from "@lucide/svelte";
+import { Card, CardContent } from "$lib/components/ui/card";
+import { cn } from "$lib/utils";
+import type { Component } from "svelte";
+import { TrendingUp, TrendingDown } from "@lucide/svelte";
 
-  interface Props {
-    title: string;
-    value: string;
-    description: string;
-    icon: Component<{ class?: string }>;
-    trend?: "up" | "down";
-    trendValue?: string;
-    iconBgColor?: string;
-    iconColor?: string;
-    context?: string;
-    loading?: boolean;
-  }
+interface Props {
+  title: string;
+  value: string;
+  description: string;
+  icon: Component<{ class?: string }>;
+  trend?: "up" | "down";
+  trendValue?: string;
+  iconBgColor?: string;
+  iconColor?: string;
+  context?: string;
+  loading?: boolean;
+}
 
-  let {
-    title,
-    value,
-    description,
-    icon: Icon,
-    trend,
-    trendValue,
-    iconBgColor = "bg-primary/10" /* Lavender tint */,
-    iconColor = "text-primary" /* Deep Purple */,
-    context,
-    loading = false,
-  }: Props = $props();
+let {
+  title,
+  value,
+  description,
+  icon: Icon,
+  trend,
+  trendValue,
+  iconBgColor = "bg-primary/10" /* Lavender tint */,
+  iconColor = "text-primary" /* Deep Purple */,
+  context,
+  loading = false,
+}: Props = $props();
 </script>
 
 <Card

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { ShieldAlert, Home } from "@lucide/svelte";
-  import { Button } from "$lib/components/ui/button";
+import { ShieldAlert, Home } from "@lucide/svelte";
+import { Button } from "$lib/components/ui/button";
 </script>
 
 <svelte:head>

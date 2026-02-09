@@ -14,16 +14,16 @@
     "android:emulator": "powershell -NoProfile -Command \"& \\\"$env:ANDROID_HOME\\\\emulator\\\\emulator\\\" -avd Medium_Phone_API_36.1\"",
     "build": "turbo build",
     "build:web": "turbo build --filter=web",
-    "lint": "turbo lint",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
     "db:generate": "turbo db:generate --filter=api",
     "db:migrate:local": "turbo db:migrate:local --filter=api",
     "db:studio": "turbo db:studio --filter=api"
   },
   "devDependencies": {
-    "prettier": "^3.8.1",
-    "prettier-plugin-svelte": "^3.4.1",
+    "@biomejs/biome": "^1.9.4",
     "turbo": "^2.8.1"
   },
   "dependencies": {

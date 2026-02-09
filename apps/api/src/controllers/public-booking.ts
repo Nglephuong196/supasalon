@@ -2,7 +2,15 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { and, eq, inArray } from "drizzle-orm";
-import { bookings, customers, member, organization, serviceCategories, services, user } from "../db/schema";
+import {
+  bookings,
+  customers,
+  member,
+  organization,
+  serviceCategories,
+  services,
+  user,
+} from "../db/schema";
 import type { Database } from "../db";
 
 const createPublicBookingSchema = z.object({
@@ -135,7 +143,9 @@ publicBookingController.post("/:slug", zValidator("json", createPublicBookingSch
   const memberIds = Array.from(
     new Set(
       body.guests.flatMap((guest) =>
-        guest.services.map((service) => service.memberId).filter((memberId): memberId is string => !!memberId),
+        guest.services
+          .map((service) => service.memberId)
+          .filter((memberId): memberId is string => !!memberId),
       ),
     ),
   );
@@ -169,7 +179,9 @@ publicBookingController.post("/:slug", zValidator("json", createPublicBookingSch
   let customer = await db
     .select({ id: customers.id })
     .from(customers)
-    .where(and(eq(customers.organizationId, org.id), eq(customers.phone, body.customerPhone.trim())))
+    .where(
+      and(eq(customers.organizationId, org.id), eq(customers.phone, body.customerPhone.trim())),
+    )
     .get();
 
   if (!customer) {

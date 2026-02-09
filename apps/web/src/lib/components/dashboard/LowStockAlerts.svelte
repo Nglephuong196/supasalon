@@ -1,21 +1,21 @@
 <script lang="ts">
-  import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
-  import { AlertCircle, ArrowUpRight, PackageOpen } from "@lucide/svelte";
-  import { cn } from "$lib/utils";
-  import { Button } from "$lib/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
+import { AlertCircle, ArrowUpRight, PackageOpen } from "@lucide/svelte";
+import { cn } from "$lib/utils";
+import { Button } from "$lib/components/ui/button";
 
-  interface Props {
-    items?: Array<{
-      id: number | string;
-      name: string;
-      stock: number;
-      minStock: number;
-      status: string;
-    }>;
-    loading?: boolean;
-  }
+interface Props {
+  items?: Array<{
+    id: number | string;
+    name: string;
+    stock: number;
+    minStock: number;
+    status: string;
+  }>;
+  loading?: boolean;
+}
 
-  let { items = [], loading = false }: Props = $props();
+let { items = [], loading = false }: Props = $props();
 </script>
 
 <Card class="premium-card border border-border/60 shadow-sm rounded-xl bg-white overflow-hidden">

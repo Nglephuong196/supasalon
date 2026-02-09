@@ -1,39 +1,39 @@
 <script lang="ts">
-  import { browser } from "$app/environment";
-  import Sidebar from "$lib/components/layout/Sidebar.svelte";
-  import Header from "$lib/components/layout/Header.svelte";
-  import { Toaster } from "$lib/components/ui/sonner";
+import { browser } from "$app/environment";
+import Sidebar from "$lib/components/layout/Sidebar.svelte";
+import Header from "$lib/components/layout/Header.svelte";
+import { Toaster } from "$lib/components/ui/sonner";
 
-  import { fade, fly } from "svelte/transition";
-  import { cubicOut } from "svelte/easing";
-  import { afterNavigate, onNavigate } from "$app/navigation";
-  import { page } from "$app/stores";
+import { fade, fly } from "svelte/transition";
+import { cubicOut } from "svelte/easing";
+import { afterNavigate, onNavigate } from "$app/navigation";
+import { page } from "$app/stores";
 
-  let { children, data } = $props();
+let { children, data } = $props();
 
-  let isSidebarCollapsed = $state(false);
-  let isMobileMenuOpen = $state(false);
-  const supportsViewTransitions =
-    browser &&
-    typeof document !== "undefined" &&
-    "startViewTransition" in document &&
-    !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let isSidebarCollapsed = $state(false);
+let isMobileMenuOpen = $state(false);
+const supportsViewTransitions =
+  browser &&
+  typeof document !== "undefined" &&
+  "startViewTransition" in document &&
+  !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  afterNavigate(() => {
-    isMobileMenuOpen = false;
-  });
+afterNavigate(() => {
+  isMobileMenuOpen = false;
+});
 
-  onNavigate((navigation) => {
-    if (!supportsViewTransitions) {
-      return;
-    }
-    return new Promise((resolve) => {
-      document.startViewTransition(async () => {
-        resolve();
-        await navigation.complete;
-      });
+onNavigate((navigation) => {
+  if (!supportsViewTransitions) {
+    return;
+  }
+  return new Promise((resolve) => {
+    document.startViewTransition(async () => {
+      resolve();
+      await navigation.complete;
     });
   });
+});
 </script>
 
 <div class="dashboard-shell flex h-screen overflow-hidden bg-gray-50">

@@ -1,334 +1,334 @@
 <script lang="ts">
-  import { invalidateAll } from "$app/navigation";
-  import { page } from "$app/stores";
-  import { Input } from "$lib/components/ui/input";
-  import { Button } from "$lib/components/ui/button";
-  import { Label } from "$lib/components/ui/label";
-  import * as Select from "$lib/components/ui/select";
-  import { toast } from "svelte-sonner";
-  import { fetchAPI } from "$lib/api";
-  import { BadgePercent, DollarSign, Search, Users } from "@lucide/svelte";
+import { invalidateAll } from "$app/navigation";
+import { page } from "$app/stores";
+import { Input } from "$lib/components/ui/input";
+import { Button } from "$lib/components/ui/button";
+import { Label } from "$lib/components/ui/label";
+import * as Select from "$lib/components/ui/select";
+import { toast } from "svelte-sonner";
+import { fetchAPI } from "$lib/api";
+import { BadgePercent, DollarSign, Search, Users } from "@lucide/svelte";
 
-  type CommissionType = "percent" | "fixed";
-  type ItemType = "service" | "product";
+type CommissionType = "percent" | "fixed";
+type ItemType = "service" | "product";
 
-  type MemberRow = {
+type MemberRow = {
+  id: string;
+  role: string;
+  user: {
     id: string;
-    role: string;
-    user: {
-      id: string;
-      name: string;
-      email: string;
-      image: string | null;
-    };
-  };
-
-  type ItemRow = {
-    id: number;
     name: string;
-    price: number;
-    categoryId: number;
+    email: string;
+    image: string | null;
   };
+};
 
-  type CategoryRow = {
-    id: number;
-    name: string;
+type ItemRow = {
+  id: number;
+  name: string;
+  price: number;
+  categoryId: number;
+};
+
+type CategoryRow = {
+  id: number;
+  name: string;
+};
+
+type CommissionRuleRow = {
+  id: number;
+  organizationId: string;
+  staffId: string;
+  itemType: ItemType;
+  itemId: number;
+  commissionType: CommissionType;
+  commissionValue: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type Draft = {
+  commissionType: CommissionType;
+  commissionValue: string;
+};
+
+interface Props {
+  data: {
+    members: MemberRow[];
+    services: ItemRow[];
+    products: ItemRow[];
+    serviceCategories: CategoryRow[];
+    productCategories: CategoryRow[];
+    rules: CommissionRuleRow[];
+    canRead?: boolean;
+    canCreate?: boolean;
+    canUpdate?: boolean;
+    canDelete?: boolean;
   };
+}
 
-  type CommissionRuleRow = {
-    id: number;
-    organizationId: string;
-    staffId: string;
-    itemType: ItemType;
-    itemId: number;
-    commissionType: CommissionType;
-    commissionValue: number;
-    createdAt: string;
-    updatedAt: string;
-  };
+let { data }: Props = $props();
 
-  type Draft = {
-    commissionType: CommissionType;
-    commissionValue: string;
-  };
+let rules = $state<CommissionRuleRow[]>([]);
+let selectedStaffId = $state("");
+let itemType = $state<ItemType>("service");
+let selectedCategoryId = $state<number | null>(null);
+let search = $state("");
 
-  interface Props {
-    data: {
-      members: MemberRow[];
-      services: ItemRow[];
-      products: ItemRow[];
-      serviceCategories: CategoryRow[];
-      productCategories: CategoryRow[];
-      rules: CommissionRuleRow[];
-      canRead?: boolean;
-      canCreate?: boolean;
-      canUpdate?: boolean;
-      canDelete?: boolean;
-    };
+let quickType = $state<CommissionType>("percent");
+let quickValue = $state("10");
+let quickApplyTarget = $state<"selected" | "all">("selected");
+
+let drafts = $state<Record<string, Draft>>({});
+let rowLoading = $state<Record<string, boolean>>({});
+let bulkLoading = $state(false);
+
+$effect(() => {
+  if (rules.length === 0 && data.rules.length > 0) {
+    rules = [...data.rules];
   }
 
-  let { data }: Props = $props();
+  if (!selectedStaffId && data.members.length > 0) {
+    selectedStaffId = data.members[0].id;
+  }
+});
 
-  let rules = $state<CommissionRuleRow[]>([]);
-  let selectedStaffId = $state("");
-  let itemType = $state<ItemType>("service");
-  let selectedCategoryId = $state<number | null>(null);
-  let search = $state("");
+let currentItems = $derived.by(() => {
+  const source = itemType === "service" ? data.services : data.products;
+  const normalizedSearch = search.trim().toLowerCase();
+  const categoryFiltered =
+    selectedCategoryId === null
+      ? source
+      : source.filter((item: ItemRow) => item.categoryId === selectedCategoryId);
 
-  let quickType = $state<CommissionType>("percent");
-  let quickValue = $state("10");
-  let quickApplyTarget = $state<"selected" | "all">("selected");
+  if (!normalizedSearch) return categoryFiltered;
 
-  let drafts = $state<Record<string, Draft>>({});
-  let rowLoading = $state<Record<string, boolean>>({});
-  let bulkLoading = $state(false);
-
-  $effect(() => {
-    if (rules.length === 0 && data.rules.length > 0) {
-      rules = [...data.rules];
-    }
-
-    if (!selectedStaffId && data.members.length > 0) {
-      selectedStaffId = data.members[0].id;
-    }
-  });
-
-  let currentItems = $derived.by(() => {
-    const source = itemType === "service" ? data.services : data.products;
-    const normalizedSearch = search.trim().toLowerCase();
-    const categoryFiltered =
-      selectedCategoryId === null
-        ? source
-        : source.filter((item: ItemRow) => item.categoryId === selectedCategoryId);
-
-    if (!normalizedSearch) return categoryFiltered;
-
-    return categoryFiltered.filter((item: ItemRow) =>
-      item.name.toLowerCase().includes(normalizedSearch),
-    );
-  });
-
-  let currentCategories = $derived.by(() =>
-    itemType === "service" ? data.serviceCategories : data.productCategories,
+  return categoryFiltered.filter((item: ItemRow) =>
+    item.name.toLowerCase().includes(normalizedSearch),
   );
+});
 
-  function keyFor(itemId: number) {
-    return `${selectedStaffId}:${itemType}:${itemId}`;
+let currentCategories = $derived.by(() =>
+  itemType === "service" ? data.serviceCategories : data.productCategories,
+);
+
+function keyFor(itemId: number) {
+  return `${selectedStaffId}:${itemType}:${itemId}`;
+}
+
+function formatCurrency(value: number) {
+  return `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+}
+
+function orgHeaders(): Record<string, string> {
+  const organizationId = $page.data.organizationId as string | undefined;
+  return organizationId ? { "X-Organization-Id": organizationId } : {};
+}
+
+function getExistingRule(itemId: number) {
+  return (
+    rules.find(
+      (rule) =>
+        rule.staffId === selectedStaffId && rule.itemType === itemType && rule.itemId === itemId,
+    ) ?? null
+  );
+}
+
+function defaultDraftFor(itemId: number): Draft {
+  const existing = getExistingRule(itemId);
+  return {
+    commissionType: existing?.commissionType ?? "percent",
+    commissionValue: String(existing?.commissionValue ?? 0),
+  };
+}
+
+function getDraft(itemId: number): Draft {
+  const key = keyFor(itemId);
+  return drafts[key] ?? defaultDraftFor(itemId);
+}
+
+function setDraft(itemId: number, patch: Partial<Draft>) {
+  const key = keyFor(itemId);
+  const current = getDraft(itemId);
+
+  drafts = {
+    ...drafts,
+    [key]: {
+      ...current,
+      ...patch,
+    },
+  };
+}
+
+function estimatePayout(itemPrice: number, draft: Draft) {
+  const value = Number(draft.commissionValue || 0);
+  if (!Number.isFinite(value) || value < 0) return 0;
+
+  if (draft.commissionType === "percent") {
+    return (itemPrice * value) / 100;
   }
 
-  function formatCurrency(value: number) {
-    return `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+  return value;
+}
+
+async function saveRule(item: ItemRow) {
+  if (!selectedStaffId) {
+    toast.error("Vui lòng chọn nhân viên");
+    return;
   }
 
-  function orgHeaders(): Record<string, string> {
-    const organizationId = $page.data.organizationId as string | undefined;
-    return organizationId ? { "X-Organization-Id": organizationId } : {};
+  const key = keyFor(item.id);
+  const draft = getDraft(item.id);
+  const numericValue = Number(draft.commissionValue);
+
+  if (!Number.isFinite(numericValue) || numericValue < 0) {
+    toast.error("Giá trị hoa hồng không hợp lệ");
+    return;
   }
 
-  function getExistingRule(itemId: number) {
-    return (
-      rules.find(
-        (rule) =>
-          rule.staffId === selectedStaffId && rule.itemType === itemType && rule.itemId === itemId,
-      ) ?? null
+  rowLoading[key] = true;
+
+  try {
+    const saved = await fetchAPI<CommissionRuleRow>("/staff-commission-rules/upsert", {
+      method: "POST",
+      headers: orgHeaders(),
+      body: JSON.stringify({
+        staffId: selectedStaffId,
+        itemType,
+        itemId: item.id,
+        commissionType: draft.commissionType,
+        commissionValue: numericValue,
+      }),
+    });
+
+    rules = [...rules.filter((r) => r.id !== saved.id), saved];
+
+    toast.success("Đã lưu cấu hình hoa hồng");
+  } catch (error: any) {
+    toast.error(error?.message || "Không thể lưu cấu hình");
+  } finally {
+    rowLoading[key] = false;
+  }
+}
+
+async function clearRule(item: ItemRow) {
+  const key = keyFor(item.id);
+  const existing = getExistingRule(item.id);
+
+  if (!existing) {
+    setDraft(item.id, {
+      commissionType: "percent",
+      commissionValue: "0",
+    });
+    return;
+  }
+
+  rowLoading[key] = true;
+
+  try {
+    await fetchAPI<{ success: boolean }>(`/staff-commission-rules/${existing.id}`, {
+      method: "DELETE",
+      headers: orgHeaders(),
+    });
+
+    rules = rules.filter((r) => r.id !== existing.id);
+    setDraft(item.id, {
+      commissionType: "percent",
+      commissionValue: "0",
+    });
+
+    toast.success("Đã xóa cấu hình, mặc định về 0");
+  } catch (error: any) {
+    toast.error(error?.message || "Không thể xóa cấu hình");
+  } finally {
+    rowLoading[key] = false;
+  }
+}
+
+async function applyQuickToFiltered() {
+  if (quickApplyTarget === "selected" && !selectedStaffId) {
+    toast.error("Vui lòng chọn nhân viên");
+    return;
+  }
+
+  const quickNumeric = Number(quickValue);
+
+  if (!Number.isFinite(quickNumeric) || quickNumeric < 0) {
+    toast.error("Giá trị áp dụng nhanh không hợp lệ");
+    return;
+  }
+
+  if (currentItems.length === 0) {
+    toast.error("Không có mục nào để áp dụng");
+    return;
+  }
+
+  const targetStaffIds =
+    quickApplyTarget === "all"
+      ? data.members.map((member: MemberRow) => member.id)
+      : [selectedStaffId];
+
+  if (targetStaffIds.length === 0) {
+    toast.error("Không có nhân viên để áp dụng");
+    return;
+  }
+
+  bulkLoading = true;
+
+  try {
+    const allPayload = targetStaffIds.flatMap((staffId: string) =>
+      currentItems.map((item: ItemRow) => ({
+        staffId,
+        itemType,
+        itemId: item.id,
+        commissionType: quickType,
+        commissionValue: quickNumeric,
+      })),
     );
-  }
 
-  function defaultDraftFor(itemId: number): Draft {
-    const existing = getExistingRule(itemId);
-    return {
-      commissionType: existing?.commissionType ?? "percent",
-      commissionValue: String(existing?.commissionValue ?? 0),
-    };
-  }
+    const chunkSize = 400;
+    const savedRules: CommissionRuleRow[] = [];
 
-  function getDraft(itemId: number): Draft {
-    const key = keyFor(itemId);
-    return drafts[key] ?? defaultDraftFor(itemId);
-  }
-
-  function setDraft(itemId: number, patch: Partial<Draft>) {
-    const key = keyFor(itemId);
-    const current = getDraft(itemId);
-
-    drafts = {
-      ...drafts,
-      [key]: {
-        ...current,
-        ...patch,
-      },
-    };
-  }
-
-  function estimatePayout(itemPrice: number, draft: Draft) {
-    const value = Number(draft.commissionValue || 0);
-    if (!Number.isFinite(value) || value < 0) return 0;
-
-    if (draft.commissionType === "percent") {
-      return (itemPrice * value) / 100;
-    }
-
-    return value;
-  }
-
-  async function saveRule(item: ItemRow) {
-    if (!selectedStaffId) {
-      toast.error("Vui lòng chọn nhân viên");
-      return;
-    }
-
-    const key = keyFor(item.id);
-    const draft = getDraft(item.id);
-    const numericValue = Number(draft.commissionValue);
-
-    if (!Number.isFinite(numericValue) || numericValue < 0) {
-      toast.error("Giá trị hoa hồng không hợp lệ");
-      return;
-    }
-
-    rowLoading[key] = true;
-
-    try {
-      const saved = await fetchAPI<CommissionRuleRow>("/staff-commission-rules/upsert", {
-        method: "POST",
-        headers: orgHeaders(),
-        body: JSON.stringify({
-          staffId: selectedStaffId,
-          itemType,
-          itemId: item.id,
-          commissionType: draft.commissionType,
-          commissionValue: numericValue,
-        }),
-      });
-
-      rules = [...rules.filter((r) => r.id !== saved.id), saved];
-
-      toast.success("Đã lưu cấu hình hoa hồng");
-    } catch (error: any) {
-      toast.error(error?.message || "Không thể lưu cấu hình");
-    } finally {
-      rowLoading[key] = false;
-    }
-  }
-
-  async function clearRule(item: ItemRow) {
-    const key = keyFor(item.id);
-    const existing = getExistingRule(item.id);
-
-    if (!existing) {
-      setDraft(item.id, {
-        commissionType: "percent",
-        commissionValue: "0",
-      });
-      return;
-    }
-
-    rowLoading[key] = true;
-
-    try {
-      await fetchAPI<{ success: boolean }>(`/staff-commission-rules/${existing.id}`, {
-        method: "DELETE",
-        headers: orgHeaders(),
-      });
-
-      rules = rules.filter((r) => r.id !== existing.id);
-      setDraft(item.id, {
-        commissionType: "percent",
-        commissionValue: "0",
-      });
-
-      toast.success("Đã xóa cấu hình, mặc định về 0");
-    } catch (error: any) {
-      toast.error(error?.message || "Không thể xóa cấu hình");
-    } finally {
-      rowLoading[key] = false;
-    }
-  }
-
-  async function applyQuickToFiltered() {
-    if (quickApplyTarget === "selected" && !selectedStaffId) {
-      toast.error("Vui lòng chọn nhân viên");
-      return;
-    }
-
-    const quickNumeric = Number(quickValue);
-
-    if (!Number.isFinite(quickNumeric) || quickNumeric < 0) {
-      toast.error("Giá trị áp dụng nhanh không hợp lệ");
-      return;
-    }
-
-    if (currentItems.length === 0) {
-      toast.error("Không có mục nào để áp dụng");
-      return;
-    }
-
-    const targetStaffIds =
-      quickApplyTarget === "all"
-        ? data.members.map((member: MemberRow) => member.id)
-        : [selectedStaffId];
-
-    if (targetStaffIds.length === 0) {
-      toast.error("Không có nhân viên để áp dụng");
-      return;
-    }
-
-    bulkLoading = true;
-
-    try {
-      const allPayload = targetStaffIds.flatMap((staffId: string) =>
-        currentItems.map((item: ItemRow) => ({
-          staffId,
-          itemType,
-          itemId: item.id,
-          commissionType: quickType,
-          commissionValue: quickNumeric,
-        })),
+    for (let i = 0; i < allPayload.length; i += chunkSize) {
+      const chunk = allPayload.slice(i, i + chunkSize);
+      const res = await fetchAPI<{ rules: CommissionRuleRow[] }>(
+        "/staff-commission-rules/bulk-upsert",
+        {
+          method: "POST",
+          headers: orgHeaders(),
+          body: JSON.stringify({ rules: chunk }),
+        },
       );
-
-      const chunkSize = 400;
-      const savedRules: CommissionRuleRow[] = [];
-
-      for (let i = 0; i < allPayload.length; i += chunkSize) {
-        const chunk = allPayload.slice(i, i + chunkSize);
-        const res = await fetchAPI<{ rules: CommissionRuleRow[] }>(
-          "/staff-commission-rules/bulk-upsert",
-          {
-            method: "POST",
-            headers: orgHeaders(),
-            body: JSON.stringify({ rules: chunk }),
-          },
-        );
-        savedRules.push(...res.rules);
-      }
-
-      const updatedIds = new Set(savedRules.map((r) => r.id));
-      rules = [...rules.filter((r) => !updatedIds.has(r.id)), ...savedRules];
-
-      for (const item of currentItems) {
-        setDraft(item.id, {
-          commissionType: quickType,
-          commissionValue: String(quickNumeric),
-        });
-      }
-
-      if (quickApplyTarget === "all") {
-        toast.success(
-          `Đã áp dụng cho ${currentItems.length} mục x ${targetStaffIds.length} nhân viên`,
-        );
-      } else {
-        toast.success(`Đã áp dụng cho ${currentItems.length} mục`);
-      }
-    } catch (error: any) {
-      toast.error(error?.message || "Không thể áp dụng hàng loạt");
-    } finally {
-      bulkLoading = false;
+      savedRules.push(...res.rules);
     }
-  }
 
-  async function refreshAll() {
-    await invalidateAll();
+    const updatedIds = new Set(savedRules.map((r) => r.id));
+    rules = [...rules.filter((r) => !updatedIds.has(r.id)), ...savedRules];
+
+    for (const item of currentItems) {
+      setDraft(item.id, {
+        commissionType: quickType,
+        commissionValue: String(quickNumeric),
+      });
+    }
+
+    if (quickApplyTarget === "all") {
+      toast.success(
+        `Đã áp dụng cho ${currentItems.length} mục x ${targetStaffIds.length} nhân viên`,
+      );
+    } else {
+      toast.success(`Đã áp dụng cho ${currentItems.length} mục`);
+    }
+  } catch (error: any) {
+    toast.error(error?.message || "Không thể áp dụng hàng loạt");
+  } finally {
+    bulkLoading = false;
   }
+}
+
+async function refreshAll() {
+  await invalidateAll();
+}
 </script>
 
 <div class="grid gap-4 lg:grid-cols-3">

@@ -1,220 +1,220 @@
 <script lang="ts">
-  import { Card } from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
-  import {
-    Plus,
-    Search,
-    Phone,
-    Mail,
-    Crown,
-    Calendar,
-    Pencil,
-    Trash2,
-    MoreVertical,
-    MapPin,
-    Wallet,
-    X,
-  } from "@lucide/svelte";
-  import { cn } from "$lib/utils";
-  import * as Dialog from "$lib/components/ui/dialog";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-  import { Label } from "$lib/components/ui/label";
-  import { enhance } from "$app/forms";
-  import type { SubmitFunction } from "./$types";
-  import { toast } from "svelte-sonner";
-  import type { Customer } from "$lib/types";
-  import { page } from "$app/stores";
-  import { goto } from "$app/navigation";
-  import * as Select from "$lib/components/ui/select";
+import { Card } from "$lib/components/ui/card";
+import { Button } from "$lib/components/ui/button";
+import { Input } from "$lib/components/ui/input";
+import {
+  Plus,
+  Search,
+  Phone,
+  Mail,
+  Crown,
+  Calendar,
+  Pencil,
+  Trash2,
+  MoreVertical,
+  MapPin,
+  Wallet,
+  X,
+} from "@lucide/svelte";
+import { cn } from "$lib/utils";
+import * as Dialog from "$lib/components/ui/dialog";
+import * as AlertDialog from "$lib/components/ui/alert-dialog";
+import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+import { Label } from "$lib/components/ui/label";
+import { enhance } from "$app/forms";
+import type { SubmitFunction } from "./$types";
+import { toast } from "svelte-sonner";
+import type { Customer } from "$lib/types";
+import { page } from "$app/stores";
+import { goto } from "$app/navigation";
+import * as Select from "$lib/components/ui/select";
 
-  let isCreateDialogOpen = $state(false);
-  let isEditDialogOpen = $state(false);
-  let isDeleteDialogOpen = $state(false);
-  let isLoading = $state(false);
-  let selectedCustomer = $state<Customer | null>(null);
+let isCreateDialogOpen = $state(false);
+let isEditDialogOpen = $state(false);
+let isDeleteDialogOpen = $state(false);
+let isLoading = $state(false);
+let selectedCustomer = $state<Customer | null>(null);
 
-  // Form Validation Errors
-  let createNameError = $state("");
-  let createPhoneError = $state("");
-  let editNameError = $state("");
-  let editPhoneError = $state("");
+// Form Validation Errors
+let createNameError = $state("");
+let createPhoneError = $state("");
+let editNameError = $state("");
+let editPhoneError = $state("");
 
-  // Search and filter state (synced with URL)
-  let searchQuery = $state($page.url.searchParams.get("q") || "");
-  let activeFilter = $state<"all" | "vip">(
-    ($page.url.searchParams.get("filter") as "all" | "vip") || "all",
-  );
+// Search and filter state (synced with URL)
+let searchQuery = $state($page.url.searchParams.get("q") || "");
+let activeFilter = $state<"all" | "vip">(
+  ($page.url.searchParams.get("filter") as "all" | "vip") || "all",
+);
 
-  // Debounce timer for search
-  let searchTimeout: ReturnType<typeof setTimeout>;
+// Debounce timer for search
+let searchTimeout: ReturnType<typeof setTimeout>;
 
-  // Update URL when search/filter changes
-  function updateUrlParams() {
-    const url = new URL($page.url);
-    if (searchQuery) {
-      url.searchParams.set("q", searchQuery);
+// Update URL when search/filter changes
+function updateUrlParams() {
+  const url = new URL($page.url);
+  if (searchQuery) {
+    url.searchParams.set("q", searchQuery);
+  } else {
+    url.searchParams.delete("q");
+  }
+  if (activeFilter !== "all") {
+    url.searchParams.set("filter", activeFilter);
+  } else {
+    url.searchParams.delete("filter");
+  }
+  goto(url.toString(), { replaceState: true, keepFocus: true });
+}
+
+function handleSearchInput(event: Event) {
+  const target = event.target as HTMLInputElement;
+  searchQuery = target.value;
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(updateUrlParams, 300);
+}
+
+function clearSearch() {
+  searchQuery = "";
+  updateUrlParams();
+}
+
+function setFilter(filter: "all" | "vip") {
+  activeFilter = filter;
+  updateUrlParams();
+}
+
+let { data } = $props();
+
+// Filtered customers based on search and filter
+let filteredCustomers = $derived.by(() => {
+  let result = data.customers;
+
+  // Apply search filter
+  if (searchQuery) {
+    const query = searchQuery.toLowerCase();
+    result = result.filter(
+      (c: Customer) =>
+        c.name.toLowerCase().includes(query) ||
+        c.phone?.toLowerCase().includes(query) ||
+        c.email?.toLowerCase().includes(query),
+    );
+  }
+
+  // Apply VIP filter
+  if (activeFilter === "vip") {
+    result = result.filter((c: Customer) => c.membershipTier);
+  }
+
+  return result;
+});
+
+// Form data for create
+let createFormData = $state({
+  name: "",
+  phone: "",
+  email: "",
+  notes: "",
+  gender: "",
+  location: "",
+});
+
+// Form data for edit
+let editFormData = $state({
+  id: 0,
+  name: "",
+  phone: "",
+  email: "",
+  notes: "",
+  gender: "",
+  location: "",
+});
+
+const handleCreateSubmit: SubmitFunction = () => {
+  isLoading = true;
+  return async ({ result, update }) => {
+    isLoading = false;
+    if (result.type === "success") {
+      isCreateDialogOpen = false;
+      createFormData = {
+        name: "",
+        phone: "",
+        email: "",
+        notes: "",
+        gender: "",
+        location: "",
+      };
+      toast.success("Khách hàng đã được tạo thành công");
+      await update();
     } else {
-      url.searchParams.delete("q");
+      toast.error("Có lỗi xảy ra, vui lòng thử lại");
     }
-    if (activeFilter !== "all") {
-      url.searchParams.set("filter", activeFilter);
+  };
+};
+
+const handleEditSubmit: SubmitFunction = () => {
+  isLoading = true;
+  return async ({ result, update }) => {
+    isLoading = false;
+    if (result.type === "success") {
+      isEditDialogOpen = false;
+      selectedCustomer = null;
+      toast.success("Khách hàng đã được cập nhật thành công");
+      await update();
     } else {
-      url.searchParams.delete("filter");
+      toast.error("Có lỗi xảy ra, vui lòng thử lại");
     }
-    goto(url.toString(), { replaceState: true, keepFocus: true });
-  }
+  };
+};
 
-  function handleSearchInput(event: Event) {
-    const target = event.target as HTMLInputElement;
-    searchQuery = target.value;
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(updateUrlParams, 300);
-  }
-
-  function clearSearch() {
-    searchQuery = "";
-    updateUrlParams();
-  }
-
-  function setFilter(filter: "all" | "vip") {
-    activeFilter = filter;
-    updateUrlParams();
-  }
-
-  let { data } = $props();
-
-  // Filtered customers based on search and filter
-  let filteredCustomers = $derived.by(() => {
-    let result = data.customers;
-
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (c: Customer) =>
-          c.name.toLowerCase().includes(query) ||
-          c.phone?.toLowerCase().includes(query) ||
-          c.email?.toLowerCase().includes(query),
-      );
+const handleDeleteSubmit: SubmitFunction = () => {
+  isLoading = true;
+  return async ({ result, update }) => {
+    isLoading = false;
+    if (result.type === "success") {
+      isDeleteDialogOpen = false;
+      selectedCustomer = null;
+      toast.success("Khách hàng đã được xóa thành công");
+      await update();
+    } else {
+      toast.error("Có lỗi xảy ra, vui lòng thử lại");
     }
-
-    // Apply VIP filter
-    if (activeFilter === "vip") {
-      result = result.filter((c: Customer) => c.membershipTier);
-    }
-
-    return result;
-  });
-
-  // Form data for create
-  let createFormData = $state({
-    name: "",
-    phone: "",
-    email: "",
-    notes: "",
-    gender: "",
-    location: "",
-  });
-
-  // Form data for edit
-  let editFormData = $state({
-    id: 0,
-    name: "",
-    phone: "",
-    email: "",
-    notes: "",
-    gender: "",
-    location: "",
-  });
-
-  const handleCreateSubmit: SubmitFunction = () => {
-    isLoading = true;
-    return async ({ result, update }) => {
-      isLoading = false;
-      if (result.type === "success") {
-        isCreateDialogOpen = false;
-        createFormData = {
-          name: "",
-          phone: "",
-          email: "",
-          notes: "",
-          gender: "",
-          location: "",
-        };
-        toast.success("Khách hàng đã được tạo thành công");
-        await update();
-      } else {
-        toast.error("Có lỗi xảy ra, vui lòng thử lại");
-      }
-    };
   };
+};
 
-  const handleEditSubmit: SubmitFunction = () => {
-    isLoading = true;
-    return async ({ result, update }) => {
-      isLoading = false;
-      if (result.type === "success") {
-        isEditDialogOpen = false;
-        selectedCustomer = null;
-        toast.success("Khách hàng đã được cập nhật thành công");
-        await update();
-      } else {
-        toast.error("Có lỗi xảy ra, vui lòng thử lại");
-      }
-    };
+function openEditDialog(customer: Customer) {
+  selectedCustomer = customer;
+  editFormData = {
+    id: customer.id,
+    name: customer.name,
+    phone: customer.phone || "",
+    email: customer.email || "",
+    notes: customer.notes || "",
+    gender: customer.gender || "",
+    location: customer.location || "",
   };
+  isEditDialogOpen = true;
+}
 
-  const handleDeleteSubmit: SubmitFunction = () => {
-    isLoading = true;
-    return async ({ result, update }) => {
-      isLoading = false;
-      if (result.type === "success") {
-        isDeleteDialogOpen = false;
-        selectedCustomer = null;
-        toast.success("Khách hàng đã được xóa thành công");
-        await update();
-      } else {
-        toast.error("Có lỗi xảy ra, vui lòng thử lại");
-      }
-    };
-  };
+function openDeleteDialog(customer: Customer) {
+  selectedCustomer = customer;
+  isDeleteDialogOpen = true;
+}
 
-  function openEditDialog(customer: Customer) {
-    selectedCustomer = customer;
-    editFormData = {
-      id: customer.id,
-      name: customer.name,
-      phone: customer.phone || "",
-      email: customer.email || "",
-      notes: customer.notes || "",
-      gender: customer.gender || "",
-      location: customer.location || "",
-    };
-    isEditDialogOpen = true;
-  }
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("vi-VN").format(amount);
+}
 
-  function openDeleteDialog(customer: Customer) {
-    selectedCustomer = customer;
-    isDeleteDialogOpen = true;
-  }
-
-  function formatCurrency(amount: number) {
-    return new Intl.NumberFormat("vi-VN").format(amount);
-  }
-
-  function getAvatarGradient(index: number) {
-    const gradients = [
-      "from-purple-500 to-indigo-500",
-      "from-pink-500 to-rose-500",
-      "from-blue-500 to-cyan-500",
-      "from-green-500 to-emerald-500",
-      "from-orange-500 to-amber-500",
-      "from-violet-500 to-purple-500",
-    ];
-    return gradients[index % gradients.length];
-  }
+function getAvatarGradient(index: number) {
+  const gradients = [
+    "from-purple-500 to-indigo-500",
+    "from-pink-500 to-rose-500",
+    "from-blue-500 to-cyan-500",
+    "from-green-500 to-emerald-500",
+    "from-orange-500 to-amber-500",
+    "from-violet-500 to-purple-500",
+  ];
+  return gradients[index % gradients.length];
+}
 </script>
 
 <svelte:head>

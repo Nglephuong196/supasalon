@@ -1,198 +1,196 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
-  import * as Dialog from "$lib/components/ui/dialog";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog";
-  import {
-    Plus,
-    Search,
-    MoreVertical,
-    Clock,
-    Pencil,
-    Trash2,
-    Layers,
-    Sparkles,
-    X,
-  } from "@lucide/svelte";
-  import { cn } from "$lib/utils";
-  import { toast } from "svelte-sonner";
-  import { Label } from "$lib/components/ui/label";
-  import { enhance } from "$app/forms";
-  import type { PageData } from "./$types";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-  import { page } from "$app/stores";
-  import { goto } from "$app/navigation";
-  import * as Select from "$lib/components/ui/select";
+import { Button } from "$lib/components/ui/button";
+import { Input } from "$lib/components/ui/input";
+import * as Dialog from "$lib/components/ui/dialog";
+import * as AlertDialog from "$lib/components/ui/alert-dialog";
+import {
+  Plus,
+  Search,
+  MoreVertical,
+  Clock,
+  Pencil,
+  Trash2,
+  Layers,
+  Sparkles,
+  X,
+} from "@lucide/svelte";
+import { cn } from "$lib/utils";
+import { toast } from "svelte-sonner";
+import { Label } from "$lib/components/ui/label";
+import { enhance } from "$app/forms";
+import type { PageData } from "./$types";
+import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+import { page } from "$app/stores";
+import { goto } from "$app/navigation";
+import * as Select from "$lib/components/ui/select";
 
-  // Props
-  let { data } = $props<{ data: PageData }>();
+// Props
+let { data } = $props<{ data: PageData }>();
 
-  // State with URL sync
-  let searchQuery = $state($page.url.searchParams.get("q") || "");
-  let categorySearchQuery = $state("");
-  const categoryParam = $page.url.searchParams.get("category");
-  let selectedCategoryId = $state<number | null>(categoryParam ? parseInt(categoryParam) : null);
-  let searchTimeout: ReturnType<typeof setTimeout>;
+// State with URL sync
+let searchQuery = $state($page.url.searchParams.get("q") || "");
+let categorySearchQuery = $state("");
+const categoryParam = $page.url.searchParams.get("category");
+let selectedCategoryId = $state<number | null>(categoryParam ? parseInt(categoryParam) : null);
+let searchTimeout: ReturnType<typeof setTimeout>;
 
-  function updateUrlParams() {
-    const url = new URL($page.url);
-    if (searchQuery) {
-      url.searchParams.set("q", searchQuery);
-    } else {
-      url.searchParams.delete("q");
+function updateUrlParams() {
+  const url = new URL($page.url);
+  if (searchQuery) {
+    url.searchParams.set("q", searchQuery);
+  } else {
+    url.searchParams.delete("q");
+  }
+  if (selectedCategoryId !== null) {
+    url.searchParams.set("category", selectedCategoryId.toString());
+  } else {
+    url.searchParams.delete("category");
+  }
+  goto(url.toString(), { replaceState: true, keepFocus: true });
+}
+
+function handleSearchInput(event: Event) {
+  const target = event.target as HTMLInputElement;
+  searchQuery = target.value;
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(updateUrlParams, 300);
+}
+
+function clearSearch() {
+  searchQuery = "";
+  updateUrlParams();
+}
+
+function selectCategory(id: number | null) {
+  selectedCategoryId = id;
+  updateUrlParams();
+}
+
+// Dialog States
+let isCategoryDialogOpen = $state(false);
+let isServiceDialogOpen = $state(false);
+let isDeleteDialogOpen = $state(false);
+
+// Editing State
+let editingCategory = $state<any>(null);
+let editingService = $state<any>(null);
+
+// Deletion State
+let deleteType = $state<"category" | "service">("service");
+let itemToDelete = $state<any>(null);
+
+// Form Validation Errors
+let catNameError = $state("");
+let svcNameError = $state("");
+let svcPriceError = $state("");
+let svcDurationError = $state("");
+let svcCategoryError = $state("");
+
+function resetErrors() {
+  catNameError = "";
+  svcNameError = "";
+  svcPriceError = "";
+  svcDurationError = "";
+  svcCategoryError = "";
+}
+
+// Derived
+let filteredServices = $derived(
+  data.services.filter((s: any) => {
+    const matchesCategory = selectedCategoryId === null || s.categoryId === selectedCategoryId;
+    const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  }),
+);
+let filteredCategories = $derived(
+  data.categories.filter((c: any) =>
+    c.name.toLowerCase().includes(categorySearchQuery.toLowerCase()),
+  ),
+);
+
+// Helpers
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("vi-VN").format(price) + "đ";
+}
+
+function getCategoryName(id: number) {
+  return data.categories.find((c: any) => c.id === id)?.name || "Unknown";
+}
+
+function categoryCount(id: number) {
+  return data.services.filter((s: any) => s.categoryId === id).length;
+}
+
+// Handlers
+function openCreateCategory() {
+  editingCategory = null;
+  isCategoryDialogOpen = true;
+}
+
+function openEditCategory(category: any, e: Event) {
+  e.stopPropagation();
+  editingCategory = category;
+  isCategoryDialogOpen = true;
+}
+
+function openCreateService() {
+  editingService = null;
+  // Default category if one is selected
+  if (selectedCategoryId) {
+    editingService = { categoryId: selectedCategoryId };
+  }
+  isServiceDialogOpen = true;
+}
+
+function openEditService(service: any) {
+  editingService = service;
+  isServiceDialogOpen = true;
+}
+
+function openDeleteCategory(category: any, e: Event) {
+  e.stopPropagation();
+  deleteType = "category";
+  itemToDelete = category;
+  isDeleteDialogOpen = true;
+}
+
+function openDeleteService(service: any) {
+  deleteType = "service";
+  itemToDelete = service;
+  isDeleteDialogOpen = true;
+}
+
+// Form Enhancement
+function handleFormSubmit() {
+  return async ({ result, update }: any) => {
+    if (result.type === "success") {
+      toast.success(
+        editingCategory?.id || editingService?.id ? "Cập nhật thành công!" : "Tạo mới thành công!",
+      );
+      isCategoryDialogOpen = false;
+      isServiceDialogOpen = false;
+      isDeleteDialogOpen = false;
+    } else if (result.type === "failure") {
+      toast.error(result.data?.message || "Có lỗi xảy ra");
     }
-    if (selectedCategoryId !== null) {
-      url.searchParams.set("category", selectedCategoryId.toString());
-    } else {
-      url.searchParams.delete("category");
-    }
-    goto(url.toString(), { replaceState: true, keepFocus: true });
-  }
+    await update();
+  };
+}
 
-  function handleSearchInput(event: Event) {
-    const target = event.target as HTMLInputElement;
-    searchQuery = target.value;
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(updateUrlParams, 300);
-  }
-
-  function clearSearch() {
-    searchQuery = "";
-    updateUrlParams();
-  }
-
-  function selectCategory(id: number | null) {
-    selectedCategoryId = id;
-    updateUrlParams();
-  }
-
-  // Dialog States
-  let isCategoryDialogOpen = $state(false);
-  let isServiceDialogOpen = $state(false);
-  let isDeleteDialogOpen = $state(false);
-
-  // Editing State
-  let editingCategory = $state<any>(null);
-  let editingService = $state<any>(null);
-
-  // Deletion State
-  let deleteType = $state<"category" | "service">("service");
-  let itemToDelete = $state<any>(null);
-
-  // Form Validation Errors
-  let catNameError = $state("");
-  let svcNameError = $state("");
-  let svcPriceError = $state("");
-  let svcDurationError = $state("");
-  let svcCategoryError = $state("");
-
-  function resetErrors() {
-    catNameError = "";
-    svcNameError = "";
-    svcPriceError = "";
-    svcDurationError = "";
-    svcCategoryError = "";
-  }
-
-  // Derived
-  let filteredServices = $derived(
-    data.services.filter((s: any) => {
-      const matchesCategory = selectedCategoryId === null || s.categoryId === selectedCategoryId;
-      const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    }),
-  );
-  let filteredCategories = $derived(
-    data.categories.filter((c: any) =>
-      c.name.toLowerCase().includes(categorySearchQuery.toLowerCase()),
-    ),
-  );
-
-  // Helpers
-  function formatPrice(price: number) {
-    return new Intl.NumberFormat("vi-VN").format(price) + "đ";
-  }
-
-  function getCategoryName(id: number) {
-    return data.categories.find((c: any) => c.id === id)?.name || "Unknown";
-  }
-
-  function categoryCount(id: number) {
-    return data.services.filter((s: any) => s.categoryId === id).length;
-  }
-
-  // Handlers
-  function openCreateCategory() {
-    editingCategory = null;
-    isCategoryDialogOpen = true;
-  }
-
-  function openEditCategory(category: any, e: Event) {
-    e.stopPropagation();
-    editingCategory = category;
-    isCategoryDialogOpen = true;
-  }
-
-  function openCreateService() {
-    editingService = null;
-    // Default category if one is selected
-    if (selectedCategoryId) {
-      editingService = { categoryId: selectedCategoryId };
-    }
-    isServiceDialogOpen = true;
-  }
-
-  function openEditService(service: any) {
-    editingService = service;
-    isServiceDialogOpen = true;
-  }
-
-  function openDeleteCategory(category: any, e: Event) {
-    e.stopPropagation();
-    deleteType = "category";
-    itemToDelete = category;
-    isDeleteDialogOpen = true;
-  }
-
-  function openDeleteService(service: any) {
-    deleteType = "service";
-    itemToDelete = service;
-    isDeleteDialogOpen = true;
-  }
-
-  // Form Enhancement
-  function handleFormSubmit() {
-    return async ({ result, update }: any) => {
-      if (result.type === "success") {
-        toast.success(
-          editingCategory?.id || editingService?.id
-            ? "Cập nhật thành công!"
-            : "Tạo mới thành công!",
-        );
-        isCategoryDialogOpen = false;
-        isServiceDialogOpen = false;
-        isDeleteDialogOpen = false;
-      } else if (result.type === "failure") {
-        toast.error(result.data?.message || "Có lỗi xảy ra");
+function handleDeleteSubmit() {
+  return async ({ result, update }: any) => {
+    if (result.type === "success") {
+      toast.success("Xóa thành công!");
+      if (deleteType === "category" && selectedCategoryId === itemToDelete.id) {
+        selectedCategoryId = null;
       }
-      await update();
-    };
-  }
-
-  function handleDeleteSubmit() {
-    return async ({ result, update }: any) => {
-      if (result.type === "success") {
-        toast.success("Xóa thành công!");
-        if (deleteType === "category" && selectedCategoryId === itemToDelete.id) {
-          selectedCategoryId = null;
-        }
-        isDeleteDialogOpen = false;
-      } else if (result.type === "failure") {
-        toast.error(result.data?.message || "Có lỗi xảy ra");
-      }
-      await update();
-    };
-  }
+      isDeleteDialogOpen = false;
+    } else if (result.type === "failure") {
+      toast.error(result.data?.message || "Có lỗi xảy ra");
+    }
+    await update();
+  };
+}
 </script>
 
 <svelte:head>

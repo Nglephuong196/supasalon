@@ -88,11 +88,7 @@ body {
   background: linear-gradient(180deg, hsl(258 40% 98%), hsl(250 35% 96%));
   /* Soft lilac gradient background */
   color: hsl(var(--foreground));
-  font-family:
-    "Plus Jakarta Sans",
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
   font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -157,8 +153,7 @@ body::after {
 
 /* Subtle texture layer */
 body {
-  background-image:
-    radial-gradient(circle at 20% 10%, hsl(265 70% 92% / 0.5), transparent 35%),
+  background-image: radial-gradient(circle at 20% 10%, hsl(265 70% 92% / 0.5), transparent 35%),
     radial-gradient(circle at 80% 20%, hsl(240 80% 92% / 0.45), transparent 40%),
     linear-gradient(180deg, hsl(258 40% 98%), hsl(250 35% 96%));
   background-attachment: fixed;
@@ -219,8 +214,7 @@ body {
 }
 
 .surface-texture {
-  background-image:
-    radial-gradient(circle at 15% 10%, hsl(265 70% 92% / 0.55), transparent 40%),
+  background-image: radial-gradient(circle at 15% 10%, hsl(265 70% 92% / 0.55), transparent 40%),
     radial-gradient(circle at 85% 0%, hsl(240 80% 92% / 0.5), transparent 35%);
 }
 
@@ -280,8 +274,7 @@ body {
 .ambient-grid {
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(to right, hsl(262 35% 85% / 0.18) 1px, transparent 1px),
+  background-image: linear-gradient(to right, hsl(262 35% 85% / 0.18) 1px, transparent 1px),
     linear-gradient(to bottom, hsl(262 35% 85% / 0.16) 1px, transparent 1px);
   background-size: 42px 42px;
   mask-image: radial-gradient(circle at 50% 35%, black 40%, transparent 86%);
@@ -297,9 +290,7 @@ body {
   border: 1px solid hsl(260 30% 90% / 0.95);
   border-radius: 1.15rem;
   background: linear-gradient(165deg, hsl(0 0% 100% / 0.95), hsl(258 55% 99% / 0.9));
-  box-shadow:
-    0 14px 38px -26px hsl(262 55% 28% / 0.35),
-    0 1px 0 hsl(0 0% 100% / 0.95) inset;
+  box-shadow: 0 14px 38px -26px hsl(262 55% 28% / 0.35), 0 1px 0 hsl(0 0% 100% / 0.95) inset;
   overflow: hidden;
 }
 
@@ -307,8 +298,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at 10% 0%, hsl(270 100% 88% / 0.25), transparent 38%),
+  background: radial-gradient(circle at 10% 0%, hsl(270 100% 88% / 0.25), transparent 38%),
     radial-gradient(circle at 85% 0%, hsl(222 100% 90% / 0.22), transparent 40%);
   pointer-events: none;
 }
@@ -321,20 +311,17 @@ body {
 
 /* Modal system polish (applies to all shared Dialog / AlertDialog content) */
 .modal-overlay {
-  background:
-    radial-gradient(circle at 20% 8%, hsl(270 95% 70% / 0.18), transparent 40%),
+  background: radial-gradient(circle at 20% 8%, hsl(270 95% 70% / 0.18), transparent 40%),
     radial-gradient(circle at 80% 92%, hsl(225 100% 80% / 0.16), transparent 42%),
     hsl(250 20% 10% / 0.42);
   backdrop-filter: blur(4px);
 }
 
 .modal-shell {
-  background:
-    linear-gradient(168deg, hsl(0 0% 100% / 0.97), hsl(262 55% 99% / 0.93)), hsl(var(--background));
+  background: linear-gradient(168deg, hsl(0 0% 100% / 0.97), hsl(262 55% 99% / 0.93)),
+    hsl(var(--background));
   border: 1px solid hsl(262 32% 86% / 0.95);
-  box-shadow:
-    0 40px 90px -34px hsl(259 45% 18% / 0.45),
-    0 1px 0 hsl(0 0% 100% / 0.85) inset;
+  box-shadow: 0 40px 90px -34px hsl(259 45% 18% / 0.45), 0 1px 0 hsl(0 0% 100% / 0.85) inset;
 }
 
 /* Premium card treatment */
@@ -344,10 +331,7 @@ body {
   border: 1px solid hsl(258 35% 89% / 0.95);
   background: linear-gradient(165deg, hsl(0 0% 100% / 0.96), hsl(260 80% 99% / 0.92));
   box-shadow: 0 16px 36px -28px hsl(262 60% 24% / 0.42);
-  transition:
-    transform 220ms ease,
-    box-shadow 260ms ease,
-    border-color 220ms ease;
+  transition: transform 220ms ease, box-shadow 260ms ease, border-color 220ms ease;
 }
 
 .premium-card::after {
@@ -460,9 +444,7 @@ body {
 
 .soft-input:focus-visible {
   border-color: hsl(var(--primary) / 0.4);
-  box-shadow:
-    0 0 0 3px hsl(var(--primary) / 0.12),
-    inset 0 1px 0 hsl(0 0% 100% / 0.95);
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12), inset 0 1px 0 hsl(0 0% 100% / 0.95);
 }
 
 .section-title {
@@ -471,10 +453,7 @@ body {
 }
 
 .elevate-hover {
-  transition:
-    transform 0.24s ease,
-    box-shadow 0.28s ease,
-    border-color 0.22s ease;
+  transition: transform 0.24s ease, box-shadow 0.28s ease, border-color 0.22s ease;
 }
 
 .elevate-hover:hover {

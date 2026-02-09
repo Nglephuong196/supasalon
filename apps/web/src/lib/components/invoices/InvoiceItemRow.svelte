@@ -1,37 +1,37 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
-  import { X, Sparkles, ShoppingBag, Percent } from "@lucide/svelte";
+import { Button } from "$lib/components/ui/button";
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import { X, Sparkles, ShoppingBag, Percent } from "@lucide/svelte";
 
-  let {
-    item = $bindable(),
-    index,
-    removeItem,
-    compact = false,
-  }: {
-    item: any;
-    index: number;
-    removeItem: (index: number) => void;
-    compact?: boolean;
-  } = $props();
+let {
+  item = $bindable(),
+  index,
+  removeItem,
+  compact = false,
+}: {
+  item: any;
+  index: number;
+  removeItem: (index: number) => void;
+  compact?: boolean;
+} = $props();
 
-  function calculateTotal() {
-    const subtotal = (item.unitPrice || 0) * (item.quantity || 1);
-    let discount = 0;
-    if (item.discountType === "percent") {
-      discount = subtotal * ((item.discountValue || 0) / 100);
-    } else {
-      discount = item.discountValue || 0;
-    }
-    item.total = Math.max(0, subtotal - discount);
+function calculateTotal() {
+  const subtotal = (item.unitPrice || 0) * (item.quantity || 1);
+  let discount = 0;
+  if (item.discountType === "percent") {
+    discount = subtotal * ((item.discountValue || 0) / 100);
+  } else {
+    discount = item.discountValue || 0;
   }
+  item.total = Math.max(0, subtotal - discount);
+}
 
-  if (item.total === undefined) calculateTotal();
+if (item.total === undefined) calculateTotal();
 
-  function formatPrice(value: number) {
-    return new Intl.NumberFormat("vi-VN").format(value || 0);
-  }
+function formatPrice(value: number) {
+  return new Intl.NumberFormat("vi-VN").format(value || 0);
+}
 </script>
 
 <div

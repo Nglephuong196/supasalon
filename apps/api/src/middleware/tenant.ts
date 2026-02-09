@@ -20,15 +20,6 @@ type Env = {
 export const ensureTenant = createMiddleware<Env>(async (c, next) => {
   const orgIdHeader = c.req.header("X-Organization-Id") || c.req.header("X-Salon-Id");
 
-  // Allow bypassing tenant check for specific public paths if needed,
-  // but generally this middleware should only be applied to protected routes.
-
-  if (!orgIdHeader) {
-    return c.json({ error: "X-Organization-Id header is required" }, 400);
-  }
-
-  const organizationId = orgIdHeader; // string ID now
-
   const db = c.get("db");
   const auth = createAuth(db, c.env);
 
@@ -44,6 +35,18 @@ export const ensureTenant = createMiddleware<Env>(async (c, next) => {
 
   if (!session) {
     return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  // Support active organization fallback when client hasn't attached the header yet.
+  const sessionActiveOrgId =
+    typeof (session.session as { activeOrganizationId?: unknown } | undefined)
+      ?.activeOrganizationId === "string"
+      ? (session.session as { activeOrganizationId: string }).activeOrganizationId
+      : null;
+  const organizationId = orgIdHeader ?? sessionActiveOrgId;
+
+  if (!organizationId) {
+    return c.json({ error: "X-Organization-Id header is required" }, 400);
   }
 
   const orgMember = await db

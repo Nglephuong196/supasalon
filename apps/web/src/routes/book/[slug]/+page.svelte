@@ -1,330 +1,330 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { Button } from "$lib/components/ui/button";
-  import Calendar from "$lib/components/ui/calendar/calendar.svelte";
-  import { Card, CardContent } from "$lib/components/ui/card";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
-  import * as Popover from "$lib/components/ui/popover";
-  import * as Select from "$lib/components/ui/select";
-  import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
-  import { getLocalTimeZone, parseDate, today, type CalendarDate } from "@internationalized/date";
-  import { Clock3, Globe, CircleCheck, Sparkles, Plus, Trash2, Users } from "@lucide/svelte";
-  import type { ActionData, PageData } from "./$types";
+import { onMount } from "svelte";
+import { Button } from "$lib/components/ui/button";
+import Calendar from "$lib/components/ui/calendar/calendar.svelte";
+import { Card, CardContent } from "$lib/components/ui/card";
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import * as Popover from "$lib/components/ui/popover";
+import * as Select from "$lib/components/ui/select";
+import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
+import { getLocalTimeZone, parseDate, today, type CalendarDate } from "@internationalized/date";
+import { Clock3, Globe, CircleCheck, Sparkles, Plus, Trash2, Users } from "@lucide/svelte";
+import type { ActionData, PageData } from "./$types";
 
-  type Locale = "vi" | "en";
-  type ServiceLine = { serviceId: string; memberId: string };
-  type GuestForm = { services: ServiceLine[] };
+type Locale = "vi" | "en";
+type ServiceLine = { serviceId: string; memberId: string };
+type GuestForm = { services: ServiceLine[] };
 
-  const copy = {
-    vi: {
-      pageTitle: "Đặt lịch",
-      heroTitle: "Đặt lịch hẹn",
-      requiredHint: "(*) Vui lòng nhập đầy đủ thông tin bắt buộc",
-      stepCustomer: "1. Khách hàng liên hệ",
-      stepSchedule: "2. Thời gian",
-      stepService: "3. Dịch vụ theo từng khách",
-      customerPhone: "Số điện thoại",
-      customerName: "Họ và tên",
-      customerCount: "Số khách",
-      dateLabel: "Chọn ngày",
-      timeLabel: "Chọn giờ",
-      serviceLabel: "Dịch vụ",
-      chooseService: "Vui lòng chọn ít nhất 1 dịch vụ cho mỗi khách.",
-      staffLabel: "Nhân viên phụ trách",
-      staffAuto: "Để salon sắp xếp",
-      notesLabel: "Ghi chú",
-      notesPh: "Ví dụ: muốn làm nhanh trước 18:00",
-      submit: "Gửi yêu cầu đặt lịch",
-      noService: "Salon chưa mở dịch vụ đặt lịch online.",
-      success: "Đặt lịch thành công. Salon sẽ liên hệ xác nhận sớm.",
-      defaultError: "Vui lòng kiểm tra lại thông tin.",
-      mins: "phút",
-      contactLine: "Liên hệ đặt lịch nhanh và dễ dàng",
-      topTag: "Đặt lịch online",
-      addService: "Thêm dịch vụ",
-      removeService: "Xóa dịch vụ",
-      serviceRow: "Dịch vụ",
-      guestLabel: "Khách",
-      invalidDateTime: "Vui lòng chọn ngày và giờ hẹn.",
-      invalidGuests: "Mỗi khách cần chọn ít nhất 1 dịch vụ.",
-      bookingPage: "TRANG ĐẶT LỊCH",
-      selectedSummary: "Tổng dịch vụ đã chọn",
-    },
-    en: {
-      pageTitle: "Book Appointment",
-      heroTitle: "Book Appointment",
-      requiredHint: "(*) Please fill all required fields",
-      stepCustomer: "1. Contact",
-      stepSchedule: "2. Time",
-      stepService: "3. Services per customer",
-      customerPhone: "Phone Number",
-      customerName: "Full Name",
-      customerCount: "Number of customers",
-      dateLabel: "Select date",
-      timeLabel: "Select time",
-      serviceLabel: "Service",
-      chooseService: "Please select at least one service per customer.",
-      staffLabel: "Preferred staff",
-      staffAuto: "Let salon assign",
-      notesLabel: "Notes",
-      notesPh: "Example: please finish before 6:00 PM",
-      submit: "Submit Booking Request",
-      noService: "This salon has not enabled online services yet.",
-      success: "Booking submitted successfully. The salon will contact you soon.",
-      defaultError: "Please review your information.",
-      mins: "mins",
-      contactLine: "Fast and easy appointment booking",
-      topTag: "Online booking",
-      addService: "Add service",
-      removeService: "Remove service",
-      serviceRow: "Service",
-      guestLabel: "Customer",
-      invalidDateTime: "Please select date and time.",
-      invalidGuests: "Each customer needs at least one service.",
-      bookingPage: "BOOKING PAGE",
-      selectedSummary: "Total selected services",
-    },
-  } as const;
+const copy = {
+  vi: {
+    pageTitle: "Đặt lịch",
+    heroTitle: "Đặt lịch hẹn",
+    requiredHint: "(*) Vui lòng nhập đầy đủ thông tin bắt buộc",
+    stepCustomer: "1. Khách hàng liên hệ",
+    stepSchedule: "2. Thời gian",
+    stepService: "3. Dịch vụ theo từng khách",
+    customerPhone: "Số điện thoại",
+    customerName: "Họ và tên",
+    customerCount: "Số khách",
+    dateLabel: "Chọn ngày",
+    timeLabel: "Chọn giờ",
+    serviceLabel: "Dịch vụ",
+    chooseService: "Vui lòng chọn ít nhất 1 dịch vụ cho mỗi khách.",
+    staffLabel: "Nhân viên phụ trách",
+    staffAuto: "Để salon sắp xếp",
+    notesLabel: "Ghi chú",
+    notesPh: "Ví dụ: muốn làm nhanh trước 18:00",
+    submit: "Gửi yêu cầu đặt lịch",
+    noService: "Salon chưa mở dịch vụ đặt lịch online.",
+    success: "Đặt lịch thành công. Salon sẽ liên hệ xác nhận sớm.",
+    defaultError: "Vui lòng kiểm tra lại thông tin.",
+    mins: "phút",
+    contactLine: "Liên hệ đặt lịch nhanh và dễ dàng",
+    topTag: "Đặt lịch online",
+    addService: "Thêm dịch vụ",
+    removeService: "Xóa dịch vụ",
+    serviceRow: "Dịch vụ",
+    guestLabel: "Khách",
+    invalidDateTime: "Vui lòng chọn ngày và giờ hẹn.",
+    invalidGuests: "Mỗi khách cần chọn ít nhất 1 dịch vụ.",
+    bookingPage: "TRANG ĐẶT LỊCH",
+    selectedSummary: "Tổng dịch vụ đã chọn",
+  },
+  en: {
+    pageTitle: "Book Appointment",
+    heroTitle: "Book Appointment",
+    requiredHint: "(*) Please fill all required fields",
+    stepCustomer: "1. Contact",
+    stepSchedule: "2. Time",
+    stepService: "3. Services per customer",
+    customerPhone: "Phone Number",
+    customerName: "Full Name",
+    customerCount: "Number of customers",
+    dateLabel: "Select date",
+    timeLabel: "Select time",
+    serviceLabel: "Service",
+    chooseService: "Please select at least one service per customer.",
+    staffLabel: "Preferred staff",
+    staffAuto: "Let salon assign",
+    notesLabel: "Notes",
+    notesPh: "Example: please finish before 6:00 PM",
+    submit: "Submit Booking Request",
+    noService: "This salon has not enabled online services yet.",
+    success: "Booking submitted successfully. The salon will contact you soon.",
+    defaultError: "Please review your information.",
+    mins: "mins",
+    contactLine: "Fast and easy appointment booking",
+    topTag: "Online booking",
+    addService: "Add service",
+    removeService: "Remove service",
+    serviceRow: "Service",
+    guestLabel: "Customer",
+    invalidDateTime: "Please select date and time.",
+    invalidGuests: "Each customer needs at least one service.",
+    bookingPage: "BOOKING PAGE",
+    selectedSummary: "Total selected services",
+  },
+} as const;
 
-  let { data, form }: { data: PageData; form: ActionData } = $props();
+let { data, form }: { data: PageData; form: ActionData } = $props();
 
-  let locale = $state<Locale>("vi");
+let locale = $state<Locale>("vi");
 
-  let customerName = $state("");
-  let customerPhone = $state("");
-  let notes = $state("");
-  let guestCount = $state("1");
+let customerName = $state("");
+let customerPhone = $state("");
+let notes = $state("");
+let guestCount = $state("1");
 
-  let bookingDate = $state("");
-  let bookingTime = $state("");
-  let bookingDateOpen = $state(false);
-  let bookingDateValue = $state<CalendarDate | undefined>(undefined);
+let bookingDate = $state("");
+let bookingTime = $state("");
+let bookingDateOpen = $state(false);
+let bookingDateValue = $state<CalendarDate | undefined>(undefined);
 
-  let guests = $state<GuestForm[]>([{ services: [{ serviceId: "", memberId: "" }] }]);
-  let clientError = $state("");
+let guests = $state<GuestForm[]>([{ services: [{ serviceId: "", memberId: "" }] }]);
+let clientError = $state("");
 
-  const timeSlots = [
-    "09:00",
-    "09:30",
-    "10:00",
-    "10:30",
-    "11:00",
-    "11:30",
-    "13:00",
-    "13:30",
-    "14:00",
-    "14:30",
-    "15:00",
-    "15:30",
-    "16:00",
-    "16:30",
-    "17:00",
-    "17:30",
-    "18:00",
-    "18:30",
-    "19:00",
-    "19:30",
-    "20:00",
-  ];
+const timeSlots = [
+  "09:00",
+  "09:30",
+  "10:00",
+  "10:30",
+  "11:00",
+  "11:30",
+  "13:00",
+  "13:30",
+  "14:00",
+  "14:30",
+  "15:00",
+  "15:30",
+  "16:00",
+  "16:30",
+  "17:00",
+  "17:30",
+  "18:00",
+  "18:30",
+  "19:00",
+  "19:30",
+  "20:00",
+];
 
-  const t = $derived(copy[locale]);
-  const dateTimeValue = $derived(bookingDate && bookingTime ? `${bookingDate}T${bookingTime}` : "");
-  const bookingDateDisplay = $derived(
-    bookingDateValue
-      ? bookingDateValue
-          .toDate(getLocalTimeZone())
-          .toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US")
-      : t.dateLabel,
+const t = $derived(copy[locale]);
+const dateTimeValue = $derived(bookingDate && bookingTime ? `${bookingDate}T${bookingTime}` : "");
+const bookingDateDisplay = $derived(
+  bookingDateValue
+    ? bookingDateValue
+        .toDate(getLocalTimeZone())
+        .toLocaleDateString(locale === "vi" ? "vi-VN" : "en-US")
+    : t.dateLabel,
+);
+
+const selectedServiceCount = $derived(
+  guests.reduce(
+    (sum, guest) => sum + guest.services.filter((service) => service.serviceId).length,
+    0,
+  ),
+);
+
+const serializedGuests = $derived(
+  JSON.stringify(
+    guests.map((guest) => ({
+      services: guest.services
+        .filter((service) => service.serviceId)
+        .map((service) => ({
+          serviceId: Number(service.serviceId),
+          memberId: service.memberId || undefined,
+        })),
+    })),
+  ),
+);
+
+function getIsoDate(offsetDays = 0) {
+  const now = new Date();
+  now.setDate(now.getDate() + offsetDays);
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function formatPrice(price: number) {
+  return (
+    new Intl.NumberFormat(locale === "vi" ? "vi-VN" : "en-US").format(price) +
+    (locale === "vi" ? "đ" : " VND")
   );
+}
 
-  const selectedServiceCount = $derived(
-    guests.reduce(
-      (sum, guest) => sum + guest.services.filter((service) => service.serviceId).length,
-      0,
-    ),
+function getServiceDisplay(serviceId: string): string {
+  if (!serviceId) return t.serviceLabel;
+  const selected = data.services.find((service) => service.id.toString() === serviceId);
+  if (!selected) return t.serviceLabel;
+  return `${selected.name} • ${formatPrice(selected.price)} • ${selected.duration} ${t.mins}`;
+}
+
+function getStaffDisplay(memberId: string): string {
+  if (!memberId) return t.staffAuto;
+  return data.staffs.find((staff) => staff.id === memberId)?.name || t.staffAuto;
+}
+
+function syncGuestCount() {
+  const parsed = Number(guestCount);
+  const normalized = Number.isFinite(parsed) ? Math.max(1, Math.min(10, parsed)) : 1;
+  guestCount = String(normalized);
+
+  while (guests.length < normalized) {
+    guests = [...guests, { services: [{ serviceId: "", memberId: "" }] }];
+  }
+
+  if (guests.length > normalized) {
+    guests = guests.slice(0, normalized);
+  }
+}
+
+function addServiceRow(guestIndex: number) {
+  guests[guestIndex].services = [...guests[guestIndex].services, { serviceId: "", memberId: "" }];
+  guests = [...guests];
+}
+
+function removeServiceRow(guestIndex: number, serviceIndex: number) {
+  if (guests[guestIndex].services.length <= 1) return;
+  guests[guestIndex].services = guests[guestIndex].services.filter(
+    (_, index) => index !== serviceIndex,
   );
+  guests = [...guests];
+}
 
-  const serializedGuests = $derived(
-    JSON.stringify(
-      guests.map((guest) => ({
-        services: guest.services
-          .filter((service) => service.serviceId)
-          .map((service) => ({
-            serviceId: Number(service.serviceId),
-            memberId: service.memberId || undefined,
-          })),
-      })),
-    ),
-  );
+onMount(() => {
+  const saved = localStorage.getItem("public-booking-lang");
+  if (saved === "vi" || saved === "en") locale = saved;
+  else locale = navigator.language.toLowerCase().startsWith("vi") ? "vi" : "en";
 
-  function getIsoDate(offsetDays = 0) {
-    const now = new Date();
-    now.setDate(now.getDate() + offsetDays);
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, "0");
-    const d = String(now.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
+  if (!bookingDate) {
+    bookingDate = getIsoDate(0);
+  }
+});
+
+function switchLocale(next: Locale) {
+  locale = next;
+  localStorage.setItem("public-booking-lang", next);
+}
+
+$effect(() => {
+  syncGuestCount();
+});
+
+$effect(() => {
+  if (!bookingDate) {
+    bookingDateValue = undefined;
+    return;
   }
 
-  function formatPrice(price: number) {
-    return (
-      new Intl.NumberFormat(locale === "vi" ? "vi-VN" : "en-US").format(price) +
-      (locale === "vi" ? "đ" : " VND")
-    );
-  }
-
-  function getServiceDisplay(serviceId: string): string {
-    if (!serviceId) return t.serviceLabel;
-    const selected = data.services.find((service) => service.id.toString() === serviceId);
-    if (!selected) return t.serviceLabel;
-    return `${selected.name} • ${formatPrice(selected.price)} • ${selected.duration} ${t.mins}`;
-  }
-
-  function getStaffDisplay(memberId: string): string {
-    if (!memberId) return t.staffAuto;
-    return data.staffs.find((staff) => staff.id === memberId)?.name || t.staffAuto;
-  }
-
-  function syncGuestCount() {
-    const parsed = Number(guestCount);
-    const normalized = Number.isFinite(parsed) ? Math.max(1, Math.min(10, parsed)) : 1;
-    guestCount = String(normalized);
-
-    while (guests.length < normalized) {
-      guests = [...guests, { services: [{ serviceId: "", memberId: "" }] }];
+  try {
+    const parsed = parseDate(bookingDate);
+    if (
+      bookingDateValue?.year !== parsed.year ||
+      bookingDateValue?.month !== parsed.month ||
+      bookingDateValue?.day !== parsed.day
+    ) {
+      bookingDateValue = parsed;
     }
+  } catch {
+    bookingDateValue = undefined;
+  }
+});
 
-    if (guests.length > normalized) {
-      guests = guests.slice(0, normalized);
-    }
+$effect(() => {
+  if (!bookingDateValue) return;
+  const y = bookingDateValue.year;
+  const m = bookingDateValue.month.toString().padStart(2, "0");
+  const d = bookingDateValue.day.toString().padStart(2, "0");
+  const nextValue = `${y}-${m}-${d}`;
+  if (bookingDate !== nextValue) {
+    bookingDate = nextValue;
+  }
+});
+
+$effect(() => {
+  const values = form?.values;
+  if (!values) return;
+  customerName = values.customerName || "";
+  customerPhone = values.customerPhone || "";
+  notes = values.notes || "";
+  guestCount = values.guestCount || "1";
+
+  const rawDateTime = values.dateTime || "";
+  if (rawDateTime && rawDateTime.includes("T")) {
+    const [d, tm] = rawDateTime.split("T");
+    bookingDate = d || "";
+    bookingTime = (tm || "").slice(0, 5);
   }
 
-  function addServiceRow(guestIndex: number) {
-    guests[guestIndex].services = [...guests[guestIndex].services, { serviceId: "", memberId: "" }];
-    guests = [...guests];
-  }
-
-  function removeServiceRow(guestIndex: number, serviceIndex: number) {
-    if (guests[guestIndex].services.length <= 1) return;
-    guests[guestIndex].services = guests[guestIndex].services.filter(
-      (_, index) => index !== serviceIndex,
-    );
-    guests = [...guests];
-  }
-
-  onMount(() => {
-    const saved = localStorage.getItem("public-booking-lang");
-    if (saved === "vi" || saved === "en") locale = saved;
-    else locale = navigator.language.toLowerCase().startsWith("vi") ? "vi" : "en";
-
-    if (!bookingDate) {
-      bookingDate = getIsoDate(0);
-    }
-  });
-
-  function switchLocale(next: Locale) {
-    locale = next;
-    localStorage.setItem("public-booking-lang", next);
-  }
-
-  $effect(() => {
-    syncGuestCount();
-  });
-
-  $effect(() => {
-    if (!bookingDate) {
-      bookingDateValue = undefined;
-      return;
-    }
-
+  if (values.guests) {
     try {
-      const parsed = parseDate(bookingDate);
-      if (
-        bookingDateValue?.year !== parsed.year ||
-        bookingDateValue?.month !== parsed.month ||
-        bookingDateValue?.day !== parsed.day
-      ) {
-        bookingDateValue = parsed;
+      const parsedGuests = JSON.parse(values.guests) as Array<{
+        services: Array<{ serviceId: number | string; memberId?: string }>;
+      }>;
+      if (Array.isArray(parsedGuests) && parsedGuests.length > 0) {
+        guests = parsedGuests.map((guest) => ({
+          services:
+            guest.services?.length > 0
+              ? guest.services.map((service) => ({
+                  serviceId: String(service.serviceId || ""),
+                  memberId: service.memberId || "",
+                }))
+              : [{ serviceId: "", memberId: "" }],
+        }));
       }
-    } catch {
-      bookingDateValue = undefined;
-    }
-  });
-
-  $effect(() => {
-    if (!bookingDateValue) return;
-    const y = bookingDateValue.year;
-    const m = bookingDateValue.month.toString().padStart(2, "0");
-    const d = bookingDateValue.day.toString().padStart(2, "0");
-    const nextValue = `${y}-${m}-${d}`;
-    if (bookingDate !== nextValue) {
-      bookingDate = nextValue;
-    }
-  });
-
-  $effect(() => {
-    const values = form?.values;
-    if (!values) return;
-    customerName = values.customerName || "";
-    customerPhone = values.customerPhone || "";
-    notes = values.notes || "";
-    guestCount = values.guestCount || "1";
-
-    const rawDateTime = values.dateTime || "";
-    if (rawDateTime && rawDateTime.includes("T")) {
-      const [d, tm] = rawDateTime.split("T");
-      bookingDate = d || "";
-      bookingTime = (tm || "").slice(0, 5);
-    }
-
-    if (values.guests) {
-      try {
-        const parsedGuests = JSON.parse(values.guests) as Array<{
-          services: Array<{ serviceId: number | string; memberId?: string }>;
-        }>;
-        if (Array.isArray(parsedGuests) && parsedGuests.length > 0) {
-          guests = parsedGuests.map((guest) => ({
-            services:
-              guest.services?.length > 0
-                ? guest.services.map((service) => ({
-                    serviceId: String(service.serviceId || ""),
-                    memberId: service.memberId || "",
-                  }))
-                : [{ serviceId: "", memberId: "" }],
-          }));
-        }
-      } catch (_err) {
-        // ignore invalid payload
-      }
-    }
-  });
-
-  function getErrorMessage() {
-    if (!form?.message) return "";
-    if (locale === "vi") return form.message;
-    return t.defaultError;
-  }
-
-  function handleSubmit(event: SubmitEvent) {
-    clientError = "";
-
-    if (!bookingDate || !bookingTime) {
-      event.preventDefault();
-      clientError = t.invalidDateTime;
-      return;
-    }
-
-    const invalidGuest = guests.some(
-      (guest) => guest.services.filter((service) => service.serviceId).length === 0,
-    );
-
-    if (invalidGuest) {
-      event.preventDefault();
-      clientError = t.invalidGuests;
-      return;
+    } catch (_err) {
+      // ignore invalid payload
     }
   }
+});
+
+function getErrorMessage() {
+  if (!form?.message) return "";
+  if (locale === "vi") return form.message;
+  return t.defaultError;
+}
+
+function handleSubmit(event: SubmitEvent) {
+  clientError = "";
+
+  if (!bookingDate || !bookingTime) {
+    event.preventDefault();
+    clientError = t.invalidDateTime;
+    return;
+  }
+
+  const invalidGuest = guests.some(
+    (guest) => guest.services.filter((service) => service.serviceId).length === 0,
+  );
+
+  if (invalidGuest) {
+    event.preventDefault();
+    clientError = t.invalidGuests;
+    return;
+  }
+}
 </script>
 
 <svelte:head>

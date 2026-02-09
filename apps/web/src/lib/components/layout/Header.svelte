@@ -1,34 +1,34 @@
 <script lang="ts">
-  import { Bell, Search, LogOut, Menu } from "@lucide/svelte";
-  import { Input } from "$lib/components/ui/input";
-  import { Button } from "$lib/components/ui/button";
-  import { useSession, signOut } from "$lib/auth-client";
-  import { goto } from "$app/navigation";
+import { Bell, Search, LogOut, Menu } from "@lucide/svelte";
+import { Input } from "$lib/components/ui/input";
+import { Button } from "$lib/components/ui/button";
+import { useSession, signOut } from "$lib/auth-client";
+import { goto } from "$app/navigation";
 
-  interface Props {
-    onMobileMenuOpen: () => void;
-  }
+interface Props {
+  onMobileMenuOpen: () => void;
+}
 
-  let { onMobileMenuOpen }: Props = $props();
+let { onMobileMenuOpen }: Props = $props();
 
-  const session = useSession();
-  let isLoggingOut = $state(false);
+const session = useSession();
+let isLoggingOut = $state(false);
 
-  async function handleLogout() {
-    isLoggingOut = true;
-    await signOut();
-    goto("/signin");
-  }
+async function handleLogout() {
+  isLoggingOut = true;
+  await signOut();
+  goto("/signin");
+}
 
-  function getInitials(name: string | null | undefined): string {
-    if (!name) return $session.data?.user?.email?.charAt(0).toUpperCase() || "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  }
+function getInitials(name: string | null | undefined): string {
+  if (!name) return $session.data?.user?.email?.charAt(0).toUpperCase() || "U";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
 </script>
 
 <header

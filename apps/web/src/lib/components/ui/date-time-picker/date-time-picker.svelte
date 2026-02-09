@@ -1,72 +1,72 @@
 <script lang="ts">
-  import { CalendarDate, DateFormatter, getLocalTimeZone } from "@internationalized/date";
-  import { untrack } from "svelte";
-  import Calendar from "$lib/components/ui/calendar/calendar.svelte";
-  import * as Popover from "$lib/components/ui/popover/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import { Input } from "$lib/components/ui/input/index.js";
-  import { cn } from "$lib/utils";
-  import CalendarIcon from "@lucide/svelte/icons/calendar";
-  import ClockIcon from "@lucide/svelte/icons/clock";
-  import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
+import { CalendarDate, DateFormatter, getLocalTimeZone } from "@internationalized/date";
+import { untrack } from "svelte";
+import Calendar from "$lib/components/ui/calendar/calendar.svelte";
+import * as Popover from "$lib/components/ui/popover/index.js";
+import { Button } from "$lib/components/ui/button/index.js";
+import { Input } from "$lib/components/ui/input/index.js";
+import { cn } from "$lib/utils";
+import CalendarIcon from "@lucide/svelte/icons/calendar";
+import ClockIcon from "@lucide/svelte/icons/clock";
+import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
 
-  let { value = $bindable(undefined), class: className } = $props<{
-    value?: string;
-    class?: string;
-  }>();
+let { value = $bindable(undefined), class: className } = $props<{
+  value?: string;
+  class?: string;
+}>();
 
-  let date = $state<CalendarDate | undefined>(undefined);
-  let time = $state("09:00");
-  let isOpen = $state(false);
+let date = $state<CalendarDate | undefined>(undefined);
+let time = $state("09:00");
+let isOpen = $state(false);
 
-  const df = new DateFormatter("vi-VN", {
-    dateStyle: "medium",
-  });
+const df = new DateFormatter("vi-VN", {
+  dateStyle: "medium",
+});
 
-  // Sync value -> internal state (one way, when value changes from outside)
-  $effect(() => {
-    const val = value;
-    untrack(() => {
-      if (val) {
-        const d = new Date(val);
-        if (!isNaN(d.getTime())) {
-          const y = d.getFullYear();
-          const m = d.getMonth() + 1;
-          const D = d.getDate();
+// Sync value -> internal state (one way, when value changes from outside)
+$effect(() => {
+  const val = value;
+  untrack(() => {
+    if (val) {
+      const d = new Date(val);
+      if (!isNaN(d.getTime())) {
+        const y = d.getFullYear();
+        const m = d.getMonth() + 1;
+        const D = d.getDate();
 
-          // Only update if different to avoid loop/jitter
-          if (date?.year !== y || date?.month !== m || date?.day !== D) {
-            date = new CalendarDate(y, m, D);
-          }
+        // Only update if different to avoid loop/jitter
+        if (date?.year !== y || date?.month !== m || date?.day !== D) {
+          date = new CalendarDate(y, m, D);
+        }
 
-          const h = d.getHours().toString().padStart(2, "0");
-          const min = d.getMinutes().toString().padStart(2, "0");
-          const t = `${h}:${min}`;
-          if (time !== t) {
-            time = t;
-          }
+        const h = d.getHours().toString().padStart(2, "0");
+        const min = d.getMinutes().toString().padStart(2, "0");
+        const t = `${h}:${min}`;
+        if (time !== t) {
+          time = t;
         }
       }
-    });
-  });
-
-  // Sync internal -> value
-  $effect(() => {
-    if (date && time) {
-      const y = date.year;
-      const m = date.month.toString().padStart(2, "0");
-      const d = date.day.toString().padStart(2, "0");
-      const newValue = `${y}-${m}-${d}T${time}`;
-
-      untrack(() => {
-        if (value !== newValue) {
-          value = newValue;
-        }
-      });
     }
   });
+});
 
-  let displayDate = $derived(date ? df.format(date.toDate(getLocalTimeZone())) : "Chọn ngày");
+// Sync internal -> value
+$effect(() => {
+  if (date && time) {
+    const y = date.year;
+    const m = date.month.toString().padStart(2, "0");
+    const d = date.day.toString().padStart(2, "0");
+    const newValue = `${y}-${m}-${d}T${time}`;
+
+    untrack(() => {
+      if (value !== newValue) {
+        value = newValue;
+      }
+    });
+  }
+});
+
+let displayDate = $derived(date ? df.format(date.toDate(getLocalTimeZone())) : "Chọn ngày");
 </script>
 
 <div class={cn("flex gap-2", className)}>

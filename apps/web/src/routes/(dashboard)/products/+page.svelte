@@ -1,195 +1,193 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
-  import * as Dialog from "$lib/components/ui/dialog";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog";
-  import {
-    Plus,
-    Search,
-    MoreVertical,
-    Package,
-    Pencil,
-    Trash2,
-    Layers,
-    Box,
-    X,
-  } from "@lucide/svelte";
-  import { cn } from "$lib/utils";
-  import { toast } from "svelte-sonner";
-  import { Label } from "$lib/components/ui/label";
-  import { enhance } from "$app/forms";
-  import type { PageData } from "./$types";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-  import { page } from "$app/stores";
-  import { goto } from "$app/navigation";
-  import * as Select from "$lib/components/ui/select";
+import { Button } from "$lib/components/ui/button";
+import { Input } from "$lib/components/ui/input";
+import * as Dialog from "$lib/components/ui/dialog";
+import * as AlertDialog from "$lib/components/ui/alert-dialog";
+import {
+  Plus,
+  Search,
+  MoreVertical,
+  Package,
+  Pencil,
+  Trash2,
+  Layers,
+  Box,
+  X,
+} from "@lucide/svelte";
+import { cn } from "$lib/utils";
+import { toast } from "svelte-sonner";
+import { Label } from "$lib/components/ui/label";
+import { enhance } from "$app/forms";
+import type { PageData } from "./$types";
+import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+import { page } from "$app/stores";
+import { goto } from "$app/navigation";
+import * as Select from "$lib/components/ui/select";
 
-  // Props
-  let { data } = $props<{ data: PageData }>();
+// Props
+let { data } = $props<{ data: PageData }>();
 
-  // State with URL sync
-  let searchQuery = $state($page.url.searchParams.get("q") || "");
-  let categorySearchQuery = $state("");
-  const categoryParam = $page.url.searchParams.get("category");
-  let selectedCategoryId = $state<number | null>(categoryParam ? parseInt(categoryParam) : null);
-  let searchTimeout: ReturnType<typeof setTimeout>;
+// State with URL sync
+let searchQuery = $state($page.url.searchParams.get("q") || "");
+let categorySearchQuery = $state("");
+const categoryParam = $page.url.searchParams.get("category");
+let selectedCategoryId = $state<number | null>(categoryParam ? parseInt(categoryParam) : null);
+let searchTimeout: ReturnType<typeof setTimeout>;
 
-  function updateUrlParams() {
-    const url = new URL($page.url);
-    if (searchQuery) {
-      url.searchParams.set("q", searchQuery);
-    } else {
-      url.searchParams.delete("q");
+function updateUrlParams() {
+  const url = new URL($page.url);
+  if (searchQuery) {
+    url.searchParams.set("q", searchQuery);
+  } else {
+    url.searchParams.delete("q");
+  }
+  if (selectedCategoryId !== null) {
+    url.searchParams.set("category", selectedCategoryId.toString());
+  } else {
+    url.searchParams.delete("category");
+  }
+  goto(url.toString(), { replaceState: true, keepFocus: true });
+}
+
+function handleSearchInput(event: Event) {
+  const target = event.target as HTMLInputElement;
+  searchQuery = target.value;
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(updateUrlParams, 300);
+}
+
+function clearSearch() {
+  searchQuery = "";
+  updateUrlParams();
+}
+
+function selectCategory(id: number | null) {
+  selectedCategoryId = id;
+  updateUrlParams();
+}
+
+// Dialog States
+let isCategoryDialogOpen = $state(false);
+let isProductDialogOpen = $state(false);
+let isDeleteDialogOpen = $state(false);
+
+// Editing State
+let editingCategory = $state<any>(null);
+let editingProduct = $state<any>(null);
+
+// Deletion State
+let deleteType = $state<"category" | "product">("product");
+let itemToDelete = $state<any>(null);
+
+// Form Validation Errors
+let catNameError = $state("");
+let prodNameError = $state("");
+let prodPriceError = $state("");
+let prodCategoryError = $state("");
+
+function resetErrors() {
+  catNameError = "";
+  prodNameError = "";
+  prodPriceError = "";
+  prodCategoryError = "";
+}
+
+// Derived
+let filteredProducts = $derived(
+  data.products.filter((p: any) => {
+    const matchesCategory = selectedCategoryId === null || p.categoryId === selectedCategoryId;
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  }),
+);
+let filteredCategories = $derived(
+  data.categories.filter((c: any) =>
+    c.name.toLowerCase().includes(categorySearchQuery.toLowerCase()),
+  ),
+);
+
+// Helpers
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("vi-VN").format(price) + "đ";
+}
+
+function getCategoryName(id: number) {
+  return data.categories.find((c: any) => c.id === id)?.name || "Unknown";
+}
+
+function categoryCount(id: number) {
+  return data.products.filter((p: any) => p.categoryId === id).length;
+}
+
+// Handlers
+function openCreateCategory() {
+  editingCategory = null;
+  isCategoryDialogOpen = true;
+}
+
+function openEditCategory(category: any, e: Event) {
+  e.stopPropagation();
+  editingCategory = category;
+  isCategoryDialogOpen = true;
+}
+
+function openCreateProduct() {
+  editingProduct = null;
+  if (selectedCategoryId) {
+    editingProduct = { categoryId: selectedCategoryId };
+  }
+  isProductDialogOpen = true;
+}
+
+function openEditProduct(product: any) {
+  editingProduct = product;
+  isProductDialogOpen = true;
+}
+
+function openDeleteCategory(category: any, e: Event) {
+  e.stopPropagation();
+  deleteType = "category";
+  itemToDelete = category;
+  isDeleteDialogOpen = true;
+}
+
+function openDeleteProduct(product: any) {
+  deleteType = "product";
+  itemToDelete = product;
+  isDeleteDialogOpen = true;
+}
+
+// Form Enhancement
+function handleFormSubmit() {
+  return async ({ result, update }: any) => {
+    if (result.type === "success") {
+      toast.success(
+        editingCategory?.id || editingProduct?.id ? "Cập nhật thành công!" : "Tạo mới thành công!",
+      );
+      isCategoryDialogOpen = false;
+      isProductDialogOpen = false;
+      isDeleteDialogOpen = false;
+    } else if (result.type === "failure") {
+      toast.error(result.data?.message || "Có lỗi xảy ra");
     }
-    if (selectedCategoryId !== null) {
-      url.searchParams.set("category", selectedCategoryId.toString());
-    } else {
-      url.searchParams.delete("category");
-    }
-    goto(url.toString(), { replaceState: true, keepFocus: true });
-  }
+    await update();
+  };
+}
 
-  function handleSearchInput(event: Event) {
-    const target = event.target as HTMLInputElement;
-    searchQuery = target.value;
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(updateUrlParams, 300);
-  }
-
-  function clearSearch() {
-    searchQuery = "";
-    updateUrlParams();
-  }
-
-  function selectCategory(id: number | null) {
-    selectedCategoryId = id;
-    updateUrlParams();
-  }
-
-  // Dialog States
-  let isCategoryDialogOpen = $state(false);
-  let isProductDialogOpen = $state(false);
-  let isDeleteDialogOpen = $state(false);
-
-  // Editing State
-  let editingCategory = $state<any>(null);
-  let editingProduct = $state<any>(null);
-
-  // Deletion State
-  let deleteType = $state<"category" | "product">("product");
-  let itemToDelete = $state<any>(null);
-
-  // Form Validation Errors
-  let catNameError = $state("");
-  let prodNameError = $state("");
-  let prodPriceError = $state("");
-  let prodCategoryError = $state("");
-
-  function resetErrors() {
-    catNameError = "";
-    prodNameError = "";
-    prodPriceError = "";
-    prodCategoryError = "";
-  }
-
-  // Derived
-  let filteredProducts = $derived(
-    data.products.filter((p: any) => {
-      const matchesCategory = selectedCategoryId === null || p.categoryId === selectedCategoryId;
-      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    }),
-  );
-  let filteredCategories = $derived(
-    data.categories.filter((c: any) =>
-      c.name.toLowerCase().includes(categorySearchQuery.toLowerCase()),
-    ),
-  );
-
-  // Helpers
-  function formatPrice(price: number) {
-    return new Intl.NumberFormat("vi-VN").format(price) + "đ";
-  }
-
-  function getCategoryName(id: number) {
-    return data.categories.find((c: any) => c.id === id)?.name || "Unknown";
-  }
-
-  function categoryCount(id: number) {
-    return data.products.filter((p: any) => p.categoryId === id).length;
-  }
-
-  // Handlers
-  function openCreateCategory() {
-    editingCategory = null;
-    isCategoryDialogOpen = true;
-  }
-
-  function openEditCategory(category: any, e: Event) {
-    e.stopPropagation();
-    editingCategory = category;
-    isCategoryDialogOpen = true;
-  }
-
-  function openCreateProduct() {
-    editingProduct = null;
-    if (selectedCategoryId) {
-      editingProduct = { categoryId: selectedCategoryId };
-    }
-    isProductDialogOpen = true;
-  }
-
-  function openEditProduct(product: any) {
-    editingProduct = product;
-    isProductDialogOpen = true;
-  }
-
-  function openDeleteCategory(category: any, e: Event) {
-    e.stopPropagation();
-    deleteType = "category";
-    itemToDelete = category;
-    isDeleteDialogOpen = true;
-  }
-
-  function openDeleteProduct(product: any) {
-    deleteType = "product";
-    itemToDelete = product;
-    isDeleteDialogOpen = true;
-  }
-
-  // Form Enhancement
-  function handleFormSubmit() {
-    return async ({ result, update }: any) => {
-      if (result.type === "success") {
-        toast.success(
-          editingCategory?.id || editingProduct?.id
-            ? "Cập nhật thành công!"
-            : "Tạo mới thành công!",
-        );
-        isCategoryDialogOpen = false;
-        isProductDialogOpen = false;
-        isDeleteDialogOpen = false;
-      } else if (result.type === "failure") {
-        toast.error(result.data?.message || "Có lỗi xảy ra");
+function handleDeleteSubmit() {
+  return async ({ result, update }: any) => {
+    if (result.type === "success") {
+      toast.success("Xóa thành công!");
+      if (deleteType === "category" && selectedCategoryId === itemToDelete.id) {
+        selectedCategoryId = null;
       }
-      await update();
-    };
-  }
-
-  function handleDeleteSubmit() {
-    return async ({ result, update }: any) => {
-      if (result.type === "success") {
-        toast.success("Xóa thành công!");
-        if (deleteType === "category" && selectedCategoryId === itemToDelete.id) {
-          selectedCategoryId = null;
-        }
-        isDeleteDialogOpen = false;
-      } else if (result.type === "failure") {
-        toast.error(result.data?.message || "Có lỗi xảy ra");
-      }
-      await update();
-    };
-  }
+      isDeleteDialogOpen = false;
+    } else if (result.type === "failure") {
+      toast.error(result.data?.message || "Có lỗi xảy ra");
+    }
+    await update();
+  };
+}
 </script>
 
 <svelte:head>

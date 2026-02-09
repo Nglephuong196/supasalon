@@ -1,378 +1,373 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
-  import * as Select from "$lib/components/ui/select";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
-  import {
-    Plus,
-    Save,
-    Loader2,
-    X,
-    Search,
-    Calendar as CalendarIcon,
-    Package,
-    User,
-    FileText,
-    RotateCcw,
-    Sparkles,
-    ShoppingBag,
-  } from "@lucide/svelte";
-  import InvoiceItemRow from "./InvoiceItemRow.svelte";
-  import { toast } from "svelte-sonner";
-  import { PUBLIC_API_URL } from "$env/static/public";
-  import { DatePicker } from "$lib/components/ui/date-picker";
-  import * as Tabs from "$lib/components/ui/tabs";
-  import { ScrollArea } from "$lib/components/ui/scroll-area";
-  import { Separator } from "$lib/components/ui/separator";
-  import Combobox from "$lib/components/ui/combobox/combobox.svelte";
-  import * as Accordion from "$lib/components/ui/accordion";
-  import { enhance } from "$app/forms";
-  import StaffAssignmentDialog from "./StaffAssignmentDialog.svelte";
+import { Button } from "$lib/components/ui/button";
+import * as Select from "$lib/components/ui/select";
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import {
+  Plus,
+  Save,
+  Loader2,
+  X,
+  Search,
+  Calendar as CalendarIcon,
+  Package,
+  User,
+  FileText,
+  RotateCcw,
+  Sparkles,
+  ShoppingBag,
+} from "@lucide/svelte";
+import InvoiceItemRow from "./InvoiceItemRow.svelte";
+import { toast } from "svelte-sonner";
+import { PUBLIC_API_URL } from "$env/static/public";
+import { DatePicker } from "$lib/components/ui/date-picker";
+import * as Tabs from "$lib/components/ui/tabs";
+import { ScrollArea } from "$lib/components/ui/scroll-area";
+import { Separator } from "$lib/components/ui/separator";
+import Combobox from "$lib/components/ui/combobox/combobox.svelte";
+import * as Accordion from "$lib/components/ui/accordion";
+import { enhance } from "$app/forms";
+import StaffAssignmentDialog from "./StaffAssignmentDialog.svelte";
 
-  let {
-    customers = [],
-    staff = [],
-    services = [],
-    products = [],
-    commissionRules = [],
-    onSaveSuccess = () => {},
-    invoice = $bindable({
-      invoiceDate: new Date().toISOString().split("T")[0],
-      dueDate: "",
-      customerId: "",
-      items: [],
+let {
+  customers = [],
+  staff = [],
+  services = [],
+  products = [],
+  commissionRules = [],
+  onSaveSuccess = () => {},
+  invoice = $bindable({
+    invoiceDate: new Date().toISOString().split("T")[0],
+    dueDate: "",
+    customerId: "",
+    items: [],
+    discountValue: 0,
+    discountType: "percent",
+    amountPaid: 0,
+    paymentMethod: "cash",
+    notes: "",
+  }),
+} = $props<{
+  customers?: any[];
+  staff?: any[];
+  services?: any[];
+  products?: any[];
+  commissionRules?: any[];
+  onSaveSuccess?: () => void;
+  invoice?: {
+    id?: number;
+    invoiceDate?: string;
+    dueDate?: string;
+    customerId: string;
+    items: any[];
+    discountValue: number;
+    discountType: "percent" | "fixed";
+    amountPaid: number;
+    paymentMethod: "cash" | "card" | "transfer";
+    notes: string;
+    status?: string;
+  };
+}>();
+
+let isLoading = $state(false);
+let catalogSearch = $state("");
+let catalogTab = $state("services"); // services | products
+
+// Time state
+let invoiceTime = $state(
+  invoice.invoiceDate
+    ? new Date(invoice.createdAt || new Date()).toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : new Date().toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+);
+
+// Derived Calculations
+let subtotal = $derived(
+  invoice.items.reduce((sum: number, item: any) => sum + (item.total || 0), 0),
+);
+
+let invoiceDiscount = $derived(
+  invoice.discountType === "percent"
+    ? subtotal * (invoice.discountValue / 100)
+    : invoice.discountValue,
+);
+
+let total = $derived(Math.max(0, subtotal - invoiceDiscount));
+let change = $derived(Math.max(0, invoice.amountPaid - total));
+let itemCount = $derived(invoice.items.length);
+let assignedStaffCount = $derived(
+  invoice.items.reduce(
+    (sum: number, current: any) =>
+      sum +
+      (current.staffTechnicians || []).filter((s: any) => s.staffId).length +
+      (current.staffSellers || []).filter((s: any) => s.staffId).length,
+    0,
+  ),
+);
+
+// Filtered Catalog
+let filteredServices = $derived(
+  services.filter((s: any) => s.name.toLowerCase().includes(catalogSearch.toLowerCase())),
+);
+let filteredProducts = $derived(
+  products.filter((p: any) => p.name.toLowerCase().includes(catalogSearch.toLowerCase())),
+);
+
+function addItem(type: "service" | "product", itemData?: any) {
+  invoice.items = [
+    ...invoice.items,
+    {
+      type,
+      referenceId: itemData ? itemData.id : null,
+      name: itemData ? itemData.name : "",
+      quantity: 1,
+      unitPrice: itemData ? Number(itemData.price) : 0,
       discountValue: 0,
       discountType: "percent",
-      amountPaid: 0,
-      paymentMethod: "cash",
-      notes: "",
-    }),
-  } = $props<{
-    customers?: any[];
-    staff?: any[];
-    services?: any[];
-    products?: any[];
-    commissionRules?: any[];
-    onSaveSuccess?: () => void;
-    invoice?: {
-      id?: number;
-      invoiceDate?: string;
-      dueDate?: string;
-      customerId: string;
-      items: any[];
-      discountValue: number;
-      discountType: "percent" | "fixed";
-      amountPaid: number;
-      paymentMethod: "cash" | "card" | "transfer";
-      notes: string;
-      status?: string;
-    };
-  }>();
+      total: itemData ? Number(itemData.price) : 0,
+      staffTechnicians: [],
+      staffSellers: [],
+    },
+  ];
+}
 
-  let isLoading = $state(false);
-  let catalogSearch = $state("");
-  let catalogTab = $state("services"); // services | products
+function removeItem(index: number) {
+  invoice.items = invoice.items.filter((_: any, i: number) => i !== index);
+}
 
-  // Time state
-  let invoiceTime = $state(
-    invoice.invoiceDate
-      ? new Date(invoice.createdAt || new Date()).toLocaleTimeString("en-GB", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : new Date().toLocaleTimeString("en-GB", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-  );
+function removeCustomer() {
+  invoice.customerId = "";
+}
 
-  // Derived Calculations
-  let subtotal = $derived(
-    invoice.items.reduce((sum: number, item: any) => sum + (item.total || 0), 0),
-  );
+// Auto-save state
+let saveStatus = $state<"saved" | "saving" | "error">("saved");
+let saveTimeout: NodeJS.Timeout;
 
-  let invoiceDiscount = $derived(
-    invoice.discountType === "percent"
-      ? subtotal * (invoice.discountValue / 100)
-      : invoice.discountValue,
-  );
-
-  let total = $derived(Math.max(0, subtotal - invoiceDiscount));
-  let change = $derived(Math.max(0, invoice.amountPaid - total));
-  let itemCount = $derived(invoice.items.length);
-  let assignedStaffCount = $derived(
-    invoice.items.reduce(
-      (sum: number, current: any) =>
-        sum +
-        (current.staffTechnicians || []).filter((s: any) => s.staffId).length +
-        (current.staffSellers || []).filter((s: any) => s.staffId).length,
-      0,
-    ),
-  );
-
-  // Filtered Catalog
-  let filteredServices = $derived(
-    services.filter((s: any) => s.name.toLowerCase().includes(catalogSearch.toLowerCase())),
-  );
-  let filteredProducts = $derived(
-    products.filter((p: any) => p.name.toLowerCase().includes(catalogSearch.toLowerCase())),
-  );
-
-  function addItem(type: "service" | "product", itemData?: any) {
-    invoice.items = [
-      ...invoice.items,
-      {
-        type,
-        referenceId: itemData ? itemData.id : null,
-        name: itemData ? itemData.name : "",
-        quantity: 1,
-        unitPrice: itemData ? Number(itemData.price) : 0,
-        discountValue: 0,
-        discountType: "percent",
-        total: itemData ? Number(itemData.price) : 0,
-        staffTechnicians: [],
-        staffSellers: [],
-      },
-    ];
+// Payload helper
+function getInvoicePayload(statusOverride?: string) {
+  // Construct createdAt from invoiceDate and invoiceTime
+  let createdAt = new Date().toISOString();
+  try {
+    if (invoice.invoiceDate && invoiceTime) {
+      const [h, m] = invoiceTime.split(":");
+      const date = new Date(invoice.invoiceDate);
+      date.setHours(Number(h), Number(m));
+      createdAt = date.toISOString();
+    }
+  } catch (e) {
+    console.error("Invalid date/time", e);
   }
 
-  function removeItem(index: number) {
-    invoice.items = invoice.items.filter((_: any, i: number) => i !== index);
+  // Helper to clean staff data - only send required fields for DB
+  function cleanStaffData(staffArray: any[], role: "technician" | "seller") {
+    if (!staffArray || !Array.isArray(staffArray)) return [];
+    return staffArray
+      .filter((s: any) => s.staffId) // Only include entries with a selected staff
+      .map((s: any) => ({
+        staffId: s.staffId,
+        role: role,
+        commissionValue: Number(s.commissionValue) || 0,
+        commissionType: s.commissionType || "percent",
+        bonus: Number(s.bonus) || 0,
+      }));
   }
 
-  function removeCustomer() {
-    invoice.customerId = "";
-  }
+  return {
+    customerId: invoice.customerId ? Number(invoice.customerId) : null,
+    subtotal,
+    discountValue: invoice.discountValue,
+    discountType: invoice.discountType,
+    total,
+    amountPaid: invoice.amountPaid,
+    change,
+    paymentMethod: invoice.paymentMethod,
+    notes: invoice.notes,
+    status: statusOverride || "pending", // Default to pending for auto-save
+    createdAt, // Add createdAt
+    items: invoice.items.map((item: any) => ({
+      type: item.type,
+      referenceId: item.referenceId,
+      name: item.name,
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unitPrice),
+      discountValue: Number(item.discountValue || 0),
+      discountType: item.discountType || "percent",
+      total: Number(item.total) || 0,
+      staff: [
+        ...cleanStaffData(item.staffTechnicians, "technician"),
+        ...cleanStaffData(item.staffSellers, "seller"),
+      ],
+    })),
+  };
+}
 
-  // Auto-save state
-  let saveStatus = $state<"saved" | "saving" | "error">("saved");
-  let saveTimeout: NodeJS.Timeout;
+// Auto-save function
+let lastError = $state<string | null>(null);
 
-  // Payload helper
-  function getInvoicePayload(statusOverride?: string) {
-    // Construct createdAt from invoiceDate and invoiceTime
-    let createdAt = new Date().toISOString();
+function autoSave() {
+  if (!invoice.id) return;
+
+  saveStatus = "saving";
+  lastError = null;
+  clearTimeout(saveTimeout);
+
+  saveTimeout = setTimeout(async () => {
+    const formData = new FormData();
+    formData.append("id", invoice.id!.toString());
+    formData.append("payload", JSON.stringify(getInvoicePayload()));
+
     try {
-      if (invoice.invoiceDate && invoiceTime) {
-        const [h, m] = invoiceTime.split(":");
-        const date = new Date(invoice.invoiceDate);
-        date.setHours(Number(h), Number(m));
-        createdAt = date.toISOString();
+      const res = await fetch("?/update", {
+        method: "POST",
+        body: formData,
+      });
+
+      // Parse the response - SvelteKit returns JSON for form actions
+      const contentType = res.headers.get("content-type");
+      if (contentType?.includes("application/json")) {
+        const data = await res.json();
+        console.log("Auto-save response:", data);
+
+        // Check for SvelteKit action failure format
+        if (data.type === "failure" || data.status >= 400) {
+          saveStatus = "error";
+          // Extract message from various possible locations
+          lastError =
+            data.data?.message || data.error || data.message || `Lỗi ${data.status || res.status}`;
+          console.error("Auto-save failed:", lastError, data);
+          return;
+        }
+
+        // Success
+        if (data.type === "success" || data.data?.success) {
+          saveStatus = "saved";
+          return;
+        }
+      }
+
+      // Fallback to HTTP status check
+      if (res.ok) {
+        saveStatus = "saved";
+      } else {
+        saveStatus = "error";
+        lastError = `HTTP Error ${res.status}`;
+        console.error("Auto-save failed:", res.status);
       }
     } catch (e) {
-      console.error("Invalid date/time", e);
+      saveStatus = "error";
+      lastError = "Lỗi kết nối";
+      console.error("Auto-save error", e);
     }
+  }, 1000); // Debounce 1s
+}
 
-    // Helper to clean staff data - only send required fields for DB
-    function cleanStaffData(staffArray: any[], role: "technician" | "seller") {
-      if (!staffArray || !Array.isArray(staffArray)) return [];
-      return staffArray
-        .filter((s: any) => s.staffId) // Only include entries with a selected staff
-        .map((s: any) => ({
-          staffId: s.staffId,
-          role: role,
-          commissionValue: Number(s.commissionValue) || 0,
-          commissionType: s.commissionType || "percent",
-          bonus: Number(s.bonus) || 0,
-        }));
-    }
+// Watch for changes (deep) - skip initial render
+let isInitialRender = true;
+let previousPayload = "";
 
-    return {
-      customerId: invoice.customerId ? Number(invoice.customerId) : null,
-      subtotal,
-      discountValue: invoice.discountValue,
-      discountType: invoice.discountType,
-      total,
-      amountPaid: invoice.amountPaid,
-      change,
-      paymentMethod: invoice.paymentMethod,
-      notes: invoice.notes,
-      status: statusOverride || "pending", // Default to pending for auto-save
-      createdAt, // Add createdAt
-      items: invoice.items.map((item: any) => ({
-        type: item.type,
-        referenceId: item.referenceId,
-        name: item.name,
-        quantity: Number(item.quantity),
-        unitPrice: Number(item.unitPrice),
-        discountValue: Number(item.discountValue || 0),
-        discountType: item.discountType || "percent",
-        total: Number(item.total) || 0,
-        staff: [
-          ...cleanStaffData(item.staffTechnicians, "technician"),
-          ...cleanStaffData(item.staffSellers, "seller"),
-        ],
-      })),
-    };
-  }
+$effect(() => {
+  // Track all dependencies by calling getInvoicePayload
+  // This ensures any field used in the payload will trigger this effect
+  const payload = JSON.stringify(getInvoicePayload());
 
-  // Auto-save function
-  let lastError = $state<string | null>(null);
-
-  function autoSave() {
-    if (!invoice.id) return;
-
-    saveStatus = "saving";
-    lastError = null;
-    clearTimeout(saveTimeout);
-
-    saveTimeout = setTimeout(async () => {
-      const formData = new FormData();
-      formData.append("id", invoice.id!.toString());
-      formData.append("payload", JSON.stringify(getInvoicePayload()));
-
-      try {
-        const res = await fetch("?/update", {
-          method: "POST",
-          body: formData,
-        });
-
-        // Parse the response - SvelteKit returns JSON for form actions
-        const contentType = res.headers.get("content-type");
-        if (contentType?.includes("application/json")) {
-          const data = await res.json();
-          console.log("Auto-save response:", data);
-
-          // Check for SvelteKit action failure format
-          if (data.type === "failure" || data.status >= 400) {
-            saveStatus = "error";
-            // Extract message from various possible locations
-            lastError =
-              data.data?.message ||
-              data.error ||
-              data.message ||
-              `Lỗi ${data.status || res.status}`;
-            console.error("Auto-save failed:", lastError, data);
-            return;
-          }
-
-          // Success
-          if (data.type === "success" || data.data?.success) {
-            saveStatus = "saved";
-            return;
-          }
-        }
-
-        // Fallback to HTTP status check
-        if (res.ok) {
-          saveStatus = "saved";
-        } else {
-          saveStatus = "error";
-          lastError = `HTTP Error ${res.status}`;
-          console.error("Auto-save failed:", res.status);
-        }
-      } catch (e) {
-        saveStatus = "error";
-        lastError = "Lỗi kết nối";
-        console.error("Auto-save error", e);
-      }
-    }, 1000); // Debounce 1s
-  }
-
-  // Watch for changes (deep) - skip initial render
-  let isInitialRender = true;
-  let previousPayload = "";
-
-  $effect(() => {
-    // Track all dependencies by calling getInvoicePayload
-    // This ensures any field used in the payload will trigger this effect
-    const payload = JSON.stringify(getInvoicePayload());
-
-    // Skip initial render
-    if (isInitialRender) {
-      isInitialRender = false;
-      previousPayload = payload;
-      return;
-    }
-
-    // Skip if payload hasn't actually changed (prevent duplicate saves)
-    if (payload === previousPayload) {
-      return;
-    }
+  // Skip initial render
+  if (isInitialRender) {
+    isInitialRender = false;
     previousPayload = payload;
-
-    // Only save if we have an ID
-    if (invoice.id) {
-      autoSave();
-    }
-  });
-
-  // Helper to find selected customer object
-  let selectedCustomer = $derived(
-    customers.find((c: any) => c.id.toString() === invoice.customerId),
-  );
-
-  function formatPrice(price: number) {
-    return new Intl.NumberFormat("vi-VN").format(price) + "đ";
+    return;
   }
 
-  let customerItems = $derived(
-    customers.map((c: any) => ({
-      value: c.id.toString(),
-      label: `${c.name}${c.phone ? " - " + c.phone : ""}`,
-    })),
-  );
-
-  // Grouping Helpers
-  function groupByCategory(items: any[]) {
-    const groups: Record<string, { id: string; name: string; items: any[] }> = {};
-
-    items.forEach((item) => {
-      const catName = item.category?.name || "Khác";
-      const catId = item.category?.id?.toString() || item.categoryId?.toString() || "other";
-
-      if (!groups[catId]) {
-        groups[catId] = { id: catId, name: catName, items: [] };
-      }
-      groups[catId].items.push(item);
-    });
-
-    return Object.values(groups);
+  // Skip if payload hasn't actually changed (prevent duplicate saves)
+  if (payload === previousPayload) {
+    return;
   }
+  previousPayload = payload;
 
-  let groupedServices = $derived(groupByCategory(filteredServices));
-  let groupedProducts = $derived(groupByCategory(filteredProducts));
-  type IndexedInvoiceItem = { item: any; index: number };
-  let serviceItemEntries = $derived.by(() =>
-    invoice.items
-      .map((item: any, index: number): IndexedInvoiceItem => ({ item, index }))
-      .filter((entry: IndexedInvoiceItem) => entry.item.type === "service"),
-  );
-  let productItemEntries = $derived.by(() =>
-    invoice.items
-      .map((item: any, index: number): IndexedInvoiceItem => ({ item, index }))
-      .filter((entry: IndexedInvoiceItem) => entry.item.type === "product"),
-  );
-  let catalogResultCount = $derived(
-    catalogTab === "services" ? filteredServices.length : filteredProducts.length,
-  );
+  // Only save if we have an ID
+  if (invoice.id) {
+    autoSave();
+  }
+});
 
-  // Accordion State
-  let accordionValue = $state<string[]>([]);
+// Helper to find selected customer object
+let selectedCustomer = $derived(customers.find((c: any) => c.id.toString() === invoice.customerId));
 
-  // Auto-expand on search
-  $effect(() => {
-    if (catalogSearch.trim()) {
-      const serviceIds = groupedServices.map((g) => g.id);
-      const productIds = groupedProducts.map((g) => g.id);
-      accordionValue = catalogTab === "services" ? serviceIds : productIds;
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("vi-VN").format(price) + "đ";
+}
+
+let customerItems = $derived(
+  customers.map((c: any) => ({
+    value: c.id.toString(),
+    label: `${c.name}${c.phone ? " - " + c.phone : ""}`,
+  })),
+);
+
+// Grouping Helpers
+function groupByCategory(items: any[]) {
+  const groups: Record<string, { id: string; name: string; items: any[] }> = {};
+
+  items.forEach((item) => {
+    const catName = item.category?.name || "Khác";
+    const catId = item.category?.id?.toString() || item.categoryId?.toString() || "other";
+
+    if (!groups[catId]) {
+      groups[catId] = { id: catId, name: catName, items: [] };
     }
+    groups[catId].items.push(item);
   });
 
-  // Default open first category when switching tabs (only if not searching)
-  $effect(() => {
-    const currentTab = catalogTab;
+  return Object.values(groups);
+}
 
-    if (!catalogSearch) {
-      if (currentTab === "services" && groupedServices.length > 0) {
-        accordionValue = [groupedServices[0].id];
-      } else if (currentTab === "products" && groupedProducts.length > 0) {
-        accordionValue = [groupedProducts[0].id];
-      }
+let groupedServices = $derived(groupByCategory(filteredServices));
+let groupedProducts = $derived(groupByCategory(filteredProducts));
+type IndexedInvoiceItem = { item: any; index: number };
+let serviceItemEntries = $derived.by(() =>
+  invoice.items
+    .map((item: any, index: number): IndexedInvoiceItem => ({ item, index }))
+    .filter((entry: IndexedInvoiceItem) => entry.item.type === "service"),
+);
+let productItemEntries = $derived.by(() =>
+  invoice.items
+    .map((item: any, index: number): IndexedInvoiceItem => ({ item, index }))
+    .filter((entry: IndexedInvoiceItem) => entry.item.type === "product"),
+);
+let catalogResultCount = $derived(
+  catalogTab === "services" ? filteredServices.length : filteredProducts.length,
+);
+
+// Accordion State
+let accordionValue = $state<string[]>([]);
+
+// Auto-expand on search
+$effect(() => {
+  if (catalogSearch.trim()) {
+    const serviceIds = groupedServices.map((g) => g.id);
+    const productIds = groupedProducts.map((g) => g.id);
+    accordionValue = catalogTab === "services" ? serviceIds : productIds;
+  }
+});
+
+// Default open first category when switching tabs (only if not searching)
+$effect(() => {
+  const currentTab = catalogTab;
+
+  if (!catalogSearch) {
+    if (currentTab === "services" && groupedServices.length > 0) {
+      accordionValue = [groupedServices[0].id];
+    } else if (currentTab === "products" && groupedProducts.length > 0) {
+      accordionValue = [groupedProducts[0].id];
     }
-  });
+  }
+});
 
-  let assignStaffOpen = $state(false);
+let assignStaffOpen = $state(false);
 </script>
 
 <div class="h-full flex flex-col lg:flex-row items-stretch overflow-hidden bg-transparent">

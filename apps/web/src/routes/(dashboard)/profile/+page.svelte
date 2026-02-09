@@ -1,24 +1,24 @@
 <script lang="ts">
-  import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
-  import { enhance } from "$app/forms";
-  import { toast } from "svelte-sonner";
-  import type { PageData } from "./$types";
-  let { data }: { data: PageData } = $props();
+import { Card, CardContent, CardHeader, CardTitle } from "$lib/components/ui/card";
+import { Button } from "$lib/components/ui/button";
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import { enhance } from "$app/forms";
+import { toast } from "svelte-sonner";
+import type { PageData } from "./$types";
+let { data }: { data: PageData } = $props();
 
-  let name = $state("");
-  let image = $state("");
-  let organizationName = $state("");
-  let organizationSlug = $state("");
+let name = $state("");
+let image = $state("");
+let organizationName = $state("");
+let organizationSlug = $state("");
 
-  $effect(() => {
-    name = data.user?.name || "";
-    image = data.user?.image || "";
-    organizationName = data.organization?.name || "";
-    organizationSlug = data.organization?.slug || "";
-  });
+$effect(() => {
+  name = data.user?.name || "";
+  image = data.user?.image || "";
+  organizationName = data.organization?.name || "";
+  organizationSlug = data.organization?.slug || "";
+});
 </script>
 
 <svelte:head>

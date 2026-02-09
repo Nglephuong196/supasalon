@@ -1,58 +1,58 @@
 <script lang="ts">
-  import { Card, CardContent } from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
-  import { CalendarDays, Users, DollarSign, TrendingUp, Plus, BarChart3 } from "@lucide/svelte";
-  import { cn } from "$lib/utils";
-  import StatsCard from "$lib/components/dashboard/StatsCard.svelte";
-  import TodaySchedule from "$lib/components/dashboard/TodaySchedule.svelte";
-  import TopStylists from "$lib/components/dashboard/TopStylists.svelte";
-  import LowStockAlerts from "$lib/components/dashboard/LowStockAlerts.svelte";
-  import { goto } from "$app/navigation";
-  import { page, navigating } from "$app/stores";
-  import type { PageData } from "./$types";
+import { Card, CardContent } from "$lib/components/ui/card";
+import { Button } from "$lib/components/ui/button";
+import { CalendarDays, Users, DollarSign, TrendingUp, Plus, BarChart3 } from "@lucide/svelte";
+import { cn } from "$lib/utils";
+import StatsCard from "$lib/components/dashboard/StatsCard.svelte";
+import TodaySchedule from "$lib/components/dashboard/TodaySchedule.svelte";
+import TopStylists from "$lib/components/dashboard/TopStylists.svelte";
+import LowStockAlerts from "$lib/components/dashboard/LowStockAlerts.svelte";
+import { goto } from "$app/navigation";
+import { page, navigating } from "$app/stores";
+import type { PageData } from "./$types";
 
-  let { data }: { data: PageData } = $props();
+let { data }: { data: PageData } = $props();
 
-  let formattedDate = $state("");
-  let lastUpdated = $state("");
-  type RangeKey = "today" | "week" | "month" | "year";
-  let selectedRange = $state<RangeKey>("week");
+let formattedDate = $state("");
+let lastUpdated = $state("");
+type RangeKey = "today" | "week" | "month" | "year";
+let selectedRange = $state<RangeKey>("week");
 
-  $effect(() => {
-    selectedRange = data.range || "week";
-    const today = new Date();
-    formattedDate = today.toLocaleDateString("vi-VN", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-    lastUpdated = today.toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+$effect(() => {
+  selectedRange = data.range || "week";
+  const today = new Date();
+  formattedDate = today.toLocaleDateString("vi-VN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   });
+  lastUpdated = today.toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+});
 
-  let chartData = $derived(data.chart?.data || []);
-  let chartLabels = $derived(data.chart?.labels || []);
-  let chartMax = $derived(Math.max(...((data.chart?.data || [1]) as number[])));
-  let chartTitle = $derived(data.chart?.title || "Doanh thu");
-  let chartUnit = $derived(data.chart?.unit || "₫");
-  let chartContext = $derived(data.chart?.context || "");
-  let chartCompare = $derived(data.chart?.compare || "");
-  let isLoading = $derived(!!$navigating);
-  let placeholderBars = $derived(Array(Math.max(chartLabels.length, 7)).fill(0));
+let chartData = $derived(data.chart?.data || []);
+let chartLabels = $derived(data.chart?.labels || []);
+let chartMax = $derived(Math.max(...((data.chart?.data || [1]) as number[])));
+let chartTitle = $derived(data.chart?.title || "Doanh thu");
+let chartUnit = $derived(data.chart?.unit || "₫");
+let chartContext = $derived(data.chart?.context || "");
+let chartCompare = $derived(data.chart?.compare || "");
+let isLoading = $derived(!!$navigating);
+let placeholderBars = $derived(Array(Math.max(chartLabels.length, 7)).fill(0));
 
-  function formatCurrency(value: number) {
-    return value.toLocaleString("vi-VN");
-  }
+function formatCurrency(value: number) {
+  return value.toLocaleString("vi-VN");
+}
 
-  function setRange(range: RangeKey) {
-    selectedRange = range;
-    const params = new URLSearchParams($page.url.searchParams);
-    params.set("range", range);
-    goto(`${$page.url.pathname}?${params.toString()}`);
-  }
+function setRange(range: RangeKey) {
+  selectedRange = range;
+  const params = new URLSearchParams($page.url.searchParams);
+  params.set("range", range);
+  goto(`${$page.url.pathname}?${params.toString()}`);
+}
 </script>
 
 <svelte:head>
