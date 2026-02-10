@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { signOut } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   CalendarDays,
@@ -12,11 +15,9 @@ import {
   UserCircle2,
   UserCog,
   Users,
+  X,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { signOut } from "@/lib/auth-client";
+import { useState } from "react";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -51,11 +52,13 @@ function NavSection({
   dotClass,
   items,
   pathname,
+  onItemClick,
 }: {
   title: string;
   dotClass: string;
   items: NavItem[];
   pathname: string;
+  onItemClick?: () => void;
 }) {
   return (
     <div className="space-y-1 border-t border-[hsl(260_18%_90%/.5)] pt-3 first:border-0 first:pt-0">
@@ -73,6 +76,7 @@ function NavSection({
             <Link
               key={item.to}
               to={item.to}
+              onClick={onItemClick}
               className={cn(
                 "group relative flex items-center gap-3 overflow-hidden rounded-lg px-3 py-2 text-base font-medium transition-colors duration-150",
                 active
@@ -112,6 +116,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   });
   const mobileItems = [mainNav[0], mainNav[1], managementNav[2], managementNav[3], systemNav[1]];
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -123,8 +128,12 @@ export function DashboardShell({ children }: DashboardShellProps) {
     }
   }
 
+  function closeMobileMenu() {
+    setIsMobileMenuOpen(false);
+  }
+
   return (
-    <div className="dashboard-shell flex h-screen overflow-hidden bg-gray-50">
+    <div className="dashboard-shell flex h-svh min-h-svh overflow-hidden bg-gray-50">
       <div className="dashboard-ambient">
         <div className="ambient-orb ambient-orb--one" />
         <div className="ambient-orb ambient-orb--two" />
@@ -152,21 +161,76 @@ export function DashboardShell({ children }: DashboardShellProps) {
             dotClass="bg-primary/70"
             items={mainNav}
             pathname={pathname}
+            onItemClick={closeMobileMenu}
           />
           <NavSection
             title="Quản lý"
             dotClass="bg-indigo-500/80"
             items={managementNav}
             pathname={pathname}
+            onItemClick={closeMobileMenu}
           />
           <NavSection
             title="Hệ thống"
             dotClass="bg-fuchsia-500/80"
             items={systemNav}
             pathname={pathname}
+            onItemClick={closeMobileMenu}
           />
         </div>
       </aside>
+
+      {isMobileMenuOpen ? (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/35"
+            aria-label="Đóng menu"
+            onClick={closeMobileMenu}
+          />
+          <aside className="absolute inset-y-0 left-0 flex w-[84vw] max-w-xs flex-col border-r border-[hsl(260_18%_90%)] bg-white shadow-2xl">
+            <div className="relative flex h-14 items-center justify-between border-b border-[hsl(260_18%_90%/.5)] px-4">
+              <div className="flex items-center gap-2.5 px-1">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-linear-to-br from-primary to-violet-600 text-primary-foreground shadow-sm shadow-purple-200">
+                  <LayoutDashboard className="h-4.5 w-4.5" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm leading-none font-bold tracking-tight text-foreground">
+                    SupaSalon
+                  </span>
+                  <span className="mt-0.5 text-[10px] font-medium text-muted-foreground">
+                    Quản lý
+                  </span>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={closeMobileMenu}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
+              <NavSection
+                title="Menu chính"
+                dotClass="bg-primary/70"
+                items={mainNav}
+                pathname={pathname}
+              />
+              <NavSection
+                title="Quản lý"
+                dotClass="bg-indigo-500/80"
+                items={managementNav}
+                pathname={pathname}
+              />
+              <NavSection
+                title="Hệ thống"
+                dotClass="bg-fuchsia-500/80"
+                items={systemNav}
+                pathname={pathname}
+              />
+            </div>
+          </aside>
+        </div>
+      ) : null}
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="glass-topbar sticky top-0 z-30 flex h-14 items-center gap-4 px-4 shadow-[0_8px_24px_-18px_rgba(97,39,212,0.55)] md:px-6">
@@ -174,6 +238,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
             variant="ghost"
             size="icon"
             className="md:hidden -ml-2 h-8 w-8 text-muted-foreground"
+            onClick={() => setIsMobileMenuOpen(true)}
+            aria-label="Mở menu"
           >
             <Menu className="h-4 w-4" />
           </Button>
@@ -236,6 +302,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
               <Link
                 key={item.to}
                 to={item.to}
+                onClick={closeMobileMenu}
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 rounded-lg py-2 text-[11px] font-medium",
                   active

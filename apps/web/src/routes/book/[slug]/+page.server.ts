@@ -1,6 +1,6 @@
-import type { Actions, PageServerLoad } from "./$types";
 import { PUBLIC_API_URL } from "$env/static/public";
 import { error, fail } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
 
 interface PublicBookingOptionsResponse {
   organization: {

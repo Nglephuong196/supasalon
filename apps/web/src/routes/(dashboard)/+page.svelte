@@ -1,14 +1,14 @@
 <script lang="ts">
-import { Card, CardContent } from "$lib/components/ui/card";
-import { Button } from "$lib/components/ui/button";
-import { CalendarDays, Users, DollarSign, TrendingUp, Plus, BarChart3 } from "@lucide/svelte";
-import { cn } from "$lib/utils";
+import { goto } from "$app/navigation";
+import { navigating, page } from "$app/stores";
+import LowStockAlerts from "$lib/components/dashboard/LowStockAlerts.svelte";
 import StatsCard from "$lib/components/dashboard/StatsCard.svelte";
 import TodaySchedule from "$lib/components/dashboard/TodaySchedule.svelte";
 import TopStylists from "$lib/components/dashboard/TopStylists.svelte";
-import LowStockAlerts from "$lib/components/dashboard/LowStockAlerts.svelte";
-import { goto } from "$app/navigation";
-import { page, navigating } from "$app/stores";
+import { Button } from "$lib/components/ui/button";
+import { Card, CardContent } from "$lib/components/ui/card";
+import { cn } from "$lib/utils";
+import { BarChart3, CalendarDays, DollarSign, Plus, TrendingUp, Users } from "@lucide/svelte";
 import type { PageData } from "./$types";
 
 let { data }: { data: PageData } = $props();

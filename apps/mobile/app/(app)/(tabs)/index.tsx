@@ -1,20 +1,20 @@
-import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { DollarSign, Calendar, Users, TrendingUp, Plus, Clock, LogOut } from "lucide-react-native";
-import { signOut } from "../../../lib/auth-client";
-import api from "../../../lib/api";
+import { Calendar, Clock, DollarSign, LogOut, Plus, TrendingUp, Users } from "lucide-react-native";
+import React from "react";
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import StatsCard from "../../../components/StatsCard";
-import { colors, spacing, borderRadius, fontSize, fontWeight } from "../../../lib/theme";
+import api from "../../../lib/api";
+import { signOut } from "../../../lib/auth-client";
+import { borderRadius, colors, fontSize, fontWeight, spacing } from "../../../lib/theme";
 
 interface DashboardStats {
   totalRevenue: number;

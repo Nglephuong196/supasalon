@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { createAuth } from "../lib/auth";
 import type { Database } from "../db";
+import { createAuth } from "../lib/auth";
 
 type Bindings = {
   DB: D1Database;

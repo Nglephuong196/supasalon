@@ -2,7 +2,7 @@
 import { Button } from "$lib/components/ui/button";
 import { Input } from "$lib/components/ui/input";
 import { Label } from "$lib/components/ui/label";
-import { X, Sparkles, ShoppingBag, Percent } from "@lucide/svelte";
+import { Percent, ShoppingBag, Sparkles, X } from "@lucide/svelte";
 
 let {
   item = $bindable(),

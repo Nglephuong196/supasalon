@@ -1,9 +1,9 @@
+import { ACTIONS, RESOURCES } from "@repo/constants";
 import { Hono } from "hono";
-import { InvoicesService, type CreateInvoiceRequest } from "../services";
-import type { NewInvoice } from "../db/schema";
 import type { Database } from "../db";
+import type { NewInvoice } from "../db/schema";
 import { requirePermission } from "../middleware/permission";
-import { RESOURCES, ACTIONS } from "@repo/constants";
+import { type CreateInvoiceRequest, InvoicesService } from "../services";
 
 type Bindings = { DB: D1Database };
 type Variables = {

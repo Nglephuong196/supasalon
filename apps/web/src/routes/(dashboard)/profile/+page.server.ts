@@ -1,8 +1,8 @@
-import type { Actions, PageServerLoad } from "./$types";
-import { fail, redirect } from "@sveltejs/kit";
 import { PUBLIC_API_URL } from "$env/static/public";
-import { ACTIONS, RESOURCES } from "@repo/constants";
 import { checkPermission } from "$lib/permissions";
+import { ACTIONS, RESOURCES } from "@repo/constants";
+import { fail, redirect } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 

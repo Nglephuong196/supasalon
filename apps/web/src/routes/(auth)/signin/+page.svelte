@@ -1,4 +1,7 @@
 <script lang="ts">
+import { goto } from "$app/navigation";
+import { authClient, signIn } from "$lib/auth-client";
+import { Button } from "$lib/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,12 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from "$lib/components/ui/card";
-import { Button } from "$lib/components/ui/button";
 import { Input } from "$lib/components/ui/input";
 import { Label } from "$lib/components/ui/label";
-import { LogIn, Loader, Sparkles } from "@lucide/svelte";
-import { signIn, authClient } from "$lib/auth-client";
-import { goto } from "$app/navigation";
+import { Loader, LogIn, Sparkles } from "@lucide/svelte";
 
 let email = $state("");
 let password = $state("");

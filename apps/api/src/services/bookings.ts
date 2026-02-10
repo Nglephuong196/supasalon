@@ -1,6 +1,6 @@
-import { eq, and, gte, lte, like, or, desc, sql } from "drizzle-orm";
+import { and, desc, eq, gte, like, lte, or, sql } from "drizzle-orm";
 import type { Database } from "../db";
-import { bookings, customers, type NewBooking, services, serviceCategories } from "../db/schema";
+import { type NewBooking, bookings, customers, serviceCategories, services } from "../db/schema";
 
 export interface BookingFilters {
   from?: Date;

@@ -1,19 +1,19 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
 import {
-  Users,
-  UserCog,
-  Scissors,
-  FolderTree,
-  Package,
+  BarChart3,
   Boxes,
   ChevronRight,
+  FolderTree,
   LogOut,
-  BarChart3,
+  Package,
+  Scissors,
+  UserCog,
+  Users,
 } from "lucide-react-native";
+import React from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { signOut } from "../../../lib/auth-client";
-import { colors, spacing, borderRadius, fontSize, fontWeight } from "../../../lib/theme";
+import { borderRadius, colors, fontSize, fontWeight, spacing } from "../../../lib/theme";
 
 interface MenuItem {
   id: string;

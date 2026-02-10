@@ -1,6 +1,6 @@
-import { fail } from "@sveltejs/kit";
 import { PUBLIC_API_URL } from "$env/static/public";
-import type { PageServerLoad, Actions } from "./$types";
+import { fail } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
 
 const API_URL = PUBLIC_API_URL || "http://127.0.0.1:8787";
 

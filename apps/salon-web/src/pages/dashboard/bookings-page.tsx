@@ -1,17 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Check, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { queryKeys } from "@/lib/query-client";
 import {
-  bookingsService,
   type BookingItem,
-  type BookingStatus,
   type BookingPayload,
   type BookingStats,
+  type BookingStatus,
+  bookingsService,
 } from "@/services/bookings.service";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
+import { CalendarDays, Check, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 function Modal(props: {
   title: string;
@@ -65,6 +74,7 @@ const emptyStats: BookingStats = {
   cancelled: 0,
   cancelRate: 0,
 };
+const NONE_OPTION_VALUE = "__none__";
 
 function todayString() {
   return new Date().toISOString().split("T")[0] ?? "";
@@ -144,8 +154,13 @@ export function BookingsPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: Partial<BookingPayload> }) =>
-      bookingsService.update(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: Partial<BookingPayload>;
+    }) => bookingsService.update(id, payload),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["bookings"] }),
@@ -221,6 +236,111 @@ export function BookingsPage() {
       members.map((item) => [item.id, item.user?.name ?? item.user?.email ?? item.id]),
     );
   }, [members]);
+
+  const bookingColumns: Array<ColumnDef<BookingItem>> = [
+    {
+      id: "customer",
+      header: "Khách hàng",
+      cell: ({ row }) => (
+        <div>
+          <div className="font-medium">
+            {row.original.customer?.name ||
+              customerById.get(String(row.original.customerId))?.name ||
+              `KH #${row.original.customerId}`}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {row.original.customer?.phone ||
+              customerById.get(String(row.original.customerId))?.phone ||
+              ""}
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "date",
+      header: "Ngày giờ",
+      cell: ({ row }) => (
+        <div className="inline-flex items-center gap-2">
+          <CalendarDays className="h-4 w-4 text-muted-foreground" />
+          {new Date(row.original.date).toLocaleString("vi-VN")}
+        </div>
+      ),
+    },
+    {
+      id: "service",
+      header: "Dịch vụ",
+      cell: ({ row }) => {
+        const firstService = row.original.guests?.[0]?.services?.[0];
+        const serviceName = firstService?.serviceId
+          ? serviceById.get(firstService.serviceId)?.name || `#${firstService.serviceId}`
+          : "-";
+        return (
+          <div>
+            <div>{serviceName}</div>
+            {firstService?.memberId ? (
+              <div className="text-xs text-muted-foreground">
+                {memberById.get(firstService.memberId) || firstService.memberId}
+              </div>
+            ) : null}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Trạng thái",
+      cell: ({ row }) => (
+        <span
+          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClass[row.original.status]}`}
+        >
+          {statusText[row.original.status]}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      header: "Thao tác",
+      meta: {
+        className: "text-right",
+        headerClassName: "text-right",
+      },
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-1">
+          <Select
+            value={row.original.status}
+            onValueChange={(value) => void quickStatus(row.original.id, value as BookingStatus)}
+          >
+            <SelectTrigger className="h-8 rounded-md border px-2 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(statusText).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => openEdit(row.original)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => openDelete(row.original)}
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   function buildPayload(): BookingPayload | null {
     const customerId = Number(formCustomerId);
@@ -309,7 +429,10 @@ export function BookingsPage() {
 
     setActionError(null);
     try {
-      await updateMutation.mutateAsync({ id: selectedBooking.id, payload });
+      await updateMutation.mutateAsync({
+        id: selectedBooking.id,
+        payload,
+      });
       setEditOpen(false);
       setSelectedBooking(null);
       resetForm();
@@ -351,18 +474,22 @@ export function BookingsPage() {
       <form className="grid gap-4" onSubmit={onSubmit}>
         <div className="grid gap-2">
           <Label>Khách hàng</Label>
-          <select
-            className="h-10 rounded-md border px-3 text-sm"
-            value={formCustomerId}
-            onChange={(event) => setFormCustomerId(event.target.value)}
+          <Select
+            value={formCustomerId || NONE_OPTION_VALUE}
+            onValueChange={(value) => setFormCustomerId(value === NONE_OPTION_VALUE ? "" : value)}
           >
-            <option value="">Chọn khách hàng</option>
-            {customers.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name} - {item.phone}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE_OPTION_VALUE}>Chọn khách hàng</SelectItem>
+              {customers.map((item) => (
+                <SelectItem key={item.id} value={String(item.id)}>
+                  {item.name} - {item.phone}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -389,49 +516,61 @@ export function BookingsPage() {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="grid gap-2">
             <Label>Dịch vụ</Label>
-            <select
-              className="h-10 rounded-md border px-3 text-sm"
-              value={formServiceId}
-              onChange={(event) => setFormServiceId(event.target.value)}
+            <Select
+              value={formServiceId || NONE_OPTION_VALUE}
+              onValueChange={(value) => setFormServiceId(value === NONE_OPTION_VALUE ? "" : value)}
             >
-              <option value="">Chọn dịch vụ</option>
-              {services.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name} - {item.price.toLocaleString("vi-VN")}đ
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE_OPTION_VALUE}>Chọn dịch vụ</SelectItem>
+                {services.map((item) => (
+                  <SelectItem key={item.id} value={String(item.id)}>
+                    {item.name} - {item.price.toLocaleString("vi-VN")}đ
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid gap-2">
             <Label>Nhân viên (tuỳ chọn)</Label>
-            <select
-              className="h-10 rounded-md border px-3 text-sm"
-              value={formMemberId}
-              onChange={(event) => setFormMemberId(event.target.value)}
+            <Select
+              value={formMemberId || NONE_OPTION_VALUE}
+              onValueChange={(value) => setFormMemberId(value === NONE_OPTION_VALUE ? "" : value)}
             >
-              <option value="">Không chỉ định</option>
-              {members.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.user?.name || item.user?.email || item.id}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE_OPTION_VALUE}>Không chỉ định</SelectItem>
+                {members.map((item) => (
+                  <SelectItem key={item.id} value={String(item.id)}>
+                    {item.user?.name || item.user?.email || item.id}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         <div className="grid gap-2">
           <Label>Trạng thái</Label>
-          <select
-            className="h-10 rounded-md border px-3 text-sm"
+          <Select
             value={formStatus}
-            onChange={(event) => setFormStatus(event.target.value as BookingStatus)}
+            onValueChange={(value) => setFormStatus(value as BookingStatus)}
           >
-            {Object.entries(statusText).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(statusText).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid gap-2">
@@ -524,18 +663,19 @@ export function BookingsPage() {
             className="pl-9"
           />
         </div>
-        <select
-          className="h-10 rounded-md border px-3 text-sm"
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-        >
-          <option value="all">Tất cả trạng thái</option>
-          {Object.entries(statusText).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tất cả trạng thái</SelectItem>
+            {Object.entries(statusText).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Input
           type="date"
           value={fromDate}
@@ -551,109 +691,12 @@ export function BookingsPage() {
       </div>
 
       <div className="overflow-auto rounded-lg border border-border/70 bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/40">
-            <tr>
-              <th className="px-3 py-2 text-left">Khách hàng</th>
-              <th className="px-3 py-2 text-left">Ngày giờ</th>
-              <th className="px-3 py-2 text-left">Dịch vụ</th>
-              <th className="px-3 py-2 text-left">Trạng thái</th>
-              <th className="px-3 py-2 text-right">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="px-3 py-4 text-center text-muted-foreground">
-                  Đang tải...
-                </td>
-              </tr>
-            ) : bookings.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-3 py-4 text-center text-muted-foreground">
-                  Không có lịch hẹn
-                </td>
-              </tr>
-            ) : (
-              bookings.map((item) => {
-                const firstService = item.guests?.[0]?.services?.[0];
-                const serviceName = firstService?.serviceId
-                  ? serviceById.get(firstService.serviceId)?.name || `#${firstService.serviceId}`
-                  : "-";
-                return (
-                  <tr key={item.id} className="border-t">
-                    <td className="px-3 py-2">
-                      <div className="font-medium">
-                        {item.customer?.name ||
-                          customerById.get(String(item.customerId))?.name ||
-                          `KH #${item.customerId}`}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {item.customer?.phone ||
-                          customerById.get(String(item.customerId))?.phone ||
-                          ""}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="inline-flex items-center gap-2">
-                        <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                        {new Date(item.date).toLocaleString("vi-VN")}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2">
-                      <div>{serviceName}</div>
-                      {firstService?.memberId ? (
-                        <div className="text-xs text-muted-foreground">
-                          {memberById.get(firstService.memberId) || firstService.memberId}
-                        </div>
-                      ) : null}
-                    </td>
-                    <td className="px-3 py-2">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClass[item.status]}`}
-                      >
-                        {statusText[item.status]}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <div className="flex justify-end gap-1">
-                        <select
-                          className="h-8 rounded-md border px-2 text-xs"
-                          value={item.status}
-                          onChange={(event) =>
-                            void quickStatus(item.id, event.target.value as BookingStatus)
-                          }
-                        >
-                          {Object.entries(statusText).map(([value, label]) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => openEdit(item)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => openDelete(item)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+        <DataTable
+          data={bookings}
+          columns={bookingColumns}
+          loading={loading}
+          emptyMessage="Không có lịch hẹn"
+        />
       </div>
 
       <Modal title="Tạo lịch hẹn" open={createOpen} onClose={() => setCreateOpen(false)}>

@@ -1,16 +1,25 @@
-import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, FileText, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { queryKeys } from "@/lib/query-client";
 import {
-  invoicesService,
   type Invoice,
   type InvoicePayload,
   type InvoiceStatus,
+  invoicesService,
 } from "@/services/invoices.service";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
+import { Check, FileText, Plus, Search, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 function Modal(props: {
   title: string;
@@ -83,29 +92,42 @@ export function InvoicesPage() {
   const createMutation = useMutation({
     mutationFn: (payload: InvoicePayload) => invoicesService.create(payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.invoices });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.invoices,
+      });
     },
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: Partial<InvoicePayload> }) =>
-      invoicesService.update(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: Partial<InvoicePayload>;
+    }) => invoicesService.update(id, payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.invoices });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.invoices,
+      });
     },
   });
 
   const closeTabMutation = useMutation({
     mutationFn: (id: number) => invoicesService.close(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.invoices });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.invoices,
+      });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => invoicesService.remove(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.invoices });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.invoices,
+      });
     },
   });
 
@@ -146,6 +168,89 @@ export function InvoicesPage() {
       openTabs: invoices.filter((item) => item.isOpenInTab).length,
     };
   }, [invoices]);
+
+  const invoiceColumns: Array<ColumnDef<Invoice>> = [
+    {
+      id: "id",
+      header: "Mã",
+      cell: ({ row }) => `#${row.original.id}`,
+    },
+    {
+      id: "customer",
+      header: "Khách hàng",
+      cell: ({ row }) => row.original.customer?.name || "Khách lẻ",
+    },
+    {
+      id: "total",
+      header: "Tổng tiền",
+      meta: {
+        className: "text-right font-medium",
+        headerClassName: "text-right",
+      },
+      cell: ({ row }) => `${Number(row.original.total || 0).toLocaleString("vi-VN")}đ`,
+    },
+    {
+      id: "status",
+      header: "Trạng thái",
+      cell: ({ row }) => (
+        <span
+          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClass[row.original.status]}`}
+        >
+          {statusText[row.original.status]}
+        </span>
+      ),
+    },
+    {
+      id: "createdAt",
+      header: "Ngày tạo",
+      cell: ({ row }) => new Date(row.original.createdAt).toLocaleString("vi-VN"),
+    },
+    {
+      id: "actions",
+      header: "Thao tác",
+      meta: {
+        className: "text-right",
+        headerClassName: "text-right",
+      },
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-1">
+          {row.original.status !== "paid" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => void updateStatus(row.original, "paid")}
+            >
+              <Check className="mr-1 h-3.5 w-3.5" />
+              Đã thu
+            </Button>
+          ) : null}
+          {row.original.isOpenInTab ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => void closeInvoiceTab(row.original)}
+            >
+              <FileText className="mr-1 h-3.5 w-3.5" />
+              Đóng tab
+            </Button>
+          ) : null}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => {
+              setSelectedInvoice(row.original);
+              setDeleteOpen(true);
+            }}
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   function resetForm() {
     setCustomerId("");
@@ -295,103 +400,31 @@ export function InvoicesPage() {
             className="pl-9"
           />
         </div>
-        <select
-          className="h-10 rounded-md border px-3 text-sm"
+        <Select
           value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value as "all" | InvoiceStatus)}
+          onValueChange={(value) => setStatusFilter(value as "all" | InvoiceStatus)}
         >
-          <option value="all">Tất cả trạng thái</option>
-          {Object.entries(statusText).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tất cả trạng thái</SelectItem>
+            {Object.entries(statusText).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="overflow-auto rounded-lg border border-border/70 bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/40">
-            <tr>
-              <th className="px-3 py-2 text-left">Mã</th>
-              <th className="px-3 py-2 text-left">Khách hàng</th>
-              <th className="px-3 py-2 text-right">Tổng tiền</th>
-              <th className="px-3 py-2 text-left">Trạng thái</th>
-              <th className="px-3 py-2 text-left">Ngày tạo</th>
-              <th className="px-3 py-2 text-right">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={6} className="px-3 py-4 text-center text-muted-foreground">
-                  Đang tải...
-                </td>
-              </tr>
-            ) : filteredInvoices.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-3 py-4 text-center text-muted-foreground">
-                  Không có hóa đơn
-                </td>
-              </tr>
-            ) : (
-              filteredInvoices.map((item) => (
-                <tr key={item.id} className="border-t">
-                  <td className="px-3 py-2">#{item.id}</td>
-                  <td className="px-3 py-2">{item.customer?.name || "Khách lẻ"}</td>
-                  <td className="px-3 py-2 text-right font-medium">
-                    {Number(item.total || 0).toLocaleString("vi-VN")}đ
-                  </td>
-                  <td className="px-3 py-2">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClass[item.status]}`}
-                    >
-                      {statusText[item.status]}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2">{new Date(item.createdAt).toLocaleString("vi-VN")}</td>
-                  <td className="px-3 py-2 text-right">
-                    <div className="flex justify-end gap-1">
-                      {item.status !== "paid" ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8"
-                          onClick={() => void updateStatus(item, "paid")}
-                        >
-                          <Check className="mr-1 h-3.5 w-3.5" />
-                          Đã thu
-                        </Button>
-                      ) : null}
-                      {item.isOpenInTab ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8"
-                          onClick={() => void closeInvoiceTab(item)}
-                        >
-                          <FileText className="mr-1 h-3.5 w-3.5" />
-                          Đóng tab
-                        </Button>
-                      ) : null}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => {
-                          setSelectedInvoice(item);
-                          setDeleteOpen(true);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        <DataTable
+          data={filteredInvoices}
+          columns={invoiceColumns}
+          loading={loading}
+          emptyMessage="Không có hóa đơn"
+        />
       </div>
 
       <Modal title="Tạo hóa đơn" open={createOpen} onClose={() => setCreateOpen(false)}>
@@ -407,14 +440,18 @@ export function InvoicesPage() {
             </div>
             <div className="grid gap-2">
               <Label>Loại mục</Label>
-              <select
-                className="h-10 rounded-md border px-3 text-sm"
+              <Select
                 value={itemType}
-                onChange={(event) => setItemType(event.target.value as "service" | "product")}
+                onValueChange={(value) => setItemType(value as "service" | "product")}
               >
-                <option value="service">Dịch vụ</option>
-                <option value="product">Sản phẩm</option>
-              </select>
+                <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="service">Dịch vụ</SelectItem>
+                  <SelectItem value="product">Sản phẩm</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="grid gap-2">

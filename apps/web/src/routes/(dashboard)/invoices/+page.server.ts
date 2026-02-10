@@ -1,12 +1,12 @@
-import type { PageServerLoad } from "./$types";
-import { redirect, error } from "@sveltejs/kit";
-import type { Invoice } from "$lib/types";
-import { RESOURCES, ACTIONS } from "@repo/constants";
-import { checkPermission, getResourcePermissions } from "$lib/permissions";
 import { PUBLIC_API_URL } from "$env/static/public";
+import { checkPermission, getResourcePermissions } from "$lib/permissions";
+import type { Invoice } from "$lib/types";
+import { ACTIONS, RESOURCES } from "@repo/constants";
+import { error, redirect } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
 
 // ... (previous imports)
-import { fail, type Actions } from "@sveltejs/kit";
+import { type Actions, fail } from "@sveltejs/kit";
 
 export const load: PageServerLoad = async ({ fetch, cookies, parent }) => {
   // ... (existing load function code remains unchanged)

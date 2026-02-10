@@ -1,7 +1,7 @@
+import { Calendar, FileText, Search, Users } from "lucide-react-native";
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Search, Calendar, Users, FileText } from "lucide-react-native";
-import { colors, spacing, fontSize, fontWeight } from "../lib/theme";
+import { StyleSheet, Text, View } from "react-native";
+import { colors, fontSize, fontWeight, spacing } from "../lib/theme";
 
 type EmptyStateType = "search" | "bookings" | "customers" | "invoices" | "employees";
 

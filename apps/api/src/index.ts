@@ -1,24 +1,24 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { initDb } from "./middleware/db";
-import type { Database } from "./db";
 import {
   authController,
-  usersController,
-  customersController,
+  bookingsController,
   customerMembershipsController,
-  serviceCategoriesController,
-  servicesController,
+  customersController,
+  dashboardController,
+  invoicesController,
+  membersController,
+  membershipTiersController,
   productCategoriesController,
   productsController,
-  bookingsController,
-  invoicesController,
-  membershipTiersController,
-  membersController,
-  staffCommissionRulesController,
-  dashboardController,
   publicBookingController,
+  serviceCategoriesController,
+  servicesController,
+  staffCommissionRulesController,
+  usersController,
 } from "./controllers";
+import type { Database } from "./db";
+import { initDb } from "./middleware/db";
 
 type Bindings = {
   DB: D1Database;

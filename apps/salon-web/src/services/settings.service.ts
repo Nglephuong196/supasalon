@@ -1,8 +1,8 @@
 import { apiClient } from "@/lib/api";
-import { ACTIONS, RESOURCES, type Action, type Resource } from "@repo/constants";
+import { ACTIONS, type Action, RESOURCES, type Resource } from "@repo/constants";
 import type { EmployeeMember } from "./employees.service";
-import type { ProductItem, ProductCategory } from "./products.service";
-import type { ServiceItem, ServiceCategory } from "./services.service";
+import type { ProductCategory, ProductItem } from "./products.service";
+import type { ServiceCategory, ServiceItem } from "./services.service";
 
 export type MembershipTier = {
   id: number;

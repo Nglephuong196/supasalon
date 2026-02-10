@@ -1,6 +1,6 @@
-import type { LayoutServerLoad } from "./$types";
-import { redirect } from "@sveltejs/kit";
 import type { Permissions } from "@repo/constants";
+import { redirect } from "@sveltejs/kit";
+import type { LayoutServerLoad } from "./$types";
 
 const API_URL = "http://localhost:8787";
 

@@ -1,9 +1,9 @@
+import { ACTIONS, RESOURCES } from "@repo/constants";
 import { Hono } from "hono";
-import { CustomersService } from "../services";
-import type { NewCustomer } from "../db/schema";
 import type { Database } from "../db";
+import type { NewCustomer } from "../db/schema";
 import { requirePermission } from "../middleware/permission";
-import { RESOURCES, ACTIONS } from "@repo/constants";
+import { CustomersService } from "../services";
 
 type Bindings = { DB: D1Database };
 type Variables = {
@@ -12,14 +12,34 @@ type Variables = {
   user: any;
 };
 
-export const customersController = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+export const customersController = new Hono<{
+  Bindings: Bindings;
+  Variables: Variables;
+}>();
 
 // Read operations
 customersController.get("/", requirePermission(RESOURCES.CUSTOMER, ACTIONS.READ), async (c) => {
   const service = new CustomersService(c.get("db"));
   const organization = c.get("organization");
-  const customers = await service.findAll(organization.id);
-  return c.json(customers);
+
+  const paginated = c.req.query("paginated") === "1";
+  if (!paginated) {
+    const customers = await service.findAll(organization.id);
+    return c.json(customers);
+  }
+
+  const page = Number.parseInt(c.req.query("page") || "1", 10);
+  const limit = Number.parseInt(c.req.query("limit") || "20", 10);
+  const search = c.req.query("search") || "";
+  const vipOnly = c.req.query("vip") === "1";
+
+  const result = await service.findPage(organization.id, {
+    page: Number.isFinite(page) && page > 0 ? page : 1,
+    limit: Number.isFinite(limit) && limit > 0 ? Math.min(limit, 100) : 20,
+    search,
+    vipOnly,
+  });
+  return c.json(result);
 });
 
 customersController.get("/:id", requirePermission(RESOURCES.CUSTOMER, ACTIONS.READ), async (c) => {

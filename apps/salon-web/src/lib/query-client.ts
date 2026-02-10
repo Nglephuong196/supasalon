@@ -16,7 +16,9 @@ export const queryClient = new QueryClient({
 export const queryKeys = {
   dashboardOverview: (range: string) => ["dashboard", "overview", range] as const,
   customers: ["customers"] as const,
+  customersList: (params: Record<string, unknown>) => ["customers", "list", params] as const,
   employees: ["employees"] as const,
+  employeesList: (params: Record<string, unknown>) => ["employees", "list", params] as const,
   services: ["services"] as const,
   serviceCategories: ["service-categories"] as const,
   products: ["products"] as const,

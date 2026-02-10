@@ -1,18 +1,18 @@
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-  ActivityIndicator,
-  ScrollView,
+  View,
 } from "react-native";
-import { router } from "expo-router";
-import { signUp, organization } from "../../lib/auth-client";
+import { organization, signUp } from "../../lib/auth-client";
 
 export default function SignupScreen() {
   const [formData, setFormData] = useState({

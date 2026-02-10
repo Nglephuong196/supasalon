@@ -1,5 +1,5 @@
-import { authClient } from "./auth-client";
 import * as SecureStore from "expo-secure-store";
+import { authClient } from "./auth-client";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:8787";
 

@@ -1,6 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { colors, spacing, borderRadius, fontSize, fontWeight } from "../lib/theme";
+import { StyleSheet, Text, View } from "react-native";
+import { borderRadius, colors, fontSize, fontWeight, spacing } from "../lib/theme";
 
 interface StatsCardProps {
   title: string;

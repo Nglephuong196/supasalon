@@ -1,5 +1,5 @@
-import type { PageServerLoad, Actions } from "./$types";
 import { fail } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
 
 const API_URL = "http://localhost:8787";
 

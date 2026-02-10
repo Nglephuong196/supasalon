@@ -1,22 +1,65 @@
-import { Outlet, createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
 import { AuthShell } from "@/components/layout/auth-shell";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PublicBookingShell } from "@/components/layout/public-booking-shell";
 import { ApiContextSync } from "@/components/providers/api-context-sync";
-import { BookingsPage } from "@/pages/dashboard/bookings-page";
-import { CommissionSettingsPage } from "@/pages/dashboard/commission-settings-page";
-import { CustomersPage } from "@/pages/dashboard/customers-page";
-import { EmployeesPage } from "@/pages/dashboard/employees-page";
-import { InvoicesPage } from "@/pages/dashboard/invoices-page";
-import { OverviewPage } from "@/pages/dashboard/overview-page";
-import { ProductsPage } from "@/pages/dashboard/products-page";
-import { ProfilePage } from "@/pages/dashboard/profile-page";
-import { ServicesPage } from "@/pages/dashboard/services-page";
-import { SettingsPage } from "@/pages/dashboard/settings-page";
-import { UnauthorizedPage } from "@/pages/dashboard/unauthorized-page";
-import { PublicBookingPage } from "@/pages/public/booking-page";
-import { SignInPage } from "@/pages/sign-in-page";
-import { SignUpPage } from "@/pages/sign-up-page";
+import {
+  Outlet,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  lazyRouteComponent,
+} from "@tanstack/react-router";
+
+const OverviewPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/overview-page"),
+  "OverviewPage",
+);
+const BookingsPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/bookings-page"),
+  "BookingsPage",
+);
+const CustomersPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/customers-page"),
+  "CustomersPage",
+);
+const EmployeesPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/employees-page"),
+  "EmployeesPage",
+);
+const ServicesPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/services-page"),
+  "ServicesPage",
+);
+const ProductsPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/products-page"),
+  "ProductsPage",
+);
+const InvoicesPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/invoices-page"),
+  "InvoicesPage",
+);
+const SettingsPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/settings-page"),
+  "SettingsPage",
+);
+const ProfilePage = lazyRouteComponent(
+  () => import("@/pages/dashboard/profile-page"),
+  "ProfilePage",
+);
+const CommissionSettingsPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/commission-settings-page"),
+  "CommissionSettingsPage",
+);
+const UnauthorizedPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/unauthorized-page"),
+  "UnauthorizedPage",
+);
+const SignInPage = lazyRouteComponent(() => import("@/pages/sign-in-page"), "SignInPage");
+const SignUpPage = lazyRouteComponent(() => import("@/pages/sign-up-page"), "SignUpPage");
+const PublicBookingPage = lazyRouteComponent(
+  () => import("@/pages/public/booking-page"),
+  "PublicBookingPage",
+);
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -27,161 +70,136 @@ const rootRoute = createRootRoute({
   ),
 });
 
-const overviewRoute = createRoute({
+const dashboardLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/",
+  id: "dashboard-layout",
   component: () => (
     <DashboardShell>
-      <OverviewPage />
+      <Outlet />
     </DashboardShell>
   ),
 });
 
-const bookingsRoute = createRoute({
+const authLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/bookings",
-  component: () => (
-    <DashboardShell>
-      <BookingsPage />
-    </DashboardShell>
-  ),
-});
-
-const customersRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/customers",
-  component: () => (
-    <DashboardShell>
-      <CustomersPage />
-    </DashboardShell>
-  ),
-});
-
-const employeesRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/employees",
-  component: () => (
-    <DashboardShell>
-      <EmployeesPage />
-    </DashboardShell>
-  ),
-});
-
-const servicesRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/services",
-  component: () => (
-    <DashboardShell>
-      <ServicesPage />
-    </DashboardShell>
-  ),
-});
-
-const productsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/products",
-  component: () => (
-    <DashboardShell>
-      <ProductsPage />
-    </DashboardShell>
-  ),
-});
-
-const invoicesRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/invoices",
-  component: () => (
-    <DashboardShell>
-      <InvoicesPage />
-    </DashboardShell>
-  ),
-});
-
-const settingsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/settings",
-  component: () => (
-    <DashboardShell>
-      <SettingsPage />
-    </DashboardShell>
-  ),
-});
-
-const profileRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/profile",
-  component: () => (
-    <DashboardShell>
-      <ProfilePage />
-    </DashboardShell>
-  ),
-});
-
-const commissionSettingsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/commission-settings",
-  component: () => (
-    <DashboardShell>
-      <CommissionSettingsPage />
-    </DashboardShell>
-  ),
-});
-
-const unauthorizedRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/unauthorized",
-  component: () => (
-    <DashboardShell>
-      <UnauthorizedPage />
-    </DashboardShell>
-  ),
-});
-
-const signInRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/signin",
+  id: "auth-layout",
   component: () => (
     <AuthShell>
-      <SignInPage />
+      <Outlet />
     </AuthShell>
   ),
 });
 
-const signUpRoute = createRoute({
+const publicLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/signup",
-  component: () => (
-    <AuthShell>
-      <SignUpPage />
-    </AuthShell>
-  ),
-});
-
-const publicBookingRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/book/$slug",
+  id: "public-layout",
   component: () => (
     <PublicBookingShell>
-      <PublicBookingPage />
+      <Outlet />
     </PublicBookingShell>
   ),
 });
 
+const overviewRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/",
+  component: OverviewPage,
+});
+
+const bookingsRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/bookings",
+  component: BookingsPage,
+});
+
+const customersRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/customers",
+  component: CustomersPage,
+});
+
+const employeesRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/employees",
+  component: EmployeesPage,
+});
+
+const servicesRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/services",
+  component: ServicesPage,
+});
+
+const productsRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/products",
+  component: ProductsPage,
+});
+
+const invoicesRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/invoices",
+  component: InvoicesPage,
+});
+
+const settingsRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/settings",
+  component: SettingsPage,
+});
+
+const profileRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/profile",
+  component: ProfilePage,
+});
+
+const commissionSettingsRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/commission-settings",
+  component: CommissionSettingsPage,
+});
+
+const unauthorizedRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/unauthorized",
+  component: UnauthorizedPage,
+});
+
+const signInRoute = createRoute({
+  getParentRoute: () => authLayoutRoute,
+  path: "/signin",
+  component: SignInPage,
+});
+
+const signUpRoute = createRoute({
+  getParentRoute: () => authLayoutRoute,
+  path: "/signup",
+  component: SignUpPage,
+});
+
+const publicBookingRoute = createRoute({
+  getParentRoute: () => publicLayoutRoute,
+  path: "/book/$slug",
+  component: PublicBookingPage,
+});
+
 const routeTree = rootRoute.addChildren([
-  overviewRoute,
-  bookingsRoute,
-  customersRoute,
-  employeesRoute,
-  servicesRoute,
-  productsRoute,
-  invoicesRoute,
-  settingsRoute,
-  profileRoute,
-  commissionSettingsRoute,
-  unauthorizedRoute,
-  signInRoute,
-  signUpRoute,
-  publicBookingRoute,
+  dashboardLayoutRoute.addChildren([
+    overviewRoute,
+    bookingsRoute,
+    customersRoute,
+    employeesRoute,
+    servicesRoute,
+    productsRoute,
+    invoicesRoute,
+    settingsRoute,
+    profileRoute,
+    commissionSettingsRoute,
+    unauthorizedRoute,
+  ]),
+  authLayoutRoute.addChildren([signInRoute, signUpRoute]),
+  publicLayoutRoute.addChildren([publicBookingRoute]),
 ]);
 
 export const router = createRouter({ routeTree });

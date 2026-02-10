@@ -1,8 +1,8 @@
-import React, { useState } from "react";
 import { Tabs, router, usePathname } from "expo-router";
-import { View, TouchableOpacity, StyleSheet, Animated, Pressable, Text } from "react-native";
-import { Home, Calendar, FileText, Menu, Plus, CalendarPlus, Receipt } from "lucide-react-native";
-import { colors, spacing, borderRadius, fontSize, fontWeight } from "../../../lib/theme";
+import { Calendar, CalendarPlus, FileText, Home, Menu, Plus, Receipt } from "lucide-react-native";
+import React, { useState } from "react";
+import { Animated, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { borderRadius, colors, fontSize, fontWeight, spacing } from "../../../lib/theme";
 
 // Custom center button component with speed dial
 function CenterButton() {

@@ -1,4 +1,7 @@
 <script lang="ts">
+import { goto } from "$app/navigation";
+import { organization, signUp } from "$lib/auth-client";
+import { Button } from "$lib/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,14 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from "$lib/components/ui/card";
-import { Button } from "$lib/components/ui/button";
+import Combobox from "$lib/components/ui/combobox/combobox.svelte";
 import { Input } from "$lib/components/ui/input";
 import { Label } from "$lib/components/ui/label";
-import Combobox from "$lib/components/ui/combobox/combobox.svelte";
-import { Store, Loader } from "@lucide/svelte";
-import { VIETNAM_PROVINCES, VIETNAM_PHONE_REGEX } from "@repo/constants";
-import { signUp, organization } from "$lib/auth-client";
-import { goto } from "$app/navigation";
+import { Loader, Store } from "@lucide/svelte";
+import { VIETNAM_PHONE_REGEX, VIETNAM_PROVINCES } from "@repo/constants";
 
 const AUTH_BASE_URL = import.meta.env.VITE_AUTH_BASE_URL || "http://localhost:8787";
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

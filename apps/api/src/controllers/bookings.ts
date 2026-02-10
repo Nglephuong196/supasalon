@@ -1,16 +1,16 @@
-import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { BookingsService } from "../services";
-import type { NewBooking } from "../db/schema";
+import { ACTIONS, RESOURCES } from "@repo/constants";
+import { Hono } from "hono";
 import type { Database } from "../db";
+import type { NewBooking } from "../db/schema";
 import { requirePermission } from "../middleware/permission";
-import { RESOURCES, ACTIONS } from "@repo/constants";
 import {
+  bookingQuerySchema,
   createBookingSchema,
   updateBookingSchema,
   updateStatusSchema,
-  bookingQuerySchema,
 } from "../schemas";
+import { BookingsService } from "../services";
 
 type Bindings = { DB: D1Database };
 type Variables = {

@@ -1,7 +1,41 @@
-import { eq, and } from "drizzle-orm";
-import { member, memberPermissions, invitation, user, type Member } from "../db/schema";
+import { type Action, type Permissions, type Resource, hasPermission } from "@repo/constants";
+import { and, desc, eq, inArray, like, or, sql } from "drizzle-orm";
 import type { Database } from "../db";
-import { hasPermission, type Permissions, type Resource, type Action } from "@repo/constants";
+import { type Member, invitation, member, memberPermissions, user } from "../db/schema";
+
+type MemberListOptions = {
+  page?: number;
+  limit?: number;
+  search?: string;
+};
+
+type PaginatedResult<T> = {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+type PaginatedMemberRow = {
+  id: string;
+  organizationId: string;
+  userId: string;
+  role: string;
+  createdAt: Date;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image: string | null;
+  } | null;
+  permissions: Array<{
+    id: number;
+    createdAt: Date;
+    memberId: string;
+    permissions: Permissions;
+  }>;
+};
 
 export class MembersService {
   constructor(private db: Database) {}
@@ -15,6 +49,72 @@ export class MembersService {
       },
     });
     return rows;
+  }
+
+  async findPage(
+    organizationId: string,
+    options: MemberListOptions,
+  ): Promise<PaginatedResult<PaginatedMemberRow>> {
+    const { page = 1, limit = 20, search } = options;
+    const conditions = [eq(member.organizationId, organizationId)];
+
+    if (search) {
+      const pattern = `%${search.trim()}%`;
+      conditions.push(or(like(user.name, pattern), like(user.email, pattern))!);
+    }
+
+    const whereClause = and(...conditions);
+    const countResult = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(member)
+      .leftJoin(user, eq(member.userId, user.id))
+      .where(whereClause)
+      .get();
+
+    const total = countResult?.count ?? 0;
+    const rows = await this.db
+      .select({
+        id: member.id,
+        organizationId: member.organizationId,
+        userId: member.userId,
+        role: member.role,
+        createdAt: member.createdAt,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+        },
+      })
+      .from(member)
+      .leftJoin(user, eq(member.userId, user.id))
+      .where(whereClause)
+      .orderBy(desc(member.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit);
+
+    const memberIds = rows.map((row) => row.id);
+    const permissionsRows =
+      memberIds.length > 0
+        ? await this.db.query.memberPermissions.findMany({
+            where: inArray(memberPermissions.memberId, memberIds),
+          })
+        : [];
+
+    const permissionsByMemberId = new Map(permissionsRows.map((row) => [row.memberId, row]));
+
+    const data = rows.map((row) => ({
+      ...row,
+      permissions: permissionsByMemberId.get(row.id) ? [permissionsByMemberId.get(row.id)!] : [],
+    }));
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    };
   }
 
   async findById(memberId: string, organizationId: string) {

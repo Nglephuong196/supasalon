@@ -1,9 +1,9 @@
+import { ACTIONS, RESOURCES } from "@repo/constants";
 import { Hono } from "hono";
-import { ProductCategoriesService } from "../services/product-categories";
-import type { NewProductCategory } from "../db/schema";
 import type { Database } from "../db";
+import type { NewProductCategory } from "../db/schema";
 import { requirePermission } from "../middleware/permission";
-import { RESOURCES, ACTIONS } from "@repo/constants";
+import { ProductCategoriesService } from "../services/product-categories";
 
 type Bindings = { DB: D1Database };
 type Variables = {

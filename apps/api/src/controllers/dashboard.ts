@@ -1,13 +1,13 @@
+import { ACTIONS, RESOURCES } from "@repo/constants";
 import { Hono } from "hono";
-import { requirePermission } from "../middleware/permission";
-import { RESOURCES, ACTIONS } from "@repo/constants";
-import { BookingsService } from "../services/bookings";
-import { InvoicesService } from "../services/invoices";
-import { CustomersService } from "../services/customers";
-import { ProductsService } from "../services/products";
-import { MembersService } from "../services/members";
-import { ServicesService } from "../services/services";
 import type { Database } from "../db";
+import { requirePermission } from "../middleware/permission";
+import { BookingsService } from "../services/bookings";
+import { CustomersService } from "../services/customers";
+import { InvoicesService } from "../services/invoices";
+import { MembersService } from "../services/members";
+import { ProductsService } from "../services/products";
+import { ServicesService } from "../services/services";
 
 type Bindings = { DB: D1Database };
 type Variables = {

@@ -14,9 +14,31 @@ export type RawMember = {
 
 export type EmployeeMember = RawMember;
 
+export type EmployeeListParams = {
+  page: number;
+  limit: number;
+  search?: string;
+};
+
+export type PaginatedEmployees = {
+  data: RawMember[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
 export const employeesService = {
   list() {
     return apiClient.get<RawMember[]>("/members");
+  },
+  listPaginated(params: EmployeeListParams) {
+    const query = new URLSearchParams();
+    query.set("paginated", "1");
+    query.set("page", String(params.page));
+    query.set("limit", String(params.limit));
+    if (params.search) query.set("search", params.search);
+    return apiClient.get<PaginatedEmployees>(`/members?${query.toString()}`);
   },
   create(payload: {
     name: string;

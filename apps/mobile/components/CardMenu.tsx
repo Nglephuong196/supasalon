@@ -1,7 +1,7 @@
+import { Edit2, MoreHorizontal, Trash2 } from "lucide-react-native";
 import React, { useState, useRef } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Pressable } from "react-native";
-import { MoreHorizontal, Edit2, Trash2 } from "lucide-react-native";
-import { colors, spacing, borderRadius, fontSize, fontWeight } from "../lib/theme";
+import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { borderRadius, colors, fontSize, fontWeight, spacing } from "../lib/theme";
 
 interface CardMenuProps {
   onEdit?: () => void;

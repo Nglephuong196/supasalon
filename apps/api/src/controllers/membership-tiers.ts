@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import { MembershipTiersService } from "../services/membership-tiers";
-import type { NewMembershipTier } from "../db/schema";
 import type { Database } from "../db";
+import type { NewMembershipTier } from "../db/schema";
+import { MembershipTiersService } from "../services/membership-tiers";
 
 type Bindings = { DB: D1Database };
 type Variables = {

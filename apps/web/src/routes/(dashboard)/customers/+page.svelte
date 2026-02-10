@@ -1,33 +1,33 @@
 <script lang="ts">
-import { Card } from "$lib/components/ui/card";
+import { enhance } from "$app/forms";
+import { goto } from "$app/navigation";
+import { page } from "$app/stores";
+import * as AlertDialog from "$lib/components/ui/alert-dialog";
 import { Button } from "$lib/components/ui/button";
+import { Card } from "$lib/components/ui/card";
+import * as Dialog from "$lib/components/ui/dialog";
+import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import * as Select from "$lib/components/ui/select";
+import type { Customer } from "$lib/types";
+import { cn } from "$lib/utils";
 import {
+  Calendar,
+  Crown,
+  Mail,
+  MapPin,
+  MoreVertical,
+  Pencil,
+  Phone,
   Plus,
   Search,
-  Phone,
-  Mail,
-  Crown,
-  Calendar,
-  Pencil,
   Trash2,
-  MoreVertical,
-  MapPin,
   Wallet,
   X,
 } from "@lucide/svelte";
-import { cn } from "$lib/utils";
-import * as Dialog from "$lib/components/ui/dialog";
-import * as AlertDialog from "$lib/components/ui/alert-dialog";
-import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-import { Label } from "$lib/components/ui/label";
-import { enhance } from "$app/forms";
-import type { SubmitFunction } from "./$types";
 import { toast } from "svelte-sonner";
-import type { Customer } from "$lib/types";
-import { page } from "$app/stores";
-import { goto } from "$app/navigation";
-import * as Select from "$lib/components/ui/select";
+import type { SubmitFunction } from "./$types";
 
 let isCreateDialogOpen = $state(false);
 let isEditDialogOpen = $state(false);

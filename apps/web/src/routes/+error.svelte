@@ -1,7 +1,7 @@
 <script lang="ts">
 import { page } from "$app/stores";
 import { Button } from "$lib/components/ui/button";
-import { FileQuestion, ServerCrash, Home, ArrowLeft, ShieldAlert, LogIn } from "@lucide/svelte";
+import { ArrowLeft, FileQuestion, Home, LogIn, ServerCrash, ShieldAlert } from "@lucide/svelte";
 
 let status = $derived($page.status);
 let error = $derived($page.error);

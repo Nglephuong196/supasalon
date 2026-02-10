@@ -1,25 +1,25 @@
-import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Crown,
-  MapPin,
-  Pencil,
-  Phone,
-  Plus,
-  Search,
-  Trash2,
-  X,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { queryKeys } from "@/lib/query-client";
 import { cn } from "@/lib/utils";
 import {
-  customersService,
   type Customer,
   type CustomerPayload,
+  customersService,
 } from "@/services/customers.service";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
+import { Crown, MapPin, Pencil, Phone, Plus, Search, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 type CustomerForm = {
   name: string;
@@ -54,6 +54,7 @@ function getAvatarGradient(index: number): string {
   ];
   return gradients[index % gradients.length];
 }
+const NONE_OPTION_VALUE = "__none__";
 
 function Modal(props: {
   title: string;
@@ -76,17 +77,10 @@ function Modal(props: {
           <div>
             <h3 className="text-lg font-semibold">{props.title}</h3>
             {props.description ? (
-              <p className="text-sm text-muted-foreground">
-                {props.description}
-              </p>
+              <p className="text-sm text-muted-foreground">{props.description}</p>
             ) : null}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={props.onClose}
-          >
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={props.onClose}>
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -101,15 +95,16 @@ export function CustomersPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "vip">("all");
+  const [page, setPage] = useState(1);
+  const limit = 20;
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null,
-  );
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [createForm, setCreateForm] = useState<CustomerForm>(emptyForm);
   const [editForm, setEditForm] = useState<CustomerForm>(emptyForm);
 
@@ -124,13 +119,47 @@ export function CustomersPage() {
     const params = new URLSearchParams(window.location.search);
     setSearchQuery(params.get("q") || "");
     setActiveFilter((params.get("filter") as "all" | "vip") || "all");
+    const nextPage = Number.parseInt(params.get("page") || "1", 10);
+    setPage(Number.isFinite(nextPage) && nextPage > 0 ? nextPage : 1);
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (debouncedSearchQuery) url.searchParams.set("q", debouncedSearchQuery);
+    else url.searchParams.delete("q");
+    if (activeFilter !== "all") url.searchParams.set("filter", activeFilter);
+    else url.searchParams.delete("filter");
+    if (page > 1) url.searchParams.set("page", String(page));
+    else url.searchParams.delete("page");
+    window.history.replaceState({}, "", url);
+  }, [activeFilter, debouncedSearchQuery, page]);
+
   const customersQuery = useQuery({
-    queryKey: queryKeys.customers,
-    queryFn: () => customersService.list(),
+    queryKey: queryKeys.customersList({
+      page,
+      limit,
+      search: debouncedSearchQuery,
+      filter: activeFilter,
+    }),
+    queryFn: () =>
+      customersService.listPaginated({
+        page,
+        limit,
+        search: debouncedSearchQuery,
+        vipOnly: activeFilter === "vip",
+      }),
+    placeholderData: (previous) => previous,
   });
-  const customers = customersQuery.data ?? [];
+  const customers = customersQuery.data?.data ?? [];
+  const total = customersQuery.data?.total ?? 0;
+  const totalPages = customersQuery.data?.totalPages ?? 1;
   const loading = customersQuery.isLoading;
 
   useEffect(() => {
@@ -138,32 +167,6 @@ export function CustomersPage() {
       setError(customersQuery.error.message);
     }
   }, [customersQuery.error]);
-
-  function updateUrlParams(nextQ: string, nextFilter: "all" | "vip") {
-    const url = new URL(window.location.href);
-    if (nextQ) url.searchParams.set("q", nextQ);
-    else url.searchParams.delete("q");
-    if (nextFilter !== "all") url.searchParams.set("filter", nextFilter);
-    else url.searchParams.delete("filter");
-    window.history.replaceState({}, "", url);
-  }
-
-  const filteredCustomers = useMemo(() => {
-    let result = customers;
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (item) =>
-          item.name.toLowerCase().includes(query) ||
-          (item.phone ?? "").toLowerCase().includes(query) ||
-          (item.email ?? "").toLowerCase().includes(query),
-      );
-    }
-    if (activeFilter === "vip") {
-      result = result.filter((item) => !!item.membershipTier);
-    }
-    return result;
-  }, [activeFilter, customers, searchQuery]);
 
   function validate(form: CustomerForm): boolean {
     let valid = true;
@@ -183,22 +186,33 @@ export function CustomersPage() {
   const createCustomerMutation = useMutation({
     mutationFn: (payload: CustomerPayload) => customersService.create(payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.customers });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.customers,
+      });
     },
   });
 
   const updateCustomerMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: CustomerPayload }) =>
-      customersService.update(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: CustomerPayload;
+    }) => customersService.update(id, payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.customers });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.customers,
+      });
     },
   });
 
   const deleteCustomerMutation = useMutation({
     mutationFn: (id: number) => customersService.remove(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.customers });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.customers,
+      });
     },
   });
 
@@ -207,9 +221,121 @@ export function CustomersPage() {
     updateCustomerMutation.isPending ||
     deleteCustomerMutation.isPending;
 
-  async function createCustomer(
-    event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>,
-  ) {
+  const customerColumns: Array<ColumnDef<Customer>> = [
+    {
+      id: "avatar",
+      header: "Avatar",
+      cell: ({ row }) => {
+        const index = row.index;
+        return (
+          <div
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br text-sm font-bold text-white shadow-sm",
+              getAvatarGradient(index),
+            )}
+          >
+            {row.original.name
+              .split(" ")
+              .map((part) => part[0])
+              .join("")
+              .slice(0, 2)}
+          </div>
+        );
+      },
+    },
+    {
+      id: "customer",
+      header: "Khách hàng",
+      cell: ({ row }) => (
+        <div>
+          <div className="font-medium text-gray-900">{row.original.name}</div>
+          <div className="text-xs text-gray-500">{row.original.email || ""}</div>
+        </div>
+      ),
+    },
+    {
+      id: "contact",
+      header: "Liên hệ",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2 text-gray-600">
+          <Phone className="h-3.5 w-3.5" />
+          <span>{row.original.phone || "N/A"}</span>
+        </div>
+      ),
+    },
+    {
+      id: "tier",
+      header: "Hạng",
+      cell: ({ row }) =>
+        row.original.membershipTier ? (
+          <div className="inline-flex items-center gap-1 rounded-full bg-linear-to-r from-amber-400 to-orange-500 px-2.5 py-0.5 text-xs font-medium text-white">
+            <Crown className="h-3 w-3" />
+            <span>{row.original.membershipTier.name}</span>
+          </div>
+        ) : (
+          <span className="text-xs text-gray-400">-</span>
+        ),
+    },
+    {
+      id: "location",
+      header: "Địa chỉ",
+      cell: ({ row }) => (
+        <div className="flex max-w-[200px] items-center gap-1.5 truncate text-gray-600">
+          {row.original.location ? (
+            <>
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+              <span className="truncate">{row.original.location}</span>
+            </>
+          ) : (
+            <span className="text-xs text-gray-400">-</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: "spent",
+      header: "Chi tiêu",
+      meta: { className: "text-right", headerClassName: "text-right" },
+      cell: ({ row }) => (
+        <div className="font-medium text-gray-900" style={{ fontVariantNumeric: "tabular-nums" }}>
+          {formatCurrency(row.original.totalSpent || 0)}đ
+        </div>
+      ),
+    },
+    {
+      id: "gender",
+      header: "Giới tính",
+      cell: ({ row }) =>
+        row.original.gender ? (
+          <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+            {row.original.gender === "male"
+              ? "Nam"
+              : row.original.gender === "female"
+                ? "Nữ"
+                : "Khác"}
+          </span>
+        ) : (
+          <span className="text-xs text-gray-400">-</span>
+        ),
+    },
+    {
+      id: "actions",
+      header: "Thao tác",
+      meta: { className: "text-right", headerClassName: "text-right" },
+      cell: ({ row }) => (
+        <div className="space-x-2">
+          <Button variant="outline" size="sm" onClick={() => openEditDialog(row.original)}>
+            <Pencil className="mr-1 h-3.5 w-3.5" /> Sửa
+          </Button>
+          <Button variant="destructive" size="sm" onClick={() => openDeleteDialog(row.original)}>
+            <Trash2 className="mr-1 h-3.5 w-3.5" /> Xóa
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  async function createCustomer(event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
     if (!validate(createForm)) return;
     setError(null);
@@ -227,16 +353,12 @@ export function CustomersPage() {
       setCreateForm(emptyForm);
     } catch (caughtError) {
       const message =
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Không thể tạo khách hàng";
+        caughtError instanceof Error ? caughtError.message : "Không thể tạo khách hàng";
       setError(message);
     }
   }
 
-  async function updateCustomer(
-    event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>,
-  ) {
+  async function updateCustomer(event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
     if (!selectedCustomer) return;
     if (!validate(editForm)) return;
@@ -258,9 +380,7 @@ export function CustomersPage() {
       setSelectedCustomer(null);
     } catch (caughtError) {
       const message =
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Không thể cập nhật khách hàng";
+        caughtError instanceof Error ? caughtError.message : "Không thể cập nhật khách hàng";
       setError(message);
     }
   }
@@ -274,9 +394,7 @@ export function CustomersPage() {
       setSelectedCustomer(null);
     } catch (caughtError) {
       const message =
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Không thể xóa khách hàng";
+        caughtError instanceof Error ? caughtError.message : "Không thể xóa khách hàng";
       setError(message);
     }
   }
@@ -306,17 +424,10 @@ export function CustomersPage() {
       <div className="rounded-2xl border border-border/70 bg-linear-to-br from-white to-secondary/30 p-5 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-              Khách hàng
-            </h1>
-            <p className="mt-1 text-gray-500">
-              Quản lý thông tin khách hàng của bạn
-            </p>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Khách hàng</h1>
+            <p className="mt-1 text-gray-500">Quản lý thông tin khách hàng của bạn</p>
           </div>
-          <Button
-            className="shadow-lg shadow-purple-200"
-            onClick={() => setIsCreateOpen(true)}
-          >
+          <Button className="shadow-lg shadow-purple-200" onClick={() => setIsCreateOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Tạo mới khách hàng
           </Button>
@@ -338,9 +449,8 @@ export function CustomersPage() {
             className="rounded-xl pr-10 pl-10"
             value={searchQuery}
             onChange={(event) => {
-              const value = event.target.value;
-              setSearchQuery(value);
-              updateUrlParams(value, activeFilter);
+              setSearchQuery(event.target.value);
+              setPage(1);
             }}
           />
           {searchQuery ? (
@@ -351,7 +461,7 @@ export function CustomersPage() {
               className="absolute top-1/2 right-3 h-5 w-5 -translate-y-1/2 rounded-full bg-gray-100 hover:bg-gray-200"
               onClick={() => {
                 setSearchQuery("");
-                updateUrlParams("", activeFilter);
+                setPage(1);
               }}
             >
               <X className="h-3 w-3 text-gray-500" />
@@ -365,7 +475,7 @@ export function CustomersPage() {
             className="h-auto rounded-xl px-4 py-2 text-sm"
             onClick={() => {
               setActiveFilter("all");
-              updateUrlParams(searchQuery, "all");
+              setPage(1);
             }}
           >
             Tất cả
@@ -375,7 +485,7 @@ export function CustomersPage() {
             className="flex h-auto items-center gap-1.5 rounded-xl px-4 py-2 text-sm"
             onClick={() => {
               setActiveFilter("vip");
-              updateUrlParams(searchQuery, "vip");
+              setPage(1);
             }}
           >
             <Crown
@@ -390,146 +500,88 @@ export function CustomersPage() {
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border/70 bg-white">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-gray-100 bg-gray-50/50">
-              <tr>
-                <th className="h-12 w-[80px] px-4 text-left font-medium text-gray-500">
-                  Avatar
-                </th>
-                <th className="h-12 px-4 text-left font-medium text-gray-500">
-                  Khách hàng
-                </th>
-                <th className="h-12 px-4 text-left font-medium text-gray-500">
-                  Liên hệ
-                </th>
-                <th className="h-12 px-4 text-left font-medium text-gray-500">
-                  Hạng
-                </th>
-                <th className="h-12 px-4 text-left font-medium text-gray-500">
-                  Địa chỉ
-                </th>
-                <th className="h-12 px-4 text-left font-medium text-gray-500">
-                  Chi tiêu
-                </th>
-                <th className="h-12 px-4 text-left font-medium text-gray-500">
-                  Giới tính
-                </th>
-                <th className="h-12 px-4 text-right font-medium text-gray-500">
-                  Thao tác
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {loading
-                ? Array.from({ length: 6 }).map((_, index) => (
-                    <tr key={index}>
-                      <td className="p-4" colSpan={8}>
-                        <div className="h-8 animate-pulse rounded bg-muted/40" />
-                      </td>
-                    </tr>
-                  ))
-                : filteredCustomers.map((customer, index) => (
-                    <tr
-                      key={customer.id}
-                      className="group transition-colors hover:bg-gray-50/50"
-                    >
-                      <td className="p-4 align-middle">
-                        <div
-                          className={cn(
-                            "flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br text-sm font-bold text-white shadow-sm",
-                            getAvatarGradient(index),
-                          )}
-                        >
-                          {customer.name
-                            .split(" ")
-                            .map((part) => part[0])
-                            .join("")
-                            .slice(0, 2)}
-                        </div>
-                      </td>
-                      <td className="p-4 align-middle">
-                        <div className="font-medium text-gray-900">
-                          {customer.name}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {customer.email || ""}
-                        </div>
-                      </td>
-                      <td className="p-4 align-middle">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Phone className="h-3.5 w-3.5" />
-                          <span>{customer.phone || "N/A"}</span>
-                        </div>
-                      </td>
-                      <td className="p-4 align-middle">
-                        {customer.membershipTier ? (
-                          <div className="inline-flex items-center gap-1 rounded-full bg-linear-to-r from-amber-400 to-orange-500 px-2.5 py-0.5 text-xs font-medium text-white">
-                            <Crown className="h-3 w-3" />
-                            <span>{customer.membershipTier.name}</span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-400">-</span>
-                        )}
-                      </td>
-                      <td className="p-4 align-middle">
-                        <div className="flex max-w-[200px] items-center gap-1.5 truncate text-gray-600">
-                          {customer.location ? (
-                            <>
-                              <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" />
-                              <span className="truncate">
-                                {customer.location}
-                              </span>
-                            </>
-                          ) : (
-                            <span className="text-xs text-gray-400">-</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4 align-middle">
-                        <div
-                          className="font-medium text-gray-900"
-                          style={{ fontVariantNumeric: "tabular-nums" }}
-                        >
-                          {formatCurrency(customer.totalSpent || 0)}đ
-                        </div>
-                      </td>
-                      <td className="p-4 align-middle">
-                        {customer.gender ? (
-                          <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                            {customer.gender === "male"
-                              ? "Nam"
-                              : customer.gender === "female"
-                                ? "Nữ"
-                                : "Khác"}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-gray-400">-</span>
-                        )}
-                      </td>
-                      <td className="space-x-2 p-4 text-right align-middle">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditDialog(customer)}
-                        >
-                          <Pencil className="mr-1 h-3.5 w-3.5" /> Sửa
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => openDeleteDialog(customer)}
-                        >
-                          <Trash2 className="mr-1 h-3.5 w-3.5" /> Xóa
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-            </tbody>
-          </table>
+        <div className="hidden overflow-x-auto md:block">
+          <DataTable data={customers} columns={customerColumns} loading={loading} />
         </div>
 
-        {!loading && filteredCustomers.length === 0 ? (
+        <div className="space-y-3 p-3 md:hidden">
+          {loading
+            ? Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="h-28 animate-pulse rounded-xl bg-muted/40" />
+              ))
+            : customers.map((customer, index) => (
+                <div
+                  key={customer.id}
+                  className="space-y-3 rounded-xl border border-border/70 bg-card p-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div
+                        className={cn(
+                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br text-sm font-bold text-white shadow-sm",
+                          getAvatarGradient(index),
+                        )}
+                      >
+                        {customer.name
+                          .split(" ")
+                          .map((part) => part[0])
+                          .join("")
+                          .slice(0, 2)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-foreground">{customer.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {customer.email || "Không có email"}
+                        </p>
+                      </div>
+                    </div>
+                    {customer.membershipTier ? (
+                      <div className="inline-flex shrink-0 items-center gap-1 rounded-full bg-linear-to-r from-amber-400 to-orange-500 px-2 py-0.5 text-xs font-medium text-white">
+                        <Crown className="h-3 w-3" />
+                        <span>{customer.membershipTier.name}</span>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <Phone className="h-3.5 w-3.5" />
+                      <span className="truncate">{customer.phone || "N/A"}</span>
+                    </div>
+                    <div className="truncate text-right font-medium text-foreground">
+                      {formatCurrency(customer.totalSpent || 0)}đ
+                    </div>
+                    <div className="col-span-2 flex items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{customer.location || "-"}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => openEditDialog(customer)}
+                    >
+                      <Pencil className="mr-1 h-3.5 w-3.5" />
+                      Sửa
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => openDeleteDialog(customer)}
+                    >
+                      <Trash2 className="mr-1 h-3.5 w-3.5" />
+                      Xóa
+                    </Button>
+                  </div>
+                </div>
+              ))}
+        </div>
+
+        {!loading && customers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
             <div className="mb-3 rounded-full bg-gray-50 p-4">
               <Search className="h-6 w-6 text-gray-400" />
@@ -543,7 +595,7 @@ export function CustomersPage() {
                   onClick={() => {
                     setSearchQuery("");
                     setActiveFilter("all");
-                    updateUrlParams("", "all");
+                    setPage(1);
                   }}
                 >
                   Xóa bộ lọc
@@ -552,6 +604,35 @@ export function CustomersPage() {
             ) : (
               <p>Chưa có khách hàng nào. Hãy thêm khách hàng đầu tiên!</p>
             )}
+          </div>
+        ) : null}
+
+        {totalPages > 1 ? (
+          <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3 text-sm">
+            <span className="text-muted-foreground">
+              Hiển thị {customers.length} / {total} khách hàng
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+              >
+                Trước
+              </Button>
+              <span className="min-w-20 text-center text-muted-foreground">
+                Trang {page}/{totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages}
+                onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              >
+                Sau
+              </Button>
+            </div>
           </div>
         ) : null}
       </div>
@@ -577,9 +658,7 @@ export function CustomersPage() {
               }}
               placeholder="Nguyễn Văn A"
             />
-            {nameError ? (
-              <span className="text-xs text-red-500">{nameError}</span>
-            ) : null}
+            {nameError ? <span className="text-xs text-red-500">{nameError}</span> : null}
           </div>
 
           <div className="grid gap-2">
@@ -597,9 +676,7 @@ export function CustomersPage() {
               }}
               placeholder="0901234567"
             />
-            {phoneError ? (
-              <span className="text-xs text-red-500">{phoneError}</span>
-            ) : null}
+            {phoneError ? <span className="text-xs text-red-500">{phoneError}</span> : null}
           </div>
 
           <div className="grid gap-2">
@@ -620,22 +697,28 @@ export function CustomersPage() {
 
           <div className="grid gap-2">
             <Label htmlFor="create-gender">Giới tính</Label>
-            <select
-              id="create-gender"
-              className="h-11 rounded-lg border border-input bg-gray-50/50 px-3 text-sm"
-              value={createForm.gender}
-              onChange={(event) =>
+            <Select
+              value={createForm.gender || NONE_OPTION_VALUE}
+              onValueChange={(value) =>
                 setCreateForm((prev) => ({
                   ...prev,
-                  gender: event.target.value as CustomerForm["gender"],
+                  gender: value === NONE_OPTION_VALUE ? "" : (value as CustomerForm["gender"]),
                 }))
               }
             >
-              <option value="">Chọn giới tính</option>
-              <option value="male">Nam</option>
-              <option value="female">Nữ</option>
-              <option value="other">Khác</option>
-            </select>
+              <SelectTrigger
+                id="create-gender"
+                className="h-11 rounded-lg border border-input bg-gray-50/50 px-3 text-sm"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE_OPTION_VALUE}>Chọn giới tính</SelectItem>
+                <SelectItem value="male">Nam</SelectItem>
+                <SelectItem value="female">Nữ</SelectItem>
+                <SelectItem value="other">Khác</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid gap-2">
@@ -669,11 +752,7 @@ export function CustomersPage() {
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsCreateOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
               Hủy
             </Button>
             <Button type="submit" disabled={saving}>
@@ -696,13 +775,14 @@ export function CustomersPage() {
               id="edit-name"
               value={editForm.name}
               onChange={(event) => {
-                setEditForm((prev) => ({ ...prev, name: event.target.value }));
+                setEditForm((prev) => ({
+                  ...prev,
+                  name: event.target.value,
+                }));
                 setNameError("");
               }}
             />
-            {nameError ? (
-              <span className="text-xs text-red-500">{nameError}</span>
-            ) : null}
+            {nameError ? <span className="text-xs text-red-500">{nameError}</span> : null}
           </div>
 
           <div className="grid gap-2">
@@ -712,13 +792,14 @@ export function CustomersPage() {
               type="tel"
               value={editForm.phone}
               onChange={(event) => {
-                setEditForm((prev) => ({ ...prev, phone: event.target.value }));
+                setEditForm((prev) => ({
+                  ...prev,
+                  phone: event.target.value,
+                }));
                 setPhoneError("");
               }}
             />
-            {phoneError ? (
-              <span className="text-xs text-red-500">{phoneError}</span>
-            ) : null}
+            {phoneError ? <span className="text-xs text-red-500">{phoneError}</span> : null}
           </div>
 
           <div className="grid gap-2">
@@ -728,29 +809,38 @@ export function CustomersPage() {
               type="email"
               value={editForm.email}
               onChange={(event) =>
-                setEditForm((prev) => ({ ...prev, email: event.target.value }))
+                setEditForm((prev) => ({
+                  ...prev,
+                  email: event.target.value,
+                }))
               }
             />
           </div>
 
           <div className="grid gap-2">
             <Label htmlFor="edit-gender">Giới tính</Label>
-            <select
-              id="edit-gender"
-              className="h-11 rounded-lg border border-input bg-gray-50/50 px-3 text-sm"
-              value={editForm.gender}
-              onChange={(event) =>
+            <Select
+              value={editForm.gender || NONE_OPTION_VALUE}
+              onValueChange={(value) =>
                 setEditForm((prev) => ({
                   ...prev,
-                  gender: event.target.value as CustomerForm["gender"],
+                  gender: value === NONE_OPTION_VALUE ? "" : (value as CustomerForm["gender"]),
                 }))
               }
             >
-              <option value="">Chọn giới tính</option>
-              <option value="male">Nam</option>
-              <option value="female">Nữ</option>
-              <option value="other">Khác</option>
-            </select>
+              <SelectTrigger
+                id="edit-gender"
+                className="h-11 rounded-lg border border-input bg-gray-50/50 px-3 text-sm"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE_OPTION_VALUE}>Chọn giới tính</SelectItem>
+                <SelectItem value="male">Nam</SelectItem>
+                <SelectItem value="female">Nữ</SelectItem>
+                <SelectItem value="other">Khác</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid gap-2">
@@ -773,17 +863,16 @@ export function CustomersPage() {
               id="edit-notes"
               value={editForm.notes}
               onChange={(event) =>
-                setEditForm((prev) => ({ ...prev, notes: event.target.value }))
+                setEditForm((prev) => ({
+                  ...prev,
+                  notes: event.target.value,
+                }))
               }
             />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsEditOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
               Hủy
             </Button>
             <Button type="submit" disabled={saving}>
@@ -799,16 +888,11 @@ export function CustomersPage() {
         title="Xác nhận xóa khách hàng?"
       >
         <p className="text-sm text-muted-foreground">
-          Bạn có chắc chắn muốn xóa khách hàng{" "}
-          <strong>{selectedCustomer?.name}</strong>? Hành động này không thể
-          hoàn tác.
+          Bạn có chắc chắn muốn xóa khách hàng <strong>{selectedCustomer?.name}</strong>? Hành động
+          này không thể hoàn tác.
         </p>
         <div className="mt-4 flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsDeleteOpen(false)}
-          >
+          <Button type="button" variant="outline" onClick={() => setIsDeleteOpen(false)}>
             Hủy bỏ
           </Button>
           <Button

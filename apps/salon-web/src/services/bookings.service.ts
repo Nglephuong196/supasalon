@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api";
 import type { Customer } from "./customers.service";
-import type { ServiceItem } from "./services.service";
 import type { EmployeeMember } from "./employees.service";
+import type { ServiceItem } from "./services.service";
 
 export type BookingStatus = "pending" | "confirmed" | "checkin" | "completed" | "cancelled";
 

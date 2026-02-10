@@ -1,29 +1,29 @@
 <script lang="ts">
 import { page } from "$app/stores";
-import { cn } from "$lib/utils";
 import { Button } from "$lib/components/ui/button";
 import {
-  checkPermission,
-  RESOURCES,
   ACTIONS,
-  type Permissions,
-  type Resource,
   type Action,
+  type Permissions,
+  RESOURCES,
+  type Resource,
+  checkPermission,
 } from "$lib/permissions";
+import { cn } from "$lib/utils";
 import {
-  LayoutDashboard,
   CalendarDays,
-  Users,
-  Receipt,
-  UserCog,
-  Settings,
-  Scissors,
-  PanelLeftClose,
-  PanelLeft,
-  Package,
   Command,
+  LayoutDashboard,
   LifeBuoy,
   LogOut,
+  Package,
+  PanelLeft,
+  PanelLeftClose,
+  Receipt,
+  Scissors,
+  Settings,
+  UserCog,
+  Users,
 } from "@lucide/svelte";
 
 interface NavItem {

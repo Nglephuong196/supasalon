@@ -1,8 +1,8 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
 import { CalendarPlus } from "lucide-react-native";
-import { colors, spacing, fontSize, fontWeight, borderRadius } from "../../../lib/theme";
+import React from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { borderRadius, colors, fontSize, fontWeight, spacing } from "../../../lib/theme";
 
 export default function CreateBookingScreen() {
   return (

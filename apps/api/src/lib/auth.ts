@@ -1,7 +1,7 @@
+import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { organization, bearer } from "better-auth/plugins";
-import { expo } from "@better-auth/expo";
+import { bearer, organization } from "better-auth/plugins";
 import type { Database } from "../db";
 import * as schema from "../db/schema";
 

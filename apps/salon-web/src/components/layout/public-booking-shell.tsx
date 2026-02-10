@@ -6,7 +6,7 @@ export function PublicBookingShell({
   return (
     <div className="min-h-screen">
       <header className="glass-topbar border-b border-border/70 px-4 py-3">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2">
           <div>
             <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
               SupaSalon

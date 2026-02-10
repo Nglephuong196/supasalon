@@ -1,8 +1,8 @@
-import { fail, redirect } from "@sveltejs/kit";
-import type { PageServerLoad, Actions } from "./$types";
-import { RESOURCES, ACTIONS } from "@repo/constants";
-import { checkPermission, getResourcePermissions } from "$lib/permissions";
 import { PUBLIC_API_URL } from "$env/static/public";
+import { checkPermission, getResourcePermissions } from "$lib/permissions";
+import { ACTIONS, RESOURCES } from "@repo/constants";
+import { fail, redirect } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ fetch, cookies, parent }) => {
   const organizationId = cookies.get("organizationId");

@@ -1,14 +1,14 @@
-import { eq, and, desc, gte, lte } from "drizzle-orm";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
 import type { Database } from "../db";
 import {
-  invoices,
-  invoiceItems,
-  invoiceItemStaff,
-  bookings,
-  customers,
   type NewInvoice,
   type NewInvoiceItem,
   type NewInvoiceItemStaff,
+  bookings,
+  customers,
+  invoiceItemStaff,
+  invoiceItems,
+  invoices,
 } from "../db/schema";
 
 export type CreateInvoiceRequest = NewInvoice & {

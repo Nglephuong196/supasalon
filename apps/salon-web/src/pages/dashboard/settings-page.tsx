@@ -1,17 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Save, Shield, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { queryKeys } from "@/lib/query-client";
 import {
-  permissionGroups,
-  settingsService,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { queryKeys } from "@/lib/query-client";
+import type { EmployeeMember } from "@/services/employees.service";
+import {
   type MembershipTier,
   type PermissionMap,
+  permissionGroups,
+  settingsService,
 } from "@/services/settings.service";
-import type { EmployeeMember } from "@/services/employees.service";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
+import { Plus, Save, Shield, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 function Modal(props: {
   title: string;
@@ -58,6 +67,7 @@ const emptyRule = {
   commissionType: "percent" as "percent" | "fixed",
   commissionValue: "0",
 };
+const NONE_OPTION_VALUE = "__none__";
 
 export function SettingsPage() {
   const queryClient = useQueryClient();
@@ -88,59 +98,85 @@ export function SettingsPage() {
   const createTierMutation = useMutation({
     mutationFn: (payload: Omit<MembershipTier, "id">) => settingsService.createTier(payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.settingsBundle });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.settingsBundle,
+      });
     },
   });
 
   const updateTierMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: Partial<Omit<MembershipTier, "id">> }) =>
-      settingsService.updateTier(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: Partial<Omit<MembershipTier, "id">>;
+    }) => settingsService.updateTier(id, payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.settingsBundle });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.settingsBundle,
+      });
     },
   });
 
   const deleteTierMutation = useMutation({
     mutationFn: (id: number) => settingsService.deleteTier(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.settingsBundle });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.settingsBundle,
+      });
     },
   });
 
   const updatePermissionsMutation = useMutation({
-    mutationFn: ({ memberId, permissions }: { memberId: string; permissions: PermissionMap }) =>
-      settingsService.updateMemberPermissions(memberId, permissions),
+    mutationFn: ({
+      memberId,
+      permissions,
+    }: {
+      memberId: string;
+      permissions: PermissionMap;
+    }) => settingsService.updateMemberPermissions(memberId, permissions),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.settingsBundle });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.settingsBundle,
+      });
     },
   });
 
   const upsertRuleMutation = useMutation({
-    mutationFn: (
-      payload: {
-        staffId: string;
-        itemType: "service" | "product";
-        itemId: number;
-        commissionType: "percent" | "fixed";
-        commissionValue: number;
-      },
-    ) => settingsService.upsertCommissionRule(payload),
+    mutationFn: (payload: {
+      staffId: string;
+      itemType: "service" | "product";
+      itemId: number;
+      commissionType: "percent" | "fixed";
+      commissionValue: number;
+    }) => settingsService.upsertCommissionRule(payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.settingsBundle });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.settingsBundle,
+      });
     },
   });
 
   const deleteRuleMutation = useMutation({
     mutationFn: (id: number) => settingsService.deleteCommissionRule(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.settingsBundle });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.settingsBundle,
+      });
     },
   });
 
   const tiers = bundleQuery.data?.tiers ?? [];
   const members = bundleQuery.data?.members ?? [];
-  const services = (bundleQuery.data?.services ?? []).map((item) => ({ id: item.id, name: item.name }));
-  const products = (bundleQuery.data?.products ?? []).map((item) => ({ id: item.id, name: item.name }));
+  const services = (bundleQuery.data?.services ?? []).map((item) => ({
+    id: item.id,
+    name: item.name,
+  }));
+  const products = (bundleQuery.data?.products ?? []).map((item) => ({
+    id: item.id,
+    name: item.name,
+  }));
   const rules = bundleQuery.data?.commissionRules ?? [];
 
   const loading = bundleQuery.isLoading;
@@ -201,7 +237,10 @@ export function SettingsPage() {
     setActionError(null);
     try {
       if (tierEditing) {
-        await updateTierMutation.mutateAsync({ id: tierEditing.id, payload });
+        await updateTierMutation.mutateAsync({
+          id: tierEditing.id,
+          payload,
+        });
       } else {
         await createTierMutation.mutateAsync(payload);
       }
@@ -239,7 +278,10 @@ export function SettingsPage() {
     const current = new Set(permissionDraft[resource] || []);
     if (enabled) current.add(action);
     else current.delete(action);
-    setPermissionDraft((prev) => ({ ...prev, [resource]: Array.from(current) }));
+    setPermissionDraft((prev) => ({
+      ...prev,
+      [resource]: Array.from(current),
+    }));
   }
 
   async function savePermissions() {
@@ -295,6 +337,158 @@ export function SettingsPage() {
     return ruleForm.itemType === "service" ? services : products;
   }, [products, ruleForm.itemType, services]);
 
+  const tierColumns: Array<ColumnDef<MembershipTier>> = [
+    {
+      accessorKey: "name",
+      header: "Tên",
+    },
+    {
+      id: "minSpending",
+      header: "Chi tiêu tối thiểu",
+      meta: { className: "text-right", headerClassName: "text-right" },
+      cell: ({ row }) => `${row.original.minSpending.toLocaleString("vi-VN")}đ`,
+    },
+    {
+      id: "discountPercent",
+      header: "Ưu đãi",
+      meta: { className: "text-right", headerClassName: "text-right" },
+      cell: ({ row }) => `${row.original.discountPercent}%`,
+    },
+    {
+      id: "actions",
+      header: "Thao tác",
+      meta: { className: "text-right", headerClassName: "text-right" },
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-1">
+          <Button variant="outline" size="sm" onClick={() => openEditTier(row.original)}>
+            Sửa
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setTierDeleteId(row.original.id)}
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  const memberPermissionColumns: Array<ColumnDef<EmployeeMember>> = [
+    {
+      id: "member",
+      header: "Thành viên",
+      cell: ({ row }) => row.original.user?.name || row.original.user?.email || row.original.id,
+    },
+    {
+      accessorKey: "role",
+      header: "Vai trò",
+    },
+    {
+      id: "count",
+      header: "Số quyền",
+      cell: ({ row }) =>
+        Object.values(row.original.permissions?.[0]?.permissions || {}).reduce(
+          (sum, actions) => sum + actions.length,
+          0,
+        ),
+    },
+    {
+      id: "actions",
+      header: "Thao tác",
+      meta: { className: "text-right", headerClassName: "text-right" },
+      cell: ({ row }) => (
+        <Button variant="outline" size="sm" onClick={() => openPermissions(row.original)}>
+          <Shield className="mr-2 h-4 w-4" />
+          Phân quyền
+        </Button>
+      ),
+    },
+  ];
+
+  const ruleColumns: Array<ColumnDef<(typeof rules)[number]>> = [
+    {
+      id: "member",
+      header: "Nhân viên",
+      cell: ({ row }) => {
+        const member = members.find((item) => item.id === row.original.staffId);
+        return member?.user?.name || member?.user?.email || row.original.staffId;
+      },
+    },
+    {
+      id: "item",
+      header: "Mục",
+      cell: ({ row }) => {
+        const itemName =
+          row.original.itemType === "service"
+            ? services.find((item) => item.id === row.original.itemId)?.name
+            : products.find((item) => item.id === row.original.itemId)?.name;
+        return `${row.original.itemType}: ${itemName || `#${row.original.itemId}`}`;
+      },
+    },
+    {
+      id: "commission",
+      header: "Hoa hồng",
+      meta: { className: "text-right", headerClassName: "text-right" },
+      cell: ({ row }) => (
+        <>
+          {row.original.commissionValue}
+          {row.original.commissionType === "percent" ? "%" : "đ"}
+        </>
+      ),
+    },
+    {
+      id: "actions",
+      header: "",
+      meta: { className: "text-right", headerClassName: "text-right" },
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => void deleteRule(row.original.id)}
+        >
+          <Trash2 className="h-4 w-4 text-red-500" />
+        </Button>
+      ),
+    },
+  ];
+
+  const permissionMatrixColumns: Array<ColumnDef<(typeof permissionGroups)[number]>> = [
+    {
+      id: "resource",
+      header: "Resource",
+      cell: ({ row }) => <span className="font-medium">{row.original.label}</span>,
+      meta: { className: "align-top" },
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex flex-wrap gap-3">
+          {row.original.actions.map((action) => (
+            <label
+              key={`${row.original.resource}-${action}`}
+              className="inline-flex items-center gap-2 text-xs"
+            >
+              <input
+                type="checkbox"
+                checked={hasPermission(row.original.resource, action)}
+                onChange={(event) =>
+                  togglePermission(row.original.resource, action, event.target.checked)
+                }
+              />
+              {action}
+            </label>
+          ))}
+        </div>
+      ),
+      meta: { className: "align-top" },
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-2xl border border-border/70 bg-linear-to-br from-white to-secondary/30 p-5 sm:p-6">
@@ -347,42 +541,7 @@ export function SettingsPage() {
             </Button>
           </div>
           <div className="overflow-auto rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/40">
-                <tr>
-                  <th className="px-3 py-2 text-left">Tên</th>
-                  <th className="px-3 py-2 text-right">Chi tiêu tối thiểu</th>
-                  <th className="px-3 py-2 text-right">Ưu đãi</th>
-                  <th className="px-3 py-2 text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tiers.map((tier) => (
-                  <tr key={tier.id} className="border-t">
-                    <td className="px-3 py-2">{tier.name}</td>
-                    <td className="px-3 py-2 text-right">
-                      {tier.minSpending.toLocaleString("vi-VN")}đ
-                    </td>
-                    <td className="px-3 py-2 text-right">{tier.discountPercent}%</td>
-                    <td className="px-3 py-2 text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="outline" size="sm" onClick={() => openEditTier(tier)}>
-                          Sửa
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => setTierDeleteId(tier.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DataTable data={tiers} columns={tierColumns} />
           </div>
         </div>
       ) : null}
@@ -391,39 +550,7 @@ export function SettingsPage() {
         <div className="rounded-xl border bg-white p-4">
           <h2 className="mb-4 font-semibold">Quyền theo thành viên</h2>
           <div className="overflow-auto rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/40">
-                <tr>
-                  <th className="px-3 py-2 text-left">Thành viên</th>
-                  <th className="px-3 py-2 text-left">Vai trò</th>
-                  <th className="px-3 py-2 text-left">Số quyền</th>
-                  <th className="px-3 py-2 text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {members.map((member) => {
-                  const count = Object.values(member.permissions?.[0]?.permissions || {}).reduce(
-                    (sum, actions) => sum + actions.length,
-                    0,
-                  );
-                  return (
-                    <tr key={member.id} className="border-t">
-                      <td className="px-3 py-2">
-                        {member.user?.name || member.user?.email || member.id}
-                      </td>
-                      <td className="px-3 py-2">{member.role}</td>
-                      <td className="px-3 py-2">{count}</td>
-                      <td className="px-3 py-2 text-right">
-                        <Button variant="outline" size="sm" onClick={() => openPermissions(member)}>
-                          <Shield className="mr-2 h-4 w-4" />
-                          Phân quyền
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <DataTable data={members} columns={memberPermissionColumns} />
           </div>
         </div>
       ) : null}
@@ -435,73 +562,95 @@ export function SettingsPage() {
             <form className="grid gap-3" onSubmit={createCommissionRule}>
               <div className="grid gap-2">
                 <Label>Nhân viên</Label>
-                <select
-                  className="h-10 rounded-md border px-3 text-sm"
-                  value={ruleForm.staffId}
-                  onChange={(event) =>
-                    setRuleForm((prev) => ({ ...prev, staffId: event.target.value }))
+                <Select
+                  value={ruleForm.staffId || NONE_OPTION_VALUE}
+                  onValueChange={(value) =>
+                    setRuleForm((prev) => ({
+                      ...prev,
+                      staffId: value === NONE_OPTION_VALUE ? "" : value,
+                    }))
                   }
                 >
-                  <option value="">Chọn nhân viên</option>
-                  {members.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.user?.name || member.user?.email || member.id}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE_OPTION_VALUE}>Chọn nhân viên</SelectItem>
+                    {members.map((member) => (
+                      <SelectItem key={member.id} value={String(member.id)}>
+                        {member.user?.name || member.user?.email || member.id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="grid gap-2">
                   <Label>Loại mục</Label>
-                  <select
-                    className="h-10 rounded-md border px-3 text-sm"
+                  <Select
                     value={ruleForm.itemType}
-                    onChange={(event) =>
+                    onValueChange={(value) =>
                       setRuleForm((prev) => ({
                         ...prev,
-                        itemType: event.target.value as "service" | "product",
+                        itemType: value as "service" | "product",
                         itemId: "",
                       }))
                     }
                   >
-                    <option value="service">Dịch vụ</option>
-                    <option value="product">Sản phẩm</option>
-                  </select>
+                    <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="service">Dịch vụ</SelectItem>
+                      <SelectItem value="product">Sản phẩm</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label>Mục</Label>
-                  <select
-                    className="h-10 rounded-md border px-3 text-sm"
-                    value={ruleForm.itemId}
-                    onChange={(event) =>
-                      setRuleForm((prev) => ({ ...prev, itemId: event.target.value }))
+                  <Select
+                    value={ruleForm.itemId || NONE_OPTION_VALUE}
+                    onValueChange={(value) =>
+                      setRuleForm((prev) => ({
+                        ...prev,
+                        itemId: value === NONE_OPTION_VALUE ? "" : value,
+                      }))
                     }
                   >
-                    <option value="">Chọn mục</option>
-                    {itemOptions.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE_OPTION_VALUE}>Chọn mục</SelectItem>
+                      {itemOptions.map((item) => (
+                        <SelectItem key={item.id} value={String(item.id)}>
+                          {item.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="grid gap-2">
                   <Label>Loại hoa hồng</Label>
-                  <select
-                    className="h-10 rounded-md border px-3 text-sm"
+                  <Select
                     value={ruleForm.commissionType}
-                    onChange={(event) =>
+                    onValueChange={(value) =>
                       setRuleForm((prev) => ({
                         ...prev,
-                        commissionType: event.target.value as "percent" | "fixed",
+                        commissionType: value as "percent" | "fixed",
                       }))
                     }
                   >
-                    <option value="percent">Phần trăm</option>
-                    <option value="fixed">Cố định</option>
-                  </select>
+                    <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percent">Phần trăm</SelectItem>
+                      <SelectItem value="fixed">Cố định</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label>Giá trị</Label>
@@ -509,7 +658,10 @@ export function SettingsPage() {
                     type="number"
                     value={ruleForm.commissionValue}
                     onChange={(event) =>
-                      setRuleForm((prev) => ({ ...prev, commissionValue: event.target.value }))
+                      setRuleForm((prev) => ({
+                        ...prev,
+                        commissionValue: event.target.value,
+                      }))
                     }
                   />
                 </div>
@@ -526,49 +678,7 @@ export function SettingsPage() {
           <div className="rounded-xl border bg-white p-4">
             <h2 className="mb-4 font-semibold">Danh sách quy tắc</h2>
             <div className="max-h-[420px] overflow-auto rounded-lg border">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40">
-                  <tr>
-                    <th className="px-3 py-2 text-left">Nhân viên</th>
-                    <th className="px-3 py-2 text-left">Mục</th>
-                    <th className="px-3 py-2 text-right">Hoa hồng</th>
-                    <th className="px-3 py-2 text-right" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {rules.map((rule) => {
-                    const member = members.find((item) => item.id === rule.staffId);
-                    const itemName =
-                      rule.itemType === "service"
-                        ? services.find((item) => item.id === rule.itemId)?.name
-                        : products.find((item) => item.id === rule.itemId)?.name;
-                    return (
-                      <tr key={rule.id} className="border-t">
-                        <td className="px-3 py-2">
-                          {member?.user?.name || member?.user?.email || rule.staffId}
-                        </td>
-                        <td className="px-3 py-2">
-                          {rule.itemType}: {itemName || `#${rule.itemId}`}
-                        </td>
-                        <td className="px-3 py-2 text-right">
-                          {rule.commissionValue}
-                          {rule.commissionType === "percent" ? "%" : "đ"}
-                        </td>
-                        <td className="px-3 py-2 text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => void deleteRule(rule.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <DataTable data={rules} columns={ruleColumns} />
             </div>
           </div>
         </div>
@@ -584,7 +694,12 @@ export function SettingsPage() {
             <Label>Tên hạng</Label>
             <Input
               value={tierForm.name}
-              onChange={(event) => setTierForm((prev) => ({ ...prev, name: event.target.value }))}
+              onChange={(event) =>
+                setTierForm((prev) => ({
+                  ...prev,
+                  name: event.target.value,
+                }))
+              }
             />
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -594,7 +709,10 @@ export function SettingsPage() {
                 type="number"
                 value={tierForm.minSpending}
                 onChange={(event) =>
-                  setTierForm((prev) => ({ ...prev, minSpending: event.target.value }))
+                  setTierForm((prev) => ({
+                    ...prev,
+                    minSpending: event.target.value,
+                  }))
                 }
               />
             </div>
@@ -604,7 +722,10 @@ export function SettingsPage() {
                 type="number"
                 value={tierForm.discountPercent}
                 onChange={(event) =>
-                  setTierForm((prev) => ({ ...prev, discountPercent: event.target.value }))
+                  setTierForm((prev) => ({
+                    ...prev,
+                    discountPercent: event.target.value,
+                  }))
                 }
               />
             </div>
@@ -616,7 +737,10 @@ export function SettingsPage() {
                 type="number"
                 value={tierForm.minSpendingToMaintain}
                 onChange={(event) =>
-                  setTierForm((prev) => ({ ...prev, minSpendingToMaintain: event.target.value }))
+                  setTierForm((prev) => ({
+                    ...prev,
+                    minSpendingToMaintain: event.target.value,
+                  }))
                 }
               />
             </div>
@@ -626,7 +750,10 @@ export function SettingsPage() {
                 type="number"
                 value={tierForm.sortOrder}
                 onChange={(event) =>
-                  setTierForm((prev) => ({ ...prev, sortOrder: event.target.value }))
+                  setTierForm((prev) => ({
+                    ...prev,
+                    sortOrder: event.target.value,
+                  }))
                 }
               />
             </div>
@@ -672,40 +799,7 @@ export function SettingsPage() {
           </div>
 
           <div className="max-h-[420px] overflow-auto rounded-md border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/40">
-                <tr>
-                  <th className="px-3 py-2 text-left">Resource</th>
-                  <th className="px-3 py-2 text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {permissionGroups.map((group) => (
-                  <tr key={group.resource} className="border-t align-top">
-                    <td className="px-3 py-2 font-medium">{group.label}</td>
-                    <td className="px-3 py-2">
-                      <div className="flex flex-wrap gap-3">
-                        {group.actions.map((action) => (
-                          <label
-                            key={`${group.resource}-${action}`}
-                            className="inline-flex items-center gap-2 text-xs"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={hasPermission(group.resource, action)}
-                              onChange={(event) =>
-                                togglePermission(group.resource, action, event.target.checked)
-                              }
-                            />
-                            {action}
-                          </label>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DataTable data={permissionGroups} columns={permissionMatrixColumns} />
           </div>
 
           <div className="flex justify-end gap-2">

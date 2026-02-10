@@ -1,16 +1,25 @@
-import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { queryKeys } from "@/lib/query-client";
 import {
-  servicesService,
   type ServiceCategory,
   type ServiceItem,
   type ServicePayload,
+  servicesService,
 } from "@/services/services.service";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
+import { Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 function Modal(props: {
   title: string;
@@ -30,12 +39,7 @@ function Modal(props: {
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <h3 className="text-lg font-semibold">{props.title}</h3>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={props.onClose}
-          >
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={props.onClose}>
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -52,6 +56,7 @@ const emptyServiceForm = {
   duration: "",
   description: "",
 };
+const NONE_OPTION_VALUE = "__none__";
 
 export function ServicesPage() {
   const queryClient = useQueryClient();
@@ -63,11 +68,8 @@ export function ServicesPage() {
   const [categoryName, setCategoryName] = useState("");
   const [serviceForm, setServiceForm] = useState(emptyServiceForm);
 
-  const [editingCategory, setEditingCategory] =
-    useState<ServiceCategory | null>(null);
-  const [editingService, setEditingService] = useState<ServiceItem | null>(
-    null,
-  );
+  const [editingCategory, setEditingCategory] = useState<ServiceCategory | null>(null);
+  const [editingService, setEditingService] = useState<ServiceItem | null>(null);
 
   const [categoryDeleteId, setCategoryDeleteId] = useState<number | null>(null);
   const [serviceDeleteId, setServiceDeleteId] = useState<number | null>(null);
@@ -100,11 +102,8 @@ export function ServicesPage() {
 
   const filteredServices = useMemo(() => {
     return services.filter((item) => {
-      const byCategory =
-        selectedCategory === null || item.categoryId === selectedCategory;
-      const bySearch = item.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+      const byCategory = selectedCategory === null || item.categoryId === selectedCategory;
+      const bySearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
       return byCategory && bySearch;
     });
   }, [searchQuery, selectedCategory, services]);
@@ -115,8 +114,7 @@ export function ServicesPage() {
   }
 
   const createCategoryMutation = useMutation({
-    mutationFn: (payload: { name: string }) =>
-      servicesService.createCategory(payload),
+    mutationFn: (payload: { name: string }) => servicesService.createCategory(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: queryKeys.serviceCategories,
@@ -125,8 +123,13 @@ export function ServicesPage() {
   });
 
   const updateCategoryMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: { name: string } }) =>
-      servicesService.updateCategory(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: { name: string };
+    }) => servicesService.updateCategory(id, payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: queryKeys.serviceCategories,
@@ -147,25 +150,35 @@ export function ServicesPage() {
   });
 
   const createServiceMutation = useMutation({
-    mutationFn: (payload: ServicePayload) =>
-      servicesService.createService(payload),
+    mutationFn: (payload: ServicePayload) => servicesService.createService(payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.services });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.services,
+      });
     },
   });
 
   const updateServiceMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: ServicePayload }) =>
-      servicesService.updateService(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: ServicePayload;
+    }) => servicesService.updateService(id, payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.services });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.services,
+      });
     },
   });
 
   const deleteServiceMutation = useMutation({
     mutationFn: (id: number) => servicesService.deleteService(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.services });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.services,
+      });
     },
   });
 
@@ -216,9 +229,7 @@ export function ServicesPage() {
     setIsServiceOpen(true);
   }
 
-  async function submitCategory(
-    event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>,
-  ) {
+  async function submitCategory(event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
     if (!categoryName.trim()) {
       setError("Vui lòng nhập tên danh mục");
@@ -233,22 +244,18 @@ export function ServicesPage() {
           payload: { name: categoryName.trim() },
         });
       } else {
-        await createCategoryMutation.mutateAsync({ name: categoryName.trim() });
+        await createCategoryMutation.mutateAsync({
+          name: categoryName.trim(),
+        });
       }
       setIsCategoryOpen(false);
       resetCategoryForm();
     } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Không thể lưu danh mục",
-      );
+      setError(caughtError instanceof Error ? caughtError.message : "Không thể lưu danh mục");
     }
   }
 
-  async function submitService(
-    event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>,
-  ) {
+  async function submitService(event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
 
     const categoryId = Number(serviceForm.categoryId);
@@ -294,11 +301,7 @@ export function ServicesPage() {
       setIsServiceOpen(false);
       resetServiceForm();
     } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Không thể lưu dịch vụ",
-      );
+      setError(caughtError instanceof Error ? caughtError.message : "Không thể lưu dịch vụ");
     }
   }
 
@@ -309,11 +312,7 @@ export function ServicesPage() {
       if (selectedCategory === id) setSelectedCategory(null);
       setCategoryDeleteId(null);
     } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Không thể xóa danh mục",
-      );
+      setError(caughtError instanceof Error ? caughtError.message : "Không thể xóa danh mục");
     }
   }
 
@@ -323,11 +322,7 @@ export function ServicesPage() {
       await deleteServiceMutation.mutateAsync(id);
       setServiceDeleteId(null);
     } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Không thể xóa dịch vụ",
-      );
+      setError(caughtError instanceof Error ? caughtError.message : "Không thể xóa dịch vụ");
     }
   }
 
@@ -336,17 +331,79 @@ export function ServicesPage() {
     [categories],
   );
 
+  const serviceColumns: Array<ColumnDef<ServiceItem>> = [
+    {
+      accessorKey: "name",
+      header: "Dịch vụ",
+      cell: ({ row }) => (
+        <div className="font-medium">
+          {row.original.name}
+          {row.original.description ? (
+            <div className="text-xs text-muted-foreground">{row.original.description}</div>
+          ) : null}
+        </div>
+      ),
+    },
+    {
+      id: "category",
+      header: "Danh mục",
+      cell: ({ row }) => categoryNameById.get(row.original.categoryId) ?? "-",
+    },
+    {
+      id: "price",
+      header: "Giá",
+      meta: {
+        className: "text-right",
+        headerClassName: "text-right",
+      },
+      cell: ({ row }) => `${row.original.price.toLocaleString("vi-VN")}đ`,
+    },
+    {
+      id: "duration",
+      header: "Thời gian",
+      meta: {
+        className: "text-right",
+        headerClassName: "text-right",
+      },
+      cell: ({ row }) => `${row.original.duration} phút`,
+    },
+    {
+      id: "actions",
+      header: "",
+      meta: {
+        className: "text-right",
+        headerClassName: "text-right",
+      },
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => openEditService(row.original)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setServiceDeleteId(row.original.id)}
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="flex h-[calc(100vh-6rem)] flex-col gap-4">
       <div className="rounded-2xl border border-border/70 bg-linear-to-br from-white to-secondary/30 p-5 sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              Quản lý dịch vụ
-            </h1>
-            <p className="text-muted-foreground">
-              Quản lý danh mục và đơn giá dịch vụ
-            </p>
+            <h1 className="text-2xl font-bold tracking-tight">Quản lý dịch vụ</h1>
+            <p className="text-muted-foreground">Quản lý danh mục và đơn giá dịch vụ</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={openCreateCategory}>
@@ -371,9 +428,7 @@ export function ServicesPage() {
         <div className="w-full rounded-xl border border-border/70 bg-white p-4 md:w-72">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-semibold">Danh mục</h2>
-            <span className="text-xs text-muted-foreground">
-              {categories.length}
-            </span>
+            <span className="text-xs text-muted-foreground">{categories.length}</span>
           </div>
           <div className="space-y-1">
             <button
@@ -424,86 +479,16 @@ export function ServicesPage() {
                 className="pl-9"
               />
             </div>
-            <span className="text-sm text-muted-foreground">
-              {filteredServices.length} dịch vụ
-            </span>
+            <span className="text-sm text-muted-foreground">{filteredServices.length} dịch vụ</span>
           </div>
 
           <div className="overflow-auto rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/40">
-                <tr>
-                  <th className="px-3 py-2 text-left">Dịch vụ</th>
-                  <th className="px-3 py-2 text-left">Danh mục</th>
-                  <th className="px-3 py-2 text-right">Giá</th>
-                  <th className="px-3 py-2 text-right">Thời gian</th>
-                  <th className="px-3 py-2" />
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-3 py-4 text-center text-muted-foreground"
-                    >
-                      Đang tải...
-                    </td>
-                  </tr>
-                ) : filteredServices.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-3 py-4 text-center text-muted-foreground"
-                    >
-                      Không có dữ liệu
-                    </td>
-                  </tr>
-                ) : (
-                  filteredServices.map((item) => (
-                    <tr key={item.id} className="border-t">
-                      <td className="px-3 py-2">
-                        <div className="font-medium">{item.name}</div>
-                        {item.description ? (
-                          <div className="text-xs text-muted-foreground">
-                            {item.description}
-                          </div>
-                        ) : null}
-                      </td>
-                      <td className="px-3 py-2">
-                        {categoryNameById.get(item.categoryId) ?? "-"}
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        {item.price.toLocaleString("vi-VN")}đ
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        {item.duration} phút
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => openEditService(item)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => setServiceDeleteId(item.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+            <DataTable
+              data={filteredServices}
+              columns={serviceColumns}
+              loading={loading}
+              emptyMessage="Không có dữ liệu"
+            />
           </div>
         </div>
       </div>
@@ -516,17 +501,10 @@ export function ServicesPage() {
         <form className="space-y-4" onSubmit={submitCategory}>
           <div className="grid gap-2">
             <Label>Tên danh mục</Label>
-            <Input
-              value={categoryName}
-              onChange={(event) => setCategoryName(event.target.value)}
-            />
+            <Input value={categoryName} onChange={(event) => setCategoryName(event.target.value)} />
           </div>
           <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsCategoryOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setIsCategoryOpen(false)}>
               Hủy
             </Button>
             <Button type="submit" disabled={saving}>
@@ -557,23 +535,27 @@ export function ServicesPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="grid gap-2">
               <Label>Danh mục</Label>
-              <select
-                className="h-10 rounded-md border px-3 text-sm"
-                value={serviceForm.categoryId}
-                onChange={(event) =>
+              <Select
+                value={serviceForm.categoryId || NONE_OPTION_VALUE}
+                onValueChange={(value) =>
                   setServiceForm((prev) => ({
                     ...prev,
-                    categoryId: event.target.value,
+                    categoryId: value === NONE_OPTION_VALUE ? "" : value,
                   }))
                 }
               >
-                <option value="">Chọn danh mục</option>
-                {categories.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE_OPTION_VALUE}>Chọn danh mục</SelectItem>
+                  {categories.map((item) => (
+                    <SelectItem key={item.id} value={String(item.id)}>
+                      {item.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-2">
               <Label>Giá</Label>
@@ -616,11 +598,7 @@ export function ServicesPage() {
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsServiceOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setIsServiceOpen(false)}>
               Hủy
             </Button>
             <Button type="submit" disabled={saving}>
@@ -645,9 +623,7 @@ export function ServicesPage() {
             </Button>
             <Button
               disabled={saving}
-              onClick={() =>
-                categoryDeleteId && void deleteCategory(categoryDeleteId)
-              }
+              onClick={() => categoryDeleteId && void deleteCategory(categoryDeleteId)}
             >
               Xóa
             </Button>
@@ -661,18 +637,14 @@ export function ServicesPage() {
         onClose={() => setServiceDeleteId(null)}
       >
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Bạn có chắc muốn xóa dịch vụ này?
-          </p>
+          <p className="text-sm text-muted-foreground">Bạn có chắc muốn xóa dịch vụ này?</p>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setServiceDeleteId(null)}>
               Hủy
             </Button>
             <Button
               disabled={saving}
-              onClick={() =>
-                serviceDeleteId && void deleteService(serviceDeleteId)
-              }
+              onClick={() => serviceDeleteId && void deleteService(serviceDeleteId)}
             >
               Xóa
             </Button>

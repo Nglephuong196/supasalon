@@ -1,8 +1,8 @@
+import { type Action, type Permissions, type Resource, formatPermissions } from "@repo/constants";
 import { Hono } from "hono";
-import { MembersService } from "../services";
-import { createAuth } from "../lib/auth";
 import type { Database } from "../db";
-import { formatPermissions, type Permissions, type Resource, type Action } from "@repo/constants";
+import { createAuth } from "../lib/auth";
+import { MembersService } from "../services";
 
 type Bindings = {
   DB: D1Database;
@@ -15,7 +15,10 @@ type Variables = {
   user: any;
 };
 
-export const membersController = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+export const membersController = new Hono<{
+  Bindings: Bindings;
+  Variables: Variables;
+}>();
 
 membersController.get("/me", async (c) => {
   const service = new MembersService(c.get("db"));
@@ -33,9 +36,24 @@ membersController.get("/me", async (c) => {
 membersController.get("/", async (c) => {
   const service = new MembersService(c.get("db"));
   const organization = c.get("organization");
-  // Check permission? Maybe restrict listing members to members only (ensureTenant does this).
-  const members = await service.findAll(organization.id);
-  return c.json(members);
+  const paginated = c.req.query("paginated") === "1";
+
+  if (!paginated) {
+    // Check permission? Maybe restrict listing members to members only (ensureTenant does this).
+    const members = await service.findAll(organization.id);
+    return c.json(members);
+  }
+
+  const page = Number.parseInt(c.req.query("page") || "1", 10);
+  const limit = Number.parseInt(c.req.query("limit") || "20", 10);
+  const search = c.req.query("search") || "";
+
+  const result = await service.findPage(organization.id, {
+    page: Number.isFinite(page) && page > 0 ? page : 1,
+    limit: Number.isFinite(limit) && limit > 0 ? Math.min(limit, 100) : 20,
+    search,
+  });
+  return c.json(result);
 });
 
 membersController.post("/", async (c) => {
@@ -85,7 +103,10 @@ membersController.post("/", async (c) => {
     // We need a method to create member directly.
     await service.addMember(organization.id, userRes.user.id, role);
 
-    return c.json({ user: userRes.user, message: "Member created successfully" });
+    return c.json({
+      user: userRes.user,
+      message: "Member created successfully",
+    });
   } catch (e: any) {
     // Handle better-auth errors (e.g. user already exists)
     if (e.body?.message) {
@@ -116,7 +137,10 @@ membersController.delete("/remove-member", async (c) => {
 membersController.put("/update-member-role", async (c) => {
   const service = new MembersService(c.get("db"));
   const organization = c.get("organization");
-  const { memberId, role } = await c.req.json<{ memberId: string; role: string }>();
+  const { memberId, role } = await c.req.json<{
+    memberId: string;
+    role: string;
+  }>();
   const updated = await service.updateRole(organization.id, memberId, role);
   if (!updated) return c.json({ error: "Member not found" }, 404);
   return c.json(updated);
@@ -133,7 +157,9 @@ membersController.put("/:id/permissions", async (c) => {
   const service = new MembersService(c.get("db"));
   const organization = c.get("organization");
   const id = c.req.param("id");
-  const { permissions } = await c.req.json<{ permissions: Record<string, string[]> }>();
+  const { permissions } = await c.req.json<{
+    permissions: Record<string, string[]>;
+  }>();
 
   // Only Owner/Admin can manage permissions (this is role-based, not permission-based)
   if (organization.role !== "owner" && organization.role !== "admin") {

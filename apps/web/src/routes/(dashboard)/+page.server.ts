@@ -1,8 +1,8 @@
-import type { PageServerLoad } from "./$types";
-import { redirect } from "@sveltejs/kit";
 import { PUBLIC_API_URL } from "$env/static/public";
-import { ACTIONS, RESOURCES } from "@repo/constants";
 import { checkPermission } from "$lib/permissions";
+import { ACTIONS, RESOURCES } from "@repo/constants";
+import { redirect } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
 
 type RangeKey = "today" | "week" | "month" | "year";
 

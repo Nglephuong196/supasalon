@@ -1,8 +1,8 @@
-import type { PageServerLoad, Actions } from "./$types";
-import { redirect, error, fail } from "@sveltejs/kit";
-import { RESOURCES, ACTIONS } from "@repo/constants";
-import { checkPermission, getResourcePermissions } from "$lib/permissions";
 import { PUBLIC_API_URL } from "$env/static/public";
+import { checkPermission, getResourcePermissions } from "$lib/permissions";
+import { ACTIONS, RESOURCES } from "@repo/constants";
+import { error, fail, redirect } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
 
 interface BookingFilters {
   from?: string;

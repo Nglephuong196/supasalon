@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { organization, useSession } from "@/lib/auth-client";
-import { apiClient } from "@/lib/api";
-import { queryKeys } from "@/lib/query-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { apiClient } from "@/lib/api";
+import { organization, useSession } from "@/lib/auth-client";
+import { queryKeys } from "@/lib/query-client";
 import { profileService } from "@/services/profile.service";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 
 type OrganizationInfo = {
   id: string;

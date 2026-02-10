@@ -1,11 +1,11 @@
-import { Hono } from "hono";
 import { ACTIONS, RESOURCES } from "@repo/constants";
-import { requirePermission } from "../middleware/permission";
+import { Hono } from "hono";
 import type { Database } from "../db";
+import { requirePermission } from "../middleware/permission";
 import {
-  StaffCommissionRulesService,
-  type CommissionType,
   type CommissionItemType,
+  type CommissionType,
+  StaffCommissionRulesService,
   type UpsertCommissionRuleInput,
 } from "../services/staff-commission-rules";
 

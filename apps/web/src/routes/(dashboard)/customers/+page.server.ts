@@ -1,9 +1,9 @@
+import { checkPermission, getResourcePermissions } from "$lib/permissions";
+import type { Customer } from "$lib/types";
+import { ACTIONS, RESOURCES } from "@repo/constants";
 import { fail, redirect } from "@sveltejs/kit";
 import { error } from "@sveltejs/kit";
-import type { PageServerLoad, Actions } from "./$types";
-import type { Customer } from "$lib/types";
-import { RESOURCES, ACTIONS } from "@repo/constants";
-import { checkPermission, getResourcePermissions } from "$lib/permissions";
+import type { Actions, PageServerLoad } from "./$types";
 
 import { PUBLIC_API_URL } from "$env/static/public";
 

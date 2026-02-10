@@ -1,7 +1,7 @@
+import type { Action, Resource } from "@repo/constants";
 import { createMiddleware } from "hono/factory";
-import { MembersService } from "../services";
 import type { Database } from "../db";
-import type { Resource, Action } from "@repo/constants";
+import { MembersService } from "../services";
 
 type Env = {
   Bindings: {

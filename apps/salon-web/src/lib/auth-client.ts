@@ -1,5 +1,5 @@
-import { createAuthClient } from "better-auth/react";
 import { organizationClient } from "better-auth/client/plugins";
+import { createAuthClient } from "better-auth/react";
 
 const authBaseURL = import.meta.env.VITE_AUTH_BASE_URL ?? "http://localhost:8787";
 

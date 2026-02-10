@@ -1,8 +1,8 @@
+import { and, eq } from "drizzle-orm";
 import { createMiddleware } from "hono/factory";
-import { eq, and } from "drizzle-orm";
+import type { Database } from "../db";
 import { member } from "../db/schema";
 import { createAuth } from "../lib/auth";
-import type { Database } from "../db";
 
 type Env = {
   Bindings: {

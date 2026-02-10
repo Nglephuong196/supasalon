@@ -1,8 +1,8 @@
 <script lang="ts">
 import { Card, CardContent } from "$lib/components/ui/card";
 import { cn } from "$lib/utils";
+import { TrendingDown, TrendingUp } from "@lucide/svelte";
 import type { Component } from "svelte";
-import { TrendingUp, TrendingDown } from "@lucide/svelte";
 
 interface Props {
   title: string;

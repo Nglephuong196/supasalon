@@ -1,13 +1,13 @@
 <script lang="ts">
 import { browser } from "$app/environment";
-import Sidebar from "$lib/components/layout/Sidebar.svelte";
 import Header from "$lib/components/layout/Header.svelte";
+import Sidebar from "$lib/components/layout/Sidebar.svelte";
 import { Toaster } from "$lib/components/ui/sonner";
 
-import { fade, fly } from "svelte/transition";
-import { cubicOut } from "svelte/easing";
 import { afterNavigate, onNavigate } from "$app/navigation";
 import { page } from "$app/stores";
+import { cubicOut } from "svelte/easing";
+import { fade, fly } from "svelte/transition";
 
 let { children, data } = $props();
 

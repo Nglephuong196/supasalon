@@ -1,7 +1,7 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
 import { Scissors } from "lucide-react-native";
-import { colors, spacing, fontSize, fontWeight } from "../../../lib/theme";
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { colors, fontSize, fontWeight, spacing } from "../../../lib/theme";
 
 export default function ServicesScreen() {
   return (

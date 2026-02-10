@@ -1,16 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useParams } from "@tanstack/react-router";
-import { CalendarDays, CheckCircle2 } from "lucide-react";
-import { queryKeys } from "@/lib/query-client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { queryKeys } from "@/lib/query-client";
 import { publicBookingService } from "@/services/public-booking.service";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useParams } from "@tanstack/react-router";
+import { CalendarDays, CheckCircle2 } from "lucide-react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
+const NONE_OPTION_VALUE = "__none__";
 
 export function PublicBookingPage() {
-  const { slug } = useParams({ from: "/book/$slug" });
+  const { slug } = useParams({ from: "/public-layout/book/$slug" });
 
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -39,7 +47,9 @@ export function PublicBookingPage() {
       customerPhone: string;
       dateTime: string;
       guestCount: number;
-      guests: Array<{ services: Array<{ serviceId: number; memberId?: string }> }>;
+      guests: Array<{
+        services: Array<{ serviceId: number; memberId?: string }>;
+      }>;
       notes: string;
     }) => publicBookingService.create(slug, payload),
   });
@@ -57,7 +67,7 @@ export function PublicBookingPage() {
     return options?.services.find((item) => String(item.id) === serviceId) || null;
   }, [options?.services, serviceId]);
 
-  async function submitBooking(event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) {
+  async function submitBooking(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const parsedGuestCount = Number(guestCount);
@@ -73,7 +83,12 @@ export function PublicBookingPage() {
 
     try {
       const guests = Array.from({ length: parsedGuestCount || 1 }, () => ({
-        services: [{ serviceId: parsedServiceId, memberId: memberId || undefined }],
+        services: [
+          {
+            serviceId: parsedServiceId,
+            memberId: memberId || undefined,
+          },
+        ],
       }));
 
       const result = await createBookingMutation.mutateAsync({
@@ -173,40 +188,48 @@ export function PublicBookingPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label>Dịch vụ</Label>
-                <select
-                  className="h-10 rounded-md border px-3 text-sm"
-                  value={serviceId}
-                  onChange={(event) => setServiceId(event.target.value)}
+                <Select
+                  value={serviceId || NONE_OPTION_VALUE}
+                  onValueChange={(value) => setServiceId(value === NONE_OPTION_VALUE ? "" : value)}
                 >
-                  <option value="">Chọn dịch vụ</option>
-                  {options?.services.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name} - {item.price.toLocaleString("vi-VN")}đ
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="h-10 w-full rounded-md border px-3 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE_OPTION_VALUE}>Chọn dịch vụ</SelectItem>
+                    {options?.services.map((item) => (
+                      <SelectItem key={item.id} value={String(item.id)}>
+                        {item.name} - {item.price.toLocaleString("vi-VN")}đ
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label>Nhân viên (tuỳ chọn)</Label>
-                <select
-                  className="h-10 rounded-md border px-3 text-sm"
-                  value={memberId}
-                  onChange={(event) => setMemberId(event.target.value)}
+                <Select
+                  value={memberId || NONE_OPTION_VALUE}
+                  onValueChange={(value) => setMemberId(value === NONE_OPTION_VALUE ? "" : value)}
                 >
-                  <option value="">Không chỉ định</option>
-                  {options?.staffs.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="h-10 w-full rounded-md border px-3 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE_OPTION_VALUE}>Không chỉ định</SelectItem>
+                    {options?.staffs.map((item) => (
+                      <SelectItem key={item.id} value={String(item.id)}>
+                        {item.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             <div className="grid gap-2">
               <Label>Ghi chú</Label>
               <textarea
-                className="min-h-20 rounded-md border px-3 py-2 text-sm"
+                className="min-h-20 w-full rounded-md border px-3 py-2 text-sm"
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
               />

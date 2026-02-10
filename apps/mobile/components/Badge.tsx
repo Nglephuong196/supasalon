@@ -1,6 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, ViewStyle } from "react-native";
-import { colors, spacing, borderRadius, fontSize, fontWeight } from "../lib/theme";
+import { StyleSheet, Text, View, ViewStyle } from "react-native";
+import { borderRadius, colors, fontSize, fontWeight, spacing } from "../lib/theme";
 
 type BadgeVariant =
   | "paid"

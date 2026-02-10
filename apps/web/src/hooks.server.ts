@@ -1,5 +1,5 @@
-import { redirect, type Handle, type HandleFetch } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
+import { type Handle, type HandleFetch, redirect } from "@sveltejs/kit";
 
 // Define protected routes that require authentication (root is dashboard)
 const protectedRoutes = [

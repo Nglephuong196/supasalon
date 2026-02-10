@@ -1,9 +1,9 @@
+import { ACTIONS, RESOURCES } from "@repo/constants";
 import { Hono } from "hono";
-import { ServicesService } from "../services";
-import type { NewService } from "../db/schema";
 import type { Database } from "../db";
+import type { NewService } from "../db/schema";
 import { requirePermission } from "../middleware/permission";
-import { RESOURCES, ACTIONS } from "@repo/constants";
+import { ServicesService } from "../services";
 
 type Bindings = { DB: D1Database };
 type Variables = {

@@ -1,8 +1,8 @@
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { MembersService } from "../services";
 import type { Database } from "../db";
 import { user } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { MembersService } from "../services";
 
 type Bindings = { DB: D1Database };
 type Variables = {

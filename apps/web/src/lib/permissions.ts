@@ -5,8 +5,8 @@
  * The actual authorization is enforced on the backend.
  */
 
-import { RESOURCES, ACTIONS, hasPermission as baseHasPermission } from "@repo/constants";
-import type { Permissions, Resource, Action } from "@repo/constants";
+import { ACTIONS, RESOURCES, hasPermission as baseHasPermission } from "@repo/constants";
+import type { Action, Permissions, Resource } from "@repo/constants";
 
 export { RESOURCES, ACTIONS, type Permissions, type Resource, type Action };
 

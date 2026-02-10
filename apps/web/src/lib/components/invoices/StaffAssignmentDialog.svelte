@@ -1,24 +1,24 @@
 <script lang="ts">
-import * as Dialog from "$lib/components/ui/dialog";
+import { Badge } from "$lib/components/ui/badge";
 import { Button } from "$lib/components/ui/button";
+import * as Dialog from "$lib/components/ui/dialog";
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import * as Popover from "$lib/components/ui/popover";
 import { Separator } from "$lib/components/ui/separator";
 import { Switch } from "$lib/components/ui/switch";
 import {
-  Users,
-  Plus,
-  X,
-  Gift,
-  Sparkles,
-  ShoppingBag,
-  Percent,
-  UserCircle,
   ChevronDown,
+  Gift,
+  Percent,
+  Plus,
   Search,
+  ShoppingBag,
+  Sparkles,
+  UserCircle,
+  Users,
+  X,
 } from "@lucide/svelte";
-import { Input } from "$lib/components/ui/input";
-import { Label } from "$lib/components/ui/label";
-import { Badge } from "$lib/components/ui/badge";
-import * as Popover from "$lib/components/ui/popover";
 import { fly, slide } from "svelte/transition";
 
 interface Props {

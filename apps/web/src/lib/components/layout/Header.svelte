@@ -1,9 +1,9 @@
 <script lang="ts">
-import { Bell, Search, LogOut, Menu } from "@lucide/svelte";
-import { Input } from "$lib/components/ui/input";
-import { Button } from "$lib/components/ui/button";
-import { useSession, signOut } from "$lib/auth-client";
 import { goto } from "$app/navigation";
+import { signOut, useSession } from "$lib/auth-client";
+import { Button } from "$lib/components/ui/button";
+import { Input } from "$lib/components/ui/input";
+import { Bell, LogOut, Menu, Search } from "@lucide/svelte";
 
 interface Props {
   onMobileMenuOpen: () => void;

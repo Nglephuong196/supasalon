@@ -1,4 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { queryKeys } from "@/lib/query-client";
+import { cn } from "@/lib/utils";
+import { type DashboardData, type RangeKey, dashboardService } from "@/services/dashboard.service";
 import { useQuery } from "@tanstack/react-query";
 import {
   BarChart3,
@@ -10,15 +14,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { queryKeys } from "@/lib/query-client";
-import { cn } from "@/lib/utils";
-import {
-  dashboardService,
-  type DashboardData,
-  type RangeKey,
-} from "@/services/dashboard.service";
+import { useEffect, useMemo, useState } from "react";
 
 const emptyDashboard: DashboardData = {
   range: "week",
@@ -72,9 +68,7 @@ function StatCard(props: {
             <div
               className={cn(
                 "flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold",
-                props.trend >= 0
-                  ? "bg-emerald-50 text-emerald-600"
-                  : "bg-rose-50 text-rose-600",
+                props.trend >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600",
               )}
             >
               {props.trend >= 0 ? (
@@ -100,15 +94,11 @@ function StatCard(props: {
                 {props.context}
               </span>
             ) : null}
-            <span className="block text-sm font-medium text-muted-foreground">
-              {props.title}
-            </span>
+            <span className="block text-sm font-medium text-muted-foreground">{props.title}</span>
             <span className="block text-2xl font-bold tracking-tight text-foreground">
               {props.value}
             </span>
-            <span className="block text-xs text-muted-foreground">
-              {props.description}
-            </span>
+            <span className="block text-xs text-muted-foreground">{props.description}</span>
           </div>
         )}
       </CardContent>
@@ -129,8 +119,7 @@ export function OverviewPage() {
   });
 
   const loading = overviewQuery.isLoading;
-  const error =
-    overviewQuery.error instanceof Error ? overviewQuery.error.message : null;
+  const error = overviewQuery.error instanceof Error ? overviewQuery.error.message : null;
   const data: DashboardData = overviewQuery.data ?? {
     ...emptyDashboard,
     range,
@@ -160,12 +149,8 @@ export function OverviewPage() {
         <div className="pointer-events-none absolute -bottom-2 -left-10 h-24 w-24 rounded-full bg-indigo-300/30 blur-2xl" />
         <div className="relative flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Tổng quan
-            </h1>
-            <p className="mt-1 text-muted-foreground">
-              Hiệu suất salon của bạn trong nháy mắt.
-            </p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Tổng quan</h1>
+            <p className="mt-1 text-muted-foreground">Hiệu suất salon của bạn trong nháy mắt.</p>
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden rounded-lg border border-border/80 bg-white/90 px-3 py-1.5 text-sm font-medium text-muted-foreground shadow-[0_8px_18px_-16px_rgba(40,23,86,0.85)] sm:block">
@@ -216,10 +201,7 @@ export function OverviewPage() {
           ))}
         </div>
         <div className="text-xs text-muted-foreground">
-          So sánh:{" "}
-          <span className="font-medium text-foreground">
-            {data.chart.compare || "-"}
-          </span>
+          So sánh: <span className="font-medium text-foreground">{data.chart.compare || "-"}</span>
         </div>
       </div>
 
@@ -299,59 +281,53 @@ export function OverviewPage() {
                     {formatCurrency(chartMax)} {data.chart.unit || "₫"}
                   </span>
                   <span>
-                    {formatCurrency(Math.round(chartMax * 0.75))}{" "}
-                    {data.chart.unit || "₫"}
+                    {formatCurrency(Math.round(chartMax * 0.75))} {data.chart.unit || "₫"}
                   </span>
                   <span>
-                    {formatCurrency(Math.round(chartMax * 0.5))}{" "}
-                    {data.chart.unit || "₫"}
+                    {formatCurrency(Math.round(chartMax * 0.5))} {data.chart.unit || "₫"}
                   </span>
                   <span>
-                    {formatCurrency(Math.round(chartMax * 0.25))}{" "}
-                    {data.chart.unit || "₫"}
+                    {formatCurrency(Math.round(chartMax * 0.25))} {data.chart.unit || "₫"}
                   </span>
                   <span>0</span>
                 </div>
                 <div className="flex flex-col gap-2">
                   <div className="flex h-64 items-end justify-between gap-2 px-2 pb-4">
-                    {(loading ? placeholderBars : chartData).map(
-                      (value, index) => (
-                        <div
-                          key={`${index}-${value}`}
-                          className={cn(
-                            "w-full rounded-t-sm",
-                            loading
-                              ? "h-[40%] animate-pulse bg-muted/50"
-                              : "group relative bg-linear-to-t from-primary/85 via-primary/65 to-indigo-300/70 transition-all hover:brightness-110",
-                          )}
-                          style={
-                            loading
-                              ? undefined
-                              : {
-                                  height: `${Math.max(6, Math.round((value / chartMax) * 100))}%`,
-                                }
-                          }
-                        >
-                          {!loading ? (
-                            <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 rounded border border-border bg-popover px-2 py-1 text-xs text-popover-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
-                              {formatCurrency(value)} {data.chart.unit || "₫"}
-                            </div>
-                          ) : null}
-                        </div>
-                      ),
-                    )}
+                    {(loading ? placeholderBars : chartData).map((value, index) => (
+                      <div
+                        key={`${index}-${value}`}
+                        className={cn(
+                          "w-full rounded-t-sm",
+                          loading
+                            ? "h-[40%] animate-pulse bg-muted/50"
+                            : "group relative bg-linear-to-t from-primary/85 via-primary/65 to-indigo-300/70 transition-all hover:brightness-110",
+                        )}
+                        style={
+                          loading
+                            ? undefined
+                            : {
+                                height: `${Math.max(6, Math.round((value / chartMax) * 100))}%`,
+                              }
+                        }
+                      >
+                        {!loading ? (
+                          <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 rounded border border-border bg-popover px-2 py-1 text-xs text-popover-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
+                            {formatCurrency(value)} {data.chart.unit || "₫"}
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
                   </div>
                   <div className="flex justify-between border-t border-border/40 px-2 pt-2 text-xs font-medium text-muted-foreground">
-                    {(loading ? placeholderBars : chartLabels).map(
-                      (label, index) =>
-                        loading ? (
-                          <span
-                            key={index}
-                            className="inline-block h-3 w-6 animate-pulse rounded bg-muted/40"
-                          />
-                        ) : (
-                          <span key={`${label}-${index}`}>{label}</span>
-                        ),
+                    {(loading ? placeholderBars : chartLabels).map((label, index) =>
+                      loading ? (
+                        <span
+                          key={index}
+                          className="inline-block h-3 w-6 animate-pulse rounded bg-muted/40"
+                        />
+                      ) : (
+                        <span key={`${label}-${index}`}>{label}</span>
+                      ),
                     )}
                   </div>
                 </div>
@@ -368,8 +344,7 @@ export function OverviewPage() {
                   Lịch hôm nay
                 </CardTitle>
                 <p className="mt-1 text-[11px] text-muted-foreground">
-                  {data.chart.context || "Hôm nay"} · {data.schedule.length}{" "}
-                  lịch
+                  {data.chart.context || "Hôm nay"} · {data.schedule.length} lịch
                 </p>
               </div>
               <Button
@@ -412,9 +387,7 @@ export function OverviewPage() {
                     <p className="truncate text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
                       {appointment.customer}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {appointment.service}
-                    </p>
+                    <p className="truncate text-xs text-muted-foreground">{appointment.service}</p>
                   </div>
                 </div>
               ))
@@ -462,9 +435,7 @@ export function OverviewPage() {
                     {stylist.avatar}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-foreground">
-                      {stylist.name}
-                    </p>
+                    <p className="truncate text-sm font-semibold text-foreground">{stylist.name}</p>
                     <div className="mt-1 flex items-center gap-2">
                       <div className="h-1.5 max-w-[120px] flex-1 overflow-hidden rounded-full bg-gray-100">
                         <div
@@ -532,9 +503,7 @@ export function OverviewPage() {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Tối thiểu:{" "}
-                      <span className="font-medium text-foreground">
-                        {product.minStock}
-                      </span>
+                      <span className="font-medium text-foreground">{product.minStock}</span>
                     </p>
                   </div>
                   <div

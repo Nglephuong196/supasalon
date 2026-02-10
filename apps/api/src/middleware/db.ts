@@ -1,5 +1,5 @@
 import { createMiddleware } from "hono/factory";
-import { createDb, type Database } from "../db";
+import { type Database, createDb } from "../db";
 
 type Env = {
   Bindings: {

@@ -1,7 +1,8 @@
-import { Hono } from "hono";
-import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { and, eq, inArray } from "drizzle-orm";
+import { Hono } from "hono";
+import { z } from "zod";
+import type { Database } from "../db";
 import {
   bookings,
   customers,
@@ -11,7 +12,6 @@ import {
   services,
   user,
 } from "../db/schema";
-import type { Database } from "../db";
 
 const createPublicBookingSchema = z.object({
   customerName: z.string().trim().min(2, "Tên khách hàng phải có ít nhất 2 ký tự"),

@@ -1,6 +1,6 @@
-import { eq, and } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { Database } from "../db";
-import { customerMemberships, customers, type NewCustomerMembership } from "../db/schema";
+import { type NewCustomerMembership, customerMemberships, customers } from "../db/schema";
 
 export class CustomerMembershipsService {
   constructor(private db: Database) {}

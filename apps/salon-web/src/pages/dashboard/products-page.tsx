@@ -1,16 +1,25 @@
-import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { queryKeys } from "@/lib/query-client";
 import {
-  productsService,
   type ProductCategory,
   type ProductItem,
   type ProductPayload,
+  productsService,
 } from "@/services/products.service";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
+import { AlertTriangle, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 function Modal(props: {
   title: string;
@@ -30,12 +39,7 @@ function Modal(props: {
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <h3 className="text-lg font-semibold">{props.title}</h3>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={props.onClose}
-          >
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={props.onClose}>
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -54,6 +58,8 @@ const emptyProductForm = {
   sku: "",
   description: "",
 };
+const ALL_CATEGORIES_VALUE = "__all__";
+const NONE_OPTION_VALUE = "__none__";
 
 export function ProductsPage() {
   const queryClient = useQueryClient();
@@ -65,11 +71,8 @@ export function ProductsPage() {
   const [categoryName, setCategoryName] = useState("");
   const [productForm, setProductForm] = useState(emptyProductForm);
 
-  const [editingCategory, setEditingCategory] =
-    useState<ProductCategory | null>(null);
-  const [editingProduct, setEditingProduct] = useState<ProductItem | null>(
-    null,
-  );
+  const [editingCategory, setEditingCategory] = useState<ProductCategory | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
 
   const [categoryDeleteId, setCategoryDeleteId] = useState<number | null>(null);
   const [productDeleteId, setProductDeleteId] = useState<number | null>(null);
@@ -102,12 +105,10 @@ export function ProductsPage() {
 
   const filteredProducts = useMemo(() => {
     return products.filter((item) => {
-      const byCategory =
-        selectedCategory === null || item.categoryId === selectedCategory;
+      const byCategory = selectedCategory === null || item.categoryId === selectedCategory;
       const query = searchQuery.toLowerCase();
       const bySearch =
-        item.name.toLowerCase().includes(query) ||
-        (item.sku ?? "").toLowerCase().includes(query);
+        item.name.toLowerCase().includes(query) || (item.sku ?? "").toLowerCase().includes(query);
       return byCategory && bySearch;
     });
   }, [products, searchQuery, selectedCategory]);
@@ -123,8 +124,7 @@ export function ProductsPage() {
   }
 
   const createCategoryMutation = useMutation({
-    mutationFn: (payload: { name: string }) =>
-      productsService.createCategory(payload),
+    mutationFn: (payload: { name: string }) => productsService.createCategory(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: queryKeys.productCategories,
@@ -133,8 +133,13 @@ export function ProductsPage() {
   });
 
   const updateCategoryMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: { name: string } }) =>
-      productsService.updateCategory(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: { name: string };
+    }) => productsService.updateCategory(id, payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: queryKeys.productCategories,
@@ -155,25 +160,35 @@ export function ProductsPage() {
   });
 
   const createProductMutation = useMutation({
-    mutationFn: (payload: ProductPayload) =>
-      productsService.createProduct(payload),
+    mutationFn: (payload: ProductPayload) => productsService.createProduct(payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.products });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.products,
+      });
     },
   });
 
   const updateProductMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: ProductPayload }) =>
-      productsService.updateProduct(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: ProductPayload;
+    }) => productsService.updateProduct(id, payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.products });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.products,
+      });
     },
   });
 
   const deleteProductMutation = useMutation({
     mutationFn: (id: number) => productsService.deleteProduct(id),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.products });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.products,
+      });
     },
   });
 
@@ -226,9 +241,7 @@ export function ProductsPage() {
     setIsProductOpen(true);
   }
 
-  async function submitCategory(
-    event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>,
-  ) {
+  async function submitCategory(event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
     if (!categoryName.trim()) {
       setError("Vui lòng nhập tên danh mục");
@@ -243,22 +256,18 @@ export function ProductsPage() {
           payload: { name: categoryName.trim() },
         });
       } else {
-        await createCategoryMutation.mutateAsync({ name: categoryName.trim() });
+        await createCategoryMutation.mutateAsync({
+          name: categoryName.trim(),
+        });
       }
       setIsCategoryOpen(false);
       resetCategoryForm();
     } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Không thể lưu danh mục",
-      );
+      setError(caughtError instanceof Error ? caughtError.message : "Không thể lưu danh mục");
     }
   }
 
-  async function submitProduct(
-    event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>,
-  ) {
+  async function submitProduct(event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
 
     const categoryId = Number(productForm.categoryId);
@@ -303,11 +312,7 @@ export function ProductsPage() {
       setIsProductOpen(false);
       resetProductForm();
     } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Không thể lưu sản phẩm",
-      );
+      setError(caughtError instanceof Error ? caughtError.message : "Không thể lưu sản phẩm");
     }
   }
 
@@ -318,11 +323,7 @@ export function ProductsPage() {
       if (selectedCategory === id) setSelectedCategory(null);
       setCategoryDeleteId(null);
     } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Không thể xóa danh mục",
-      );
+      setError(caughtError instanceof Error ? caughtError.message : "Không thể xóa danh mục");
     }
   }
 
@@ -332,11 +333,7 @@ export function ProductsPage() {
       await deleteProductMutation.mutateAsync(id);
       setProductDeleteId(null);
     } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Không thể xóa sản phẩm",
-      );
+      setError(caughtError instanceof Error ? caughtError.message : "Không thể xóa sản phẩm");
     }
   }
 
@@ -345,14 +342,93 @@ export function ProductsPage() {
     [categories],
   );
 
+  const productColumns: Array<ColumnDef<ProductItem>> = [
+    {
+      accessorKey: "name",
+      header: "Sản phẩm",
+      cell: ({ row }) => (
+        <div className="font-medium">
+          {row.original.name}
+          <div className="text-xs text-muted-foreground">{row.original.sku || "Không có SKU"}</div>
+        </div>
+      ),
+    },
+    {
+      id: "category",
+      header: "Danh mục",
+      cell: ({ row }) => categoryNameById.get(row.original.categoryId) ?? "-",
+    },
+    {
+      id: "price",
+      header: "Giá",
+      meta: {
+        className: "text-right",
+        headerClassName: "text-right",
+      },
+      cell: ({ row }) => `${row.original.price.toLocaleString("vi-VN")}đ`,
+    },
+    {
+      id: "stock",
+      header: "Tồn kho",
+      meta: {
+        className: "text-right",
+        headerClassName: "text-right",
+      },
+      cell: ({ row }) => (
+        <span
+          className={
+            row.original.stock <= row.original.minStock ? "font-semibold text-red-600" : ""
+          }
+        >
+          {row.original.stock}
+        </span>
+      ),
+    },
+    {
+      id: "minStock",
+      header: "Tồn tối thiểu",
+      meta: {
+        className: "text-right",
+        headerClassName: "text-right",
+      },
+      cell: ({ row }) => row.original.minStock,
+    },
+    {
+      id: "actions",
+      header: "",
+      meta: {
+        className: "text-right",
+        headerClassName: "text-right",
+      },
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => openEditProduct(row.original)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setProductDeleteId(row.original.id)}
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="flex h-[calc(100vh-6rem)] flex-col gap-4">
       <div className="rounded-2xl border border-border/70 bg-linear-to-br from-white to-secondary/30 p-5 sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              Quản lý sản phẩm
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight">Quản lý sản phẩm</h1>
             <p className="text-muted-foreground">
               Theo dõi kho, tồn tối thiểu và danh mục sản phẩm
             </p>
@@ -386,22 +462,24 @@ export function ProductsPage() {
             className="pl-9"
           />
         </div>
-        <select
-          className="h-10 rounded-md border px-3 text-sm"
-          value={selectedCategory ?? "all"}
-          onChange={(event) =>
-            setSelectedCategory(
-              event.target.value === "all" ? null : Number(event.target.value),
-            )
+        <Select
+          value={selectedCategory === null ? ALL_CATEGORIES_VALUE : String(selectedCategory)}
+          onValueChange={(value) =>
+            setSelectedCategory(value === ALL_CATEGORIES_VALUE ? null : Number(value))
           }
         >
-          <option value="all">Tất cả danh mục</option>
-          {categories.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_CATEGORIES_VALUE}>Tất cả danh mục</SelectItem>
+            {categories.map((item) => (
+              <SelectItem key={item.id} value={String(item.id)}>
+                {item.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div className="ml-auto inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
           <AlertTriangle className="h-3.5 w-3.5" />
           {lowStockCount} sản phẩm sắp hết
@@ -409,82 +487,12 @@ export function ProductsPage() {
       </div>
 
       <div className="overflow-auto rounded-lg border border-border/70 bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/40">
-            <tr>
-              <th className="px-3 py-2 text-left">Sản phẩm</th>
-              <th className="px-3 py-2 text-left">Danh mục</th>
-              <th className="px-3 py-2 text-right">Giá</th>
-              <th className="px-3 py-2 text-right">Tồn kho</th>
-              <th className="px-3 py-2 text-right">Tồn tối thiểu</th>
-              <th className="px-3 py-2" />
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="px-3 py-4 text-center text-muted-foreground"
-                >
-                  Đang tải...
-                </td>
-              </tr>
-            ) : filteredProducts.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="px-3 py-4 text-center text-muted-foreground"
-                >
-                  Không có dữ liệu
-                </td>
-              </tr>
-            ) : (
-              filteredProducts.map((item) => (
-                <tr key={item.id} className="border-t">
-                  <td className="px-3 py-2">
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {item.sku || "Không có SKU"}
-                    </div>
-                  </td>
-                  <td className="px-3 py-2">
-                    {categoryNameById.get(item.categoryId) ?? "-"}
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    {item.price.toLocaleString("vi-VN")}đ
-                  </td>
-                  <td
-                    className={`px-3 py-2 text-right ${item.stock <= item.minStock ? "font-semibold text-red-600" : ""}`}
-                  >
-                    {item.stock}
-                  </td>
-                  <td className="px-3 py-2 text-right">{item.minStock}</td>
-                  <td className="px-3 py-2 text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => openEditProduct(item)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => setProductDeleteId(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        <DataTable
+          data={filteredProducts}
+          columns={productColumns}
+          loading={loading}
+          emptyMessage="Không có dữ liệu"
+        />
       </div>
 
       <div className="rounded-xl border border-border/70 bg-white p-4">
@@ -525,17 +533,10 @@ export function ProductsPage() {
         <form className="space-y-4" onSubmit={submitCategory}>
           <div className="grid gap-2">
             <Label>Tên danh mục</Label>
-            <Input
-              value={categoryName}
-              onChange={(event) => setCategoryName(event.target.value)}
-            />
+            <Input value={categoryName} onChange={(event) => setCategoryName(event.target.value)} />
           </div>
           <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsCategoryOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setIsCategoryOpen(false)}>
               Hủy
             </Button>
             <Button type="submit" disabled={saving}>
@@ -566,23 +567,27 @@ export function ProductsPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label>Danh mục</Label>
-              <select
-                className="h-10 rounded-md border px-3 text-sm"
-                value={productForm.categoryId}
-                onChange={(event) =>
+              <Select
+                value={productForm.categoryId || NONE_OPTION_VALUE}
+                onValueChange={(value) =>
                   setProductForm((prev) => ({
                     ...prev,
-                    categoryId: event.target.value,
+                    categoryId: value === NONE_OPTION_VALUE ? "" : value,
                   }))
                 }
               >
-                <option value="">Chọn danh mục</option>
-                {categories.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE_OPTION_VALUE}>Chọn danh mục</SelectItem>
+                  {categories.map((item) => (
+                    <SelectItem key={item.id} value={String(item.id)}>
+                      {item.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid gap-2">
               <Label>Giá</Label>
@@ -629,7 +634,10 @@ export function ProductsPage() {
             <Input
               value={productForm.sku}
               onChange={(event) =>
-                setProductForm((prev) => ({ ...prev, sku: event.target.value }))
+                setProductForm((prev) => ({
+                  ...prev,
+                  sku: event.target.value,
+                }))
               }
             />
           </div>
@@ -647,11 +655,7 @@ export function ProductsPage() {
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsProductOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => setIsProductOpen(false)}>
               Hủy
             </Button>
             <Button type="submit" disabled={saving}>
@@ -667,18 +671,14 @@ export function ProductsPage() {
         onClose={() => setCategoryDeleteId(null)}
       >
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Bạn có chắc muốn xóa danh mục này?
-          </p>
+          <p className="text-sm text-muted-foreground">Bạn có chắc muốn xóa danh mục này?</p>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setCategoryDeleteId(null)}>
               Hủy
             </Button>
             <Button
               disabled={saving}
-              onClick={() =>
-                categoryDeleteId && void deleteCategory(categoryDeleteId)
-              }
+              onClick={() => categoryDeleteId && void deleteCategory(categoryDeleteId)}
             >
               Xóa
             </Button>
@@ -692,18 +692,14 @@ export function ProductsPage() {
         onClose={() => setProductDeleteId(null)}
       >
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Bạn có chắc muốn xóa sản phẩm này?
-          </p>
+          <p className="text-sm text-muted-foreground">Bạn có chắc muốn xóa sản phẩm này?</p>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setProductDeleteId(null)}>
               Hủy
             </Button>
             <Button
               disabled={saving}
-              onClick={() =>
-                productDeleteId && void deleteProduct(productDeleteId)
-              }
+              onClick={() => productDeleteId && void deleteProduct(productDeleteId)}
             >
               Xóa
             </Button>

@@ -1,4 +1,15 @@
 <script lang="ts">
+import { enhance } from "$app/forms";
+import { invalidateAll } from "$app/navigation";
+import { fetchAPI } from "$lib/api";
+import CommissionSettingsPanel from "$lib/components/settings/CommissionSettingsPanel.svelte";
+import * as AlertDialog from "$lib/components/ui/alert-dialog";
+import { Button } from "$lib/components/ui/button";
+import { Checkbox } from "$lib/components/ui/checkbox";
+import * as Dialog from "$lib/components/ui/dialog";
+import { Input } from "$lib/components/ui/input";
+import { Label } from "$lib/components/ui/label";
+import * as Select from "$lib/components/ui/select";
 import {
   Table,
   TableBody,
@@ -7,33 +18,22 @@ import {
   TableHeader,
   TableRow,
 } from "$lib/components/ui/table";
-import { Button } from "$lib/components/ui/button";
-import * as Select from "$lib/components/ui/select";
-import { Input } from "$lib/components/ui/input";
-import { Checkbox } from "$lib/components/ui/checkbox";
-import * as Dialog from "$lib/components/ui/dialog";
-import * as AlertDialog from "$lib/components/ui/alert-dialog";
+import { cn } from "$lib/utils";
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Crown,
-  Settings2,
-  Users,
   BadgePercent,
+  Crown,
   Eye,
+  Pencil,
+  Plus,
+  Settings2,
   ShieldCheck,
   ShieldX,
+  Trash2,
+  Users,
 } from "@lucide/svelte";
-import { cn } from "$lib/utils";
+import { ACTIONS, RESOURCES } from "@repo/constants";
 import { toast } from "svelte-sonner";
-import { Label } from "$lib/components/ui/label";
-import { fetchAPI } from "$lib/api";
-import { invalidateAll } from "$app/navigation";
-import { enhance } from "$app/forms";
-import type { MembershipTier, Member } from "./+page.server";
-import { RESOURCES, ACTIONS } from "@repo/constants";
-import CommissionSettingsPanel from "$lib/components/settings/CommissionSettingsPanel.svelte";
+import type { Member, MembershipTier } from "./+page.server";
 
 let { data } = $props();
 
