@@ -13,15 +13,15 @@ node_modules/
 # testing
 /coverage
 
-# apps/web (next.js)
+# next.js
 .next/
 /out/
 
-# apps/api (cloudflare workers)
+# cloudflare workers
 .wrangler/
 .dev.vars
 
-# apps/web-svelte (sveltekit)
+# sveltekit
 .svelte-kit/
 .netlify/
 vite.config.js.timestamp-*
