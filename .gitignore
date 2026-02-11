@@ -101,3 +101,6 @@ dist-ssr/
 *.sw?
 
 .turbo
+
+# npm lockfile
+package-lock.json

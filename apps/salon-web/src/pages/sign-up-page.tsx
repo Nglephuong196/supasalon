@@ -15,7 +15,11 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Loader2, Store } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 
-const AUTH_BASE_URL = import.meta.env.VITE_AUTH_BASE_URL || "http://localhost:8787";
+const AUTH_BASE_URL =
+  import.meta.env.VITE_AUTH_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.PUBLIC_API_URL ||
+  "http://localhost:3000";
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 type SlugStatus = "idle" | "checking" | "available" | "taken";
@@ -158,28 +162,29 @@ export function SignUpPage() {
 
     setSlugStatus("checking");
     try {
-      const response = await fetch(`${AUTH_BASE_URL}/api/auth/organization/check-slug`, {
+      const response = await fetch(`${AUTH_BASE_URL}/public/organization/check-slug`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ slug }),
       });
 
-      if (response.ok) {
+      if (!response.ok) {
+        setSlugStatus("idle");
+        setFieldError("salonSlug", "Không kiểm tra được slug. Vui lòng thử lại.");
+        return false;
+      }
+
+      const payload = (await response.json()) as { available?: boolean };
+      if (payload.available) {
         setSlugStatus("available");
         setLastCheckedSlug(slug);
         setFieldError("salonSlug", null);
         return true;
       }
 
-      if (response.status === 400) {
-        setSlugStatus("taken");
-        setFieldError("salonSlug", "Slug này đã tồn tại. Vui lòng chọn slug khác.");
-        return false;
-      }
-
-      setSlugStatus("idle");
-      setFieldError("salonSlug", "Không kiểm tra được slug. Vui lòng thử lại.");
+      setSlugStatus("taken");
+      setFieldError("salonSlug", "Slug này đã tồn tại. Vui lòng chọn slug khác.");
       return false;
     } catch {
       setSlugStatus("idle");
@@ -397,21 +402,22 @@ export function SignUpPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="province">Tỉnh/Thành phố</Label>
-                <Input
+                <select
                   id="province"
-                  list="vietnam-provinces"
-                  placeholder="Chọn tỉnh/thành"
+                  className="border-gray-200 bg-background selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground flex h-9 w-full min-w-0 rounded-md border px-3 py-1 text-sm shadow-xs outline-none transition-[color,box-shadow] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                   value={formData.province}
                   disabled={isLoading}
                   aria-invalid={Boolean(errors.province)}
                   onChange={(event) => setField("province", event.target.value)}
                   onBlur={() => validateProvince(formData.province)}
-                />
-                <datalist id="vietnam-provinces">
+                >
+                  <option value="">Chọn tỉnh/thành</option>
                   {provinceItems.map((province) => (
-                    <option key={province} value={province} />
+                    <option key={province} value={province}>
+                      {province}
+                    </option>
                   ))}
-                </datalist>
+                </select>
                 {errors.province ? (
                   <p className="text-sm text-destructive">{errors.province}</p>
                 ) : null}

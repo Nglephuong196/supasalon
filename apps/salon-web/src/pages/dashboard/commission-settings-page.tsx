@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -10,27 +9,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { queryKeys } from "@/lib/query-client";
-import type { EmployeeMember } from "@/services/employees.service";
-import { type CommissionRule, settingsService } from "@/services/settings.service";
+import { type CommissionRule, type CommissionRulePayload, settingsService } from "@/services/settings.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ColumnDef } from "@tanstack/react-table";
-import { Save, Trash2 } from "lucide-react";
+import { DollarSign, Search, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-const emptyForm = {
-  staffId: "",
-  itemType: "service" as "service" | "product",
-  itemId: "",
-  commissionType: "percent" as "percent" | "fixed",
-  commissionValue: "0",
-};
 const NONE_OPTION_VALUE = "__none__";
+
+type ItemType = "service" | "product";
+type CommissionType = "percent" | "fixed";
+type ApplyTarget = "selected" | "all";
+type Draft = {
+  commissionType: CommissionType;
+  commissionValue: string;
+};
 
 export function CommissionSettingsPage() {
   const queryClient = useQueryClient();
-
-  const [form, setForm] = useState(emptyForm);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [rules, setRules] = useState<CommissionRule[]>([]);
+  const [selectedStaffId, setSelectedStaffId] = useState("");
+  const [itemType, setItemType] = useState<ItemType>("service");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [quickType, setQuickType] = useState<CommissionType>("percent");
+  const [quickValue, setQuickValue] = useState("10");
+  const [quickApplyTarget, setQuickApplyTarget] = useState<ApplyTarget>("selected");
+
+  const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+  const [rowLoading, setRowLoading] = useState<Record<string, boolean>>({});
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   useEffect(() => {
     document.title = "Cài đặt hoa hồng | SupaSalon";
@@ -42,8 +51,7 @@ export function CommissionSettingsPage() {
   });
 
   const upsertRuleMutation = useMutation({
-    mutationFn: (payload: Omit<CommissionRule, "id">) =>
-      settingsService.upsertCommissionRule(payload),
+    mutationFn: (payload: CommissionRulePayload) => settingsService.upsertCommissionRule(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: queryKeys.settingsBundle,
@@ -60,19 +68,33 @@ export function CommissionSettingsPage() {
     },
   });
 
-  const rules = bundleQuery.data?.commissionRules ?? [];
-  const members: EmployeeMember[] = bundleQuery.data?.members ?? [];
+  const members = bundleQuery.data?.members ?? [];
   const services = (bundleQuery.data?.services ?? []).map((item) => ({
     id: item.id,
     name: item.name,
+    price: item.price,
+    categoryId: item.categoryId,
   }));
   const products = (bundleQuery.data?.products ?? []).map((item) => ({
     id: item.id,
     name: item.name,
+    price: item.price,
+    categoryId: item.categoryId,
   }));
+  const serviceCategories = bundleQuery.data?.serviceCategories ?? [];
+  const productCategories = bundleQuery.data?.productCategories ?? [];
+
+  useEffect(() => {
+    setRules(bundleQuery.data?.commissionRules ?? []);
+  }, [bundleQuery.data?.commissionRules]);
+
+  useEffect(() => {
+    if (selectedStaffId || members.length === 0) return;
+    setSelectedStaffId(members[0]?.id ?? "");
+  }, [members, selectedStaffId]);
 
   const loading = bundleQuery.isLoading;
-  const saving = upsertRuleMutation.isPending || deleteRuleMutation.isPending;
+  const saving = upsertRuleMutation.isPending || deleteRuleMutation.isPending || bulkLoading;
 
   const error =
     actionError ??
@@ -80,89 +102,192 @@ export function CommissionSettingsPage() {
     (upsertRuleMutation.error instanceof Error ? upsertRuleMutation.error.message : null) ??
     (deleteRuleMutation.error instanceof Error ? deleteRuleMutation.error.message : null);
 
-  const itemOptions = useMemo(() => {
-    return form.itemType === "service" ? services : products;
-  }, [form.itemType, products, services]);
+  const currentItems = useMemo(() => {
+    const source = itemType === "service" ? services : products;
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    const byCategory =
+      selectedCategoryId === null
+        ? source
+        : source.filter((item) => item.categoryId === selectedCategoryId);
 
-  const ruleColumns: Array<ColumnDef<CommissionRule>> = [
-    {
-      id: "member",
-      header: "Nhân viên",
-      cell: ({ row }) => {
-        const member = members.find((item) => item.id === row.original.staffId);
-        return member?.user?.name || member?.user?.email || row.original.staffId;
-      },
-    },
-    {
-      id: "item",
-      header: "Mục",
-      cell: ({ row }) => {
-        const itemName =
-          row.original.itemType === "service"
-            ? services.find((item) => item.id === row.original.itemId)?.name
-            : products.find((item) => item.id === row.original.itemId)?.name;
-        return `${row.original.itemType}: ${itemName || `#${row.original.itemId}`}`;
-      },
-    },
-    {
-      id: "value",
-      header: "Giá trị",
-      meta: { className: "text-right", headerClassName: "text-right" },
-      cell: ({ row }) => (
-        <>
-          {row.original.commissionValue}
-          {row.original.commissionType === "percent" ? "%" : "đ"}
-        </>
-      ),
-    },
-    {
-      id: "actions",
-      header: "",
-      meta: { className: "text-right", headerClassName: "text-right" },
-      cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => void removeRule(row.original.id)}
-        >
-          <Trash2 className="h-4 w-4 text-red-500" />
-        </Button>
-      ),
-    },
-  ];
+    if (!normalizedSearch) return byCategory;
+    return byCategory.filter((item) => item.name.toLowerCase().includes(normalizedSearch));
+  }, [itemType, products, searchQuery, selectedCategoryId, services]);
 
-  async function submit(event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) {
-    event.preventDefault();
+  const currentCategories = itemType === "service" ? serviceCategories : productCategories;
 
-    const itemId = Number(form.itemId);
-    const value = Number(form.commissionValue);
-    if (!form.staffId || !Number.isInteger(itemId) || itemId <= 0) {
-      setActionError("Vui lòng chọn đầy đủ nhân viên và mục áp dụng");
+  function keyFor(itemId: number): string {
+    return `${selectedStaffId}:${itemType}:${itemId}`;
+  }
+
+  function getExistingRule(itemId: number) {
+    return (
+      rules.find(
+        (rule) =>
+          rule.staffId === selectedStaffId && rule.itemType === itemType && rule.itemId === itemId,
+      ) ?? null
+    );
+  }
+
+  function defaultDraftFor(itemId: number): Draft {
+    const existing = getExistingRule(itemId);
+    return {
+      commissionType: existing?.commissionType ?? "percent",
+      commissionValue: String(existing?.commissionValue ?? 0),
+    };
+  }
+
+  function getDraft(itemId: number): Draft {
+    return drafts[keyFor(itemId)] ?? defaultDraftFor(itemId);
+  }
+
+  function setDraft(itemId: number, patch: Partial<Draft>) {
+    const key = keyFor(itemId);
+    setDrafts((prev) => {
+      const fallback = defaultDraftFor(itemId);
+      return {
+        ...prev,
+        [key]: {
+          ...(prev[key] ?? fallback),
+          ...patch,
+        },
+      };
+    });
+  }
+
+  function formatCurrency(value: number) {
+    return `${new Intl.NumberFormat("vi-VN").format(value)}đ`;
+  }
+
+  function estimatePayout(itemPrice: number, draft: Draft) {
+    const value = Number(draft.commissionValue || 0);
+    if (!Number.isFinite(value) || value < 0) return 0;
+    if (draft.commissionType === "percent") return (itemPrice * value) / 100;
+    return value;
+  }
+
+  async function saveRule(item: { id: number }) {
+    if (!selectedStaffId) {
+      setActionError("Vui lòng chọn nhân viên");
+      return;
+    }
+    const key = keyFor(item.id);
+    const draft = getDraft(item.id);
+    const numericValue = Number(draft.commissionValue);
+    if (!Number.isFinite(numericValue) || numericValue < 0) {
+      setActionError("Giá trị hoa hồng không hợp lệ");
       return;
     }
 
     setActionError(null);
+    setRowLoading((prev) => ({ ...prev, [key]: true }));
     try {
-      await upsertRuleMutation.mutateAsync({
-        staffId: form.staffId,
-        itemType: form.itemType,
-        itemId,
-        commissionType: form.commissionType,
-        commissionValue: value,
+      const saved = await upsertRuleMutation.mutateAsync({
+        staffId: selectedStaffId,
+        itemType,
+        itemId: item.id,
+        commissionType: draft.commissionType,
+        commissionValue: numericValue,
       });
-      setForm(emptyForm);
+      setRules((prev) => {
+        const rest = prev.filter(
+          (rule) =>
+            !(rule.staffId === saved.staffId && rule.itemType === saved.itemType && rule.itemId === saved.itemId) &&
+            rule.id !== saved.id,
+        );
+        return [...rest, saved];
+      });
     } catch {
       // handled by mutation state
+    } finally {
+      setRowLoading((prev) => ({ ...prev, [key]: false }));
     }
   }
 
-  async function removeRule(id: number) {
+  async function clearRule(item: { id: number }) {
+    const key = keyFor(item.id);
+    const existing = getExistingRule(item.id);
+    if (!existing) {
+      setDraft(item.id, { commissionType: "percent", commissionValue: "0" });
+      return;
+    }
+
     setActionError(null);
+    setRowLoading((prev) => ({ ...prev, [key]: true }));
     try {
-      await deleteRuleMutation.mutateAsync(id);
+      await deleteRuleMutation.mutateAsync(existing.id);
+      setRules((prev) => prev.filter((rule) => rule.id !== existing.id));
+      setDraft(item.id, { commissionType: "percent", commissionValue: "0" });
     } catch {
       // handled by mutation state
+    } finally {
+      setRowLoading((prev) => ({ ...prev, [key]: false }));
+    }
+  }
+
+  async function applyQuickToFiltered() {
+    if (quickApplyTarget === "selected" && !selectedStaffId) {
+      setActionError("Vui lòng chọn nhân viên");
+      return;
+    }
+    const quickNumeric = Number(quickValue);
+    if (!Number.isFinite(quickNumeric) || quickNumeric < 0) {
+      setActionError("Giá trị áp dụng nhanh không hợp lệ");
+      return;
+    }
+    if (currentItems.length === 0) {
+      setActionError("Không có mục nào để áp dụng");
+      return;
+    }
+
+    const targetStaffIds =
+      quickApplyTarget === "all" ? members.map((member) => member.id) : [selectedStaffId];
+    if (targetStaffIds.length === 0) {
+      setActionError("Không có nhân viên để áp dụng");
+      return;
+    }
+
+    const allPayload = targetStaffIds.flatMap((staffId) =>
+      currentItems.map((item) => ({
+        staffId,
+        itemType,
+        itemId: item.id,
+        commissionType: quickType,
+        commissionValue: quickNumeric,
+      })),
+    );
+
+    setActionError(null);
+    setBulkLoading(true);
+    try {
+      const chunkSize = 400;
+      const savedRules: CommissionRule[] = [];
+      for (let i = 0; i < allPayload.length; i += chunkSize) {
+        const chunk = allPayload.slice(i, i + chunkSize);
+        const response = await settingsService.bulkUpsertCommissionRules({ rules: chunk });
+        savedRules.push(...response.rules);
+      }
+
+      setRules((prev) => {
+        const replaced = new Set(savedRules.map((rule) => `${rule.staffId}:${rule.itemType}:${rule.itemId}`));
+        const next = prev.filter((rule) => !replaced.has(`${rule.staffId}:${rule.itemType}:${rule.itemId}`));
+        return [...next, ...savedRules];
+      });
+
+      for (const item of currentItems) {
+        setDraft(item.id, {
+          commissionType: quickType,
+          commissionValue: String(quickNumeric),
+        });
+      }
+
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.settingsBundle,
+      });
+    } catch {
+      setActionError("Không thể áp dụng hàng loạt");
+    } finally {
+      setBulkLoading(false);
     }
   }
 
@@ -181,140 +306,287 @@ export function CommissionSettingsPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border bg-white p-4">
-          <h2 className="mb-4 font-semibold">Tạo/ghi đè quy tắc</h2>
-          <form className="grid gap-3" onSubmit={submit}>
-            <div className="grid gap-2">
-              <Label>Nhân viên</Label>
-              <Select
-                value={form.staffId || NONE_OPTION_VALUE}
-                onValueChange={(value) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    staffId: value === NONE_OPTION_VALUE ? "" : value,
-                  }))
-                }
-              >
-                <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE_OPTION_VALUE}>Chọn nhân viên</SelectItem>
-                  {members.map((member) => (
-                    <SelectItem key={member.id} value={String(member.id)}>
-                      {member.user?.name || member.user?.email || member.id}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="grid gap-2">
-                <Label>Loại mục</Label>
-                <Select
-                  value={form.itemType}
-                  onValueChange={(value) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      itemType: value as "service" | "product",
-                      itemId: "",
-                    }))
-                  }
-                >
-                  <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="service">Dịch vụ</SelectItem>
-                    <SelectItem value="product">Sản phẩm</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label>Mục</Label>
-                <Select
-                  value={form.itemId || NONE_OPTION_VALUE}
-                  onValueChange={(value) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      itemId: value === NONE_OPTION_VALUE ? "" : value,
-                    }))
-                  }
-                >
-                  <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE_OPTION_VALUE}>Chọn mục</SelectItem>
-                    {itemOptions.map((item) => (
-                      <SelectItem key={item.id} value={String(item.id)}>
-                        {item.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="grid gap-2">
-                <Label>Kiểu</Label>
-                <Select
-                  value={form.commissionType}
-                  onValueChange={(value) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      commissionType: value as "percent" | "fixed",
-                    }))
-                  }
-                >
-                  <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="percent">Phần trăm</SelectItem>
-                    <SelectItem value="fixed">Cố định</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label>Giá trị</Label>
-                <Input
-                  type="number"
-                  value={form.commissionValue}
-                  onChange={(event) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      commissionValue: event.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <Button type="submit" disabled={saving}>
-                <Save className="mr-2 h-4 w-4" />
-                Lưu quy tắc
-              </Button>
-            </div>
-          </form>
+      {loading ? (
+        <div className="rounded-xl border bg-white p-4 text-sm text-muted-foreground">
+          Đang tải dữ liệu...
         </div>
+      ) : (
+        <>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="rounded-xl border bg-white p-4 lg:col-span-2">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="md:col-span-2">
+                  <Label className="mb-2 block">Nhân viên</Label>
+                  <Select
+                    value={selectedStaffId || NONE_OPTION_VALUE}
+                    onValueChange={(value) =>
+                      setSelectedStaffId(value === NONE_OPTION_VALUE ? "" : value)
+                    }
+                  >
+                    <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE_OPTION_VALUE}>Chọn nhân viên</SelectItem>
+                      {members.map((member) => (
+                        <SelectItem key={member.id} value={String(member.id)}>
+                          {member.user?.name || member.user?.email || member.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-        <div className="rounded-xl border bg-white p-4">
-          <h2 className="mb-4 font-semibold">Danh sách quy tắc</h2>
-          <div className="max-h-[420px] overflow-auto rounded-lg border">
-            <DataTable
-              data={rules}
-              columns={ruleColumns}
-              loading={loading}
-              emptyMessage="Chưa có quy tắc"
-            />
+                <div>
+                  <Label className="mb-2 block">Tìm kiếm mục</Label>
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-8"
+                      placeholder="Tên dịch vụ/sản phẩm"
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2 rounded-lg border bg-muted/30 p-2">
+                <Button
+                  variant={itemType === "service" ? "default" : "outline"}
+                  onClick={() => {
+                    setItemType("service");
+                    setSelectedCategoryId(null);
+                  }}
+                >
+                  Dịch vụ
+                </Button>
+                <Button
+                  variant={itemType === "product" ? "default" : "outline"}
+                  onClick={() => {
+                    setItemType("product");
+                    setSelectedCategoryId(null);
+                  }}
+                >
+                  Sản phẩm
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    void queryClient.invalidateQueries({ queryKey: queryKeys.settingsBundle });
+                  }}
+                >
+                  Làm mới dữ liệu
+                </Button>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant={selectedCategoryId === null ? "default" : "outline"}
+                  onClick={() => setSelectedCategoryId(null)}
+                >
+                  Tất cả danh mục
+                </Button>
+                {currentCategories.map((category) => (
+                  <Button
+                    key={category.id}
+                    size="sm"
+                    variant={selectedCategoryId === category.id ? "default" : "outline"}
+                    onClick={() => setSelectedCategoryId(category.id)}
+                  >
+                    {category.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border bg-white p-4">
+              <h2 className="font-semibold">Áp dụng nhanh</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Áp dụng cùng 1 mức cho danh sách đang lọc.
+              </p>
+
+              <div className="mt-4 grid gap-3">
+                <div className="grid gap-2">
+                  <Label>Loại</Label>
+                  <Select
+                    value={quickType}
+                    onValueChange={(value) => setQuickType(value as CommissionType)}
+                  >
+                    <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percent">Phần trăm (%)</SelectItem>
+                      <SelectItem value="fixed">Cố định (đ)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Phạm vi áp dụng</Label>
+                  <Select
+                    value={quickApplyTarget}
+                    onValueChange={(value) => setQuickApplyTarget(value as ApplyTarget)}
+                  >
+                    <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="selected">Nhân viên đang chọn</SelectItem>
+                      <SelectItem value="all">Tất cả nhân viên</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Giá trị</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={quickValue}
+                    onChange={(event) => setQuickValue(event.target.value)}
+                  />
+                </div>
+                <Button onClick={() => void applyQuickToFiltered()} disabled={saving}>
+                  {bulkLoading
+                    ? "Đang áp dụng..."
+                    : quickApplyTarget === "all"
+                      ? `Áp dụng ${currentItems.length} mục x ${members.length} nhân viên`
+                      : `Áp dụng cho ${currentItems.length} mục`}
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+
+          <div className="overflow-hidden rounded-xl border bg-white">
+            <div className="flex items-center gap-2 border-b bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              {selectedStaffId ? (
+                <>
+                  Đang cấu hình cho:
+                  <span className="font-medium text-foreground">
+                    {members.find((member) => member.id === selectedStaffId)?.user?.name ?? selectedStaffId}
+                  </span>
+                </>
+              ) : (
+                "Chưa chọn nhân viên"
+              )}
+              <span className="ml-auto">{currentItems.length} mục</span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[920px] text-sm">
+                <thead className="text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium">
+                      {itemType === "service" ? "Dịch vụ" : "Sản phẩm"}
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium">Giá bán</th>
+                    <th className="px-4 py-3 text-left font-medium">Loại hoa hồng</th>
+                    <th className="px-4 py-3 text-left font-medium">Giá trị</th>
+                    <th className="px-4 py-3 text-left font-medium">Ước tính</th>
+                    <th className="px-4 py-3 text-left font-medium">Trạng thái</th>
+                    <th className="px-4 py-3 text-right font-medium">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                        Không có dữ liệu phù hợp.
+                      </td>
+                    </tr>
+                  ) : null}
+
+                  {currentItems.map((item) => {
+                    const key = keyFor(item.id);
+                    const draft = getDraft(item.id);
+                    const existing = getExistingRule(item.id);
+                    const rowSaving = Boolean(rowLoading[key]);
+                    return (
+                      <tr
+                        key={item.id}
+                        className="border-t border-border/60 align-top transition-colors hover:bg-muted/20"
+                      >
+                        <td className="px-4 py-3 font-medium text-foreground">{item.name}</td>
+                        <td className="px-4 py-3">{formatCurrency(item.price)}</td>
+                        <td className="w-48 px-4 py-3">
+                          <Select
+                            value={draft.commissionType}
+                            onValueChange={(value) =>
+                              setDraft(item.id, {
+                                commissionType: value as CommissionType,
+                              })
+                            }
+                          >
+                            <SelectTrigger className="h-9 rounded-md border px-3 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="percent">Phần trăm (%)</SelectItem>
+                              <SelectItem value="fixed">Cố định (đ)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="w-48 px-4 py-3">
+                          <Input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            value={draft.commissionValue}
+                            onChange={(event) =>
+                              setDraft(item.id, {
+                                commissionValue: event.target.value,
+                              })
+                            }
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center gap-1.5 font-medium">
+                            <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                            {formatCurrency(estimatePayout(item.price, draft))}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {existing ? (
+                            <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                              Đã cấu hình
+                            </span>
+                          ) : (
+                            <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                              Mặc định 0
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={rowSaving || saving}
+                              onClick={() => void clearRule(item)}
+                            >
+                              Đặt về 0
+                            </Button>
+                            <Button
+                              size="sm"
+                              disabled={rowSaving || saving}
+                              onClick={() => void saveRule(item)}
+                            >
+                              {rowSaving ? "Đang lưu..." : "Lưu"}
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

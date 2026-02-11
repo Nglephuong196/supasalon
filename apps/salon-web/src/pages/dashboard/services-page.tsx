@@ -64,6 +64,9 @@ export function ServicesPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<"name-asc" | "price-asc" | "price-desc" | "duration-asc">(
+    "name-asc",
+  );
 
   const [categoryName, setCategoryName] = useState("");
   const [serviceForm, setServiceForm] = useState(emptyServiceForm);
@@ -101,12 +104,21 @@ export function ServicesPage() {
   }, [categoriesQuery.error, servicesQuery.error]);
 
   const filteredServices = useMemo(() => {
-    return services.filter((item) => {
+    const next = services.filter((item) => {
       const byCategory = selectedCategory === null || item.categoryId === selectedCategory;
       const bySearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
       return byCategory && bySearch;
     });
-  }, [searchQuery, selectedCategory, services]);
+
+    next.sort((a, b) => {
+      if (sortBy === "price-asc") return a.price - b.price;
+      if (sortBy === "price-desc") return b.price - a.price;
+      if (sortBy === "duration-asc") return a.duration - b.duration;
+      return a.name.localeCompare(b.name, "vi");
+    });
+
+    return next;
+  }, [searchQuery, selectedCategory, services, sortBy]);
 
   function resetCategoryForm() {
     setCategoryName("");
@@ -330,6 +342,17 @@ export function ServicesPage() {
     () => new Map(categories.map((item) => [item.id, item.name])),
     [categories],
   );
+  const categoryServiceCount = useMemo(() => {
+    const counter = new Map<number, number>();
+    for (const service of services) {
+      counter.set(service.categoryId, (counter.get(service.categoryId) ?? 0) + 1);
+    }
+    return counter;
+  }, [services]);
+  const selectedCategoryLabel = useMemo(() => {
+    if (selectedCategory === null) return "Tất cả danh mục";
+    return categoryNameById.get(selectedCategory) ?? "Danh mục";
+  }, [categoryNameById, selectedCategory]);
 
   const serviceColumns: Array<ColumnDef<ServiceItem>> = [
     {
@@ -375,22 +398,14 @@ export function ServicesPage() {
         headerClassName: "text-right",
       },
       cell: ({ row }) => (
-        <div className="flex justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => openEditService(row.original)}
-          >
-            <Pencil className="h-4 w-4" />
+        <div className="inline-flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={() => openEditService(row.original)}>
+            <Pencil className="mr-1.5 h-3 w-3" />
+            Sửa
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setServiceDeleteId(row.original.id)}
-          >
-            <Trash2 className="h-4 w-4 text-red-500" />
+          <Button variant="destructive" size="sm" onClick={() => setServiceDeleteId(row.original.id)}>
+            <Trash2 className="mr-1.5 h-3 w-3" />
+            Xóa
           </Button>
         </div>
       ),
@@ -399,8 +414,8 @@ export function ServicesPage() {
 
   return (
     <div className="flex h-[calc(100vh-6rem)] flex-col gap-4">
-      <div className="rounded-2xl border border-border/70 bg-linear-to-br from-white to-secondary/30 p-5 sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="rounded-2xl border border-border/70 bg-linear-to-br from-white via-white to-secondary/30 p-5 sm:p-6">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Quản lý dịch vụ</h1>
             <p className="text-muted-foreground">Quản lý danh mục và đơn giá dịch vụ</p>
@@ -425,61 +440,96 @@ export function ServicesPage() {
       ) : null}
 
       <div className="flex flex-1 flex-col gap-4 md:flex-row md:gap-6">
-        <div className="w-full rounded-xl border border-border/70 bg-white p-4 md:w-72">
+        <div className="w-full rounded-xl border border-border/70 bg-white p-4 md:w-80">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-semibold">Danh mục</h2>
-            <span className="text-xs text-muted-foreground">{categories.length}</span>
+            <h2 className="font-semibold">Danh mục dịch vụ</h2>
+            <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+              {categories.length}
+            </span>
           </div>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Chọn danh mục để lọc nhanh dịch vụ theo nhóm.
+          </p>
           <div className="space-y-1">
             <button
               type="button"
-              className={`w-full rounded-lg px-3 py-2 text-left text-sm ${selectedCategory === null ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${selectedCategory === null ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
               onClick={() => setSelectedCategory(null)}
             >
-              Tất cả
+              <span>Tất cả</span>
+              <span className="text-xs">{services.length}</span>
             </button>
             {categories.map((category) => (
               <div key={category.id} className="group flex items-center gap-2">
                 <button
                   type="button"
-                  className={`flex-1 rounded-lg px-3 py-2 text-left text-sm ${selectedCategory === category.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  className={`flex flex-1 items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${selectedCategory === category.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
                   onClick={() => setSelectedCategory(category.id)}
                 >
-                  {category.name}
+                  <span className="truncate">{category.name}</span>
+                  <span className="text-xs">{categoryServiceCount.get(category.id) ?? 0}</span>
                 </button>
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
+                  variant="outline"
+                  size="sm"
                   onClick={() => openEditCategory(category)}
                 >
-                  <Pencil className="h-3.5 w-3.5" />
+                  <Pencil className="mr-1.5 h-3 w-3" />
+                  Sửa
                 </Button>
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
+                  variant="destructive"
+                  size="sm"
                   onClick={() => setCategoryDeleteId(category.id)}
                 >
-                  <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                  <Trash2 className="mr-1.5 h-3 w-3" />
+                  Xóa
                 </Button>
               </div>
             ))}
+            {categories.length === 0 ? (
+              <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                Chưa có danh mục nào. Tạo danh mục đầu tiên để bắt đầu.
+              </div>
+            ) : null}
           </div>
         </div>
 
         <div className="flex-1 rounded-xl border border-border/70 bg-white p-4">
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative w-full max-w-md">
-              <Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Tìm tên dịch vụ"
-                className="pl-9"
-              />
+          <div className="mb-4 rounded-lg border border-border/70 bg-muted/30 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="font-medium">{selectedCategoryLabel}</p>
+              <span className="text-xs text-muted-foreground">
+                {filteredServices.length} dịch vụ hiển thị
+              </span>
             </div>
-            <span className="text-sm text-muted-foreground">{filteredServices.length} dịch vụ</span>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="relative w-full sm:flex-1">
+                <Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Tìm tên dịch vụ"
+                  className="pl-9"
+                />
+              </div>
+              <Select
+                value={sortBy}
+                onValueChange={(value) =>
+                  setSortBy(value as "name-asc" | "price-asc" | "price-desc" | "duration-asc")
+                }
+              >
+                <SelectTrigger className="w-full sm:w-64">
+                  <SelectValue placeholder="Sắp xếp" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name-asc">Tên A - Z</SelectItem>
+                  <SelectItem value="price-asc">Giá thấp đến cao</SelectItem>
+                  <SelectItem value="price-desc">Giá cao đến thấp</SelectItem>
+                  <SelectItem value="duration-asc">Thời gian ngắn trước</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="overflow-auto rounded-lg border">
@@ -487,7 +537,7 @@ export function ServicesPage() {
               data={filteredServices}
               columns={serviceColumns}
               loading={loading}
-              emptyMessage="Không có dữ liệu"
+              emptyMessage="Không tìm thấy dịch vụ phù hợp. Hãy thử từ khóa khác hoặc tạo dịch vụ mới."
             />
           </div>
         </div>

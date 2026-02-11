@@ -22,6 +22,8 @@ export type CommissionRule = {
   commissionValue: number;
 };
 
+export type CommissionRulePayload = Omit<CommissionRule, "id">;
+
 export type PermissionMap = Record<string, string[]>;
 
 export type SettingsBundle = {
@@ -102,8 +104,11 @@ export const settingsService = {
   updateMemberPermissions(memberId: string, permissions: PermissionMap) {
     return apiClient.put(`/members/${memberId}/permissions`, { permissions });
   },
-  upsertCommissionRule(payload: Omit<CommissionRule, "id">) {
+  upsertCommissionRule(payload: CommissionRulePayload) {
     return apiClient.post<CommissionRule>("/staff-commission-rules/upsert", payload);
+  },
+  bulkUpsertCommissionRules(payload: { rules: CommissionRulePayload[] }) {
+    return apiClient.post<{ rules: CommissionRule[] }>("/staff-commission-rules/bulk-upsert", payload);
   },
   deleteCommissionRule(id: number) {
     return apiClient.delete<{ success: boolean }>(`/staff-commission-rules/${id}`);

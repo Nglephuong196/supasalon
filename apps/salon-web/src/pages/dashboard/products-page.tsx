@@ -18,7 +18,7 @@ import {
 } from "@/services/products.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { AlertTriangle, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 function Modal(props: {
@@ -58,7 +58,6 @@ const emptyProductForm = {
   sku: "",
   description: "",
 };
-const ALL_CATEGORIES_VALUE = "__all__";
 const NONE_OPTION_VALUE = "__none__";
 
 export function ProductsPage() {
@@ -67,6 +66,9 @@ export function ProductsPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<"name-asc" | "price-asc" | "price-desc" | "stock-asc">(
+    "name-asc",
+  );
 
   const [categoryName, setCategoryName] = useState("");
   const [productForm, setProductForm] = useState(emptyProductForm);
@@ -104,19 +106,23 @@ export function ProductsPage() {
   }, [categoriesQuery.error, productsQuery.error]);
 
   const filteredProducts = useMemo(() => {
-    return products.filter((item) => {
+    const next = products.filter((item) => {
       const byCategory = selectedCategory === null || item.categoryId === selectedCategory;
       const query = searchQuery.toLowerCase();
       const bySearch =
         item.name.toLowerCase().includes(query) || (item.sku ?? "").toLowerCase().includes(query);
       return byCategory && bySearch;
     });
-  }, [products, searchQuery, selectedCategory]);
 
-  const lowStockCount = useMemo(
-    () => products.filter((item) => item.stock <= item.minStock).length,
-    [products],
-  );
+    next.sort((a, b) => {
+      if (sortBy === "price-asc") return a.price - b.price;
+      if (sortBy === "price-desc") return b.price - a.price;
+      if (sortBy === "stock-asc") return a.stock - b.stock;
+      return a.name.localeCompare(b.name, "vi");
+    });
+
+    return next;
+  }, [products, searchQuery, selectedCategory, sortBy]);
 
   function resetCategoryForm() {
     setCategoryName("");
@@ -341,6 +347,17 @@ export function ProductsPage() {
     () => new Map(categories.map((item) => [item.id, item.name])),
     [categories],
   );
+  const categoryProductCount = useMemo(() => {
+    const counter = new Map<number, number>();
+    for (const product of products) {
+      counter.set(product.categoryId, (counter.get(product.categoryId) ?? 0) + 1);
+    }
+    return counter;
+  }, [products]);
+  const selectedCategoryLabel = useMemo(() => {
+    if (selectedCategory === null) return "Tất cả danh mục";
+    return categoryNameById.get(selectedCategory) ?? "Danh mục";
+  }, [categoryNameById, selectedCategory]);
 
   const productColumns: Array<ColumnDef<ProductItem>> = [
     {
@@ -401,22 +418,14 @@ export function ProductsPage() {
         headerClassName: "text-right",
       },
       cell: ({ row }) => (
-        <div className="flex justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => openEditProduct(row.original)}
-          >
-            <Pencil className="h-4 w-4" />
+        <div className="inline-flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={() => openEditProduct(row.original)}>
+            <Pencil className="mr-1.5 h-3 w-3" />
+            Sửa
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setProductDeleteId(row.original.id)}
-          >
-            <Trash2 className="h-4 w-4 text-red-500" />
+          <Button variant="destructive" size="sm" onClick={() => setProductDeleteId(row.original.id)}>
+            <Trash2 className="mr-1.5 h-3 w-3" />
+            Xóa
           </Button>
         </div>
       ),
@@ -452,76 +461,107 @@ export function ProductsPage() {
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/70 bg-white p-3">
-        <div className="relative w-full max-w-md">
-          <Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Tìm tên hoặc SKU"
-            className="pl-9"
-          />
-        </div>
-        <Select
-          value={selectedCategory === null ? ALL_CATEGORIES_VALUE : String(selectedCategory)}
-          onValueChange={(value) =>
-            setSelectedCategory(value === ALL_CATEGORIES_VALUE ? null : Number(value))
-          }
-        >
-          <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_CATEGORIES_VALUE}>Tất cả danh mục</SelectItem>
-            {categories.map((item) => (
-              <SelectItem key={item.id} value={String(item.id)}>
-                {item.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div className="ml-auto inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-          <AlertTriangle className="h-3.5 w-3.5" />
-          {lowStockCount} sản phẩm sắp hết
-        </div>
-      </div>
-
-      <div className="overflow-auto rounded-lg border border-border/70 bg-white">
-        <DataTable
-          data={filteredProducts}
-          columns={productColumns}
-          loading={loading}
-          emptyMessage="Không có dữ liệu"
-        />
-      </div>
-
-      <div className="rounded-xl border border-border/70 bg-white p-4">
-        <h2 className="mb-2 text-sm font-semibold">Danh mục sản phẩm</h2>
-        <div className="flex flex-wrap gap-2">
-          {categories.map((category) => (
-            <div
-              key={category.id}
-              className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs"
+      <div className="flex flex-1 flex-col gap-4 md:flex-row md:gap-6">
+        <div className="w-full rounded-xl border border-border/70 bg-white p-4 md:w-80">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-semibold">Danh mục sản phẩm</h2>
+            <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+              {categories.length}
+            </span>
+          </div>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Chọn danh mục để lọc nhanh sản phẩm theo nhóm.
+          </p>
+          <div className="space-y-1">
+            <button
+              type="button"
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${selectedCategory === null ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              onClick={() => setSelectedCategory(null)}
             >
-              <span>{category.name}</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-5 w-5"
-                onClick={() => openEditCategory(category)}
-              >
-                <Pencil className="h-3 w-3" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-5 w-5"
-                onClick={() => setCategoryDeleteId(category.id)}
-              >
-                <Trash2 className="h-3 w-3 text-red-500" />
-              </Button>
+              <span>Tất cả</span>
+              <span className="text-xs">{products.length}</span>
+            </button>
+            {categories.map((category) => (
+              <div key={category.id} className="group flex items-center gap-2">
+                <button
+                  type="button"
+                  className={`flex flex-1 items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${selectedCategory === category.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  onClick={() => setSelectedCategory(category.id)}
+                >
+                  <span className="truncate">{category.name}</span>
+                  <span className="text-xs">{categoryProductCount.get(category.id) ?? 0}</span>
+                </button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openEditCategory(category)}
+                >
+                  <Pencil className="mr-1.5 h-3 w-3" />
+                  Sửa
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setCategoryDeleteId(category.id)}
+                >
+                  <Trash2 className="mr-1.5 h-3 w-3" />
+                  Xóa
+                </Button>
+              </div>
+            ))}
+            {categories.length === 0 ? (
+              <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                Chưa có danh mục nào. Tạo danh mục đầu tiên để bắt đầu.
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="flex-1 rounded-xl border border-border/70 bg-white p-4">
+          <div className="mb-4 rounded-lg border border-border/70 bg-muted/30 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="font-medium">{selectedCategoryLabel}</p>
+              <span className="text-xs text-muted-foreground">
+                {filteredProducts.length} sản phẩm hiển thị
+              </span>
             </div>
-          ))}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="relative w-full sm:flex-1">
+                <Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Tìm tên hoặc SKU"
+                  className="pl-9"
+                />
+              </div>
+              <Select
+                value={sortBy}
+                onValueChange={(value) =>
+                  setSortBy(value as "name-asc" | "price-asc" | "price-desc" | "stock-asc")
+                }
+              >
+                <SelectTrigger className="w-full sm:w-64">
+                  <SelectValue placeholder="Sắp xếp" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name-asc">Tên A - Z</SelectItem>
+                  <SelectItem value="price-asc">Giá thấp đến cao</SelectItem>
+                  <SelectItem value="price-desc">Giá cao đến thấp</SelectItem>
+                  <SelectItem value="stock-asc">Tồn kho thấp trước</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="overflow-auto rounded-lg border">
+            <DataTable
+              data={filteredProducts}
+              columns={productColumns}
+              loading={loading}
+              emptyMessage="Không tìm thấy sản phẩm phù hợp. Hãy thử từ khóa khác hoặc tạo sản phẩm mới."
+            />
+          </div>
         </div>
       </div>
 

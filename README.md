@@ -4,15 +4,16 @@ A multi-tenant salon management SaaS with web and mobile apps.
 
 ## Tech Stack
 
-| Layer        | Technology                                           |
-| ------------ | ---------------------------------------------------- |
-| **Web**      | SvelteKit 2 + Svelte 5 + Tailwind v4 + shadcn-svelte |
-| **API**      | Hono on Cloudflare Workers                           |
-| **Mobile**   | Expo 54 + React Native                               |
-| **Database** | Cloudflare D1 (SQLite) + Drizzle ORM                 |
-| **Auth**     | Better Auth (email/password)                         |
-| **Monorepo** | pnpm workspaces + Turbo                              |
-| **Hosting**  | Cloudflare (Workers + Pages)                         |
+| Layer              | Technology                                           |
+| ------------------ | ---------------------------------------------------- |
+| **Web (Customer)** | SvelteKit 2 + Svelte 5 + Tailwind v4 + shadcn-svelte |
+| **Web (Salon)**    | React + TypeScript + Vite                            |
+| **API**            | Hono on Cloudflare Workers                           |
+| **Mobile**         | Expo 54 + React Native                               |
+| **Database**       | Cloudflare D1 (SQLite) + Drizzle ORM                 |
+| **Auth**           | Better Auth (email/password)                         |
+| **Monorepo**       | Bun workspaces + Turbo                               |
+| **Hosting**        | Cloudflare (Workers + Pages)                         |
 
 ## Project Structure
 
@@ -21,7 +22,9 @@ supasalon/
 |-- apps/
 |   |-- api/              # Hono API (Cloudflare Workers)
 |   |-- web/              # SvelteKit web app
-|   `-- mobile/           # Expo mobile app
+|   |-- salon-web/        # React + Vite web app
+|   |-- mobile/           # Expo mobile app
+|   `-- salon-api/        # Elysia + Bun API template
 `-- packages/
     |-- constants/        # Shared constants (Vietnam provinces, phone validation)
     `-- database/         # Shared database types
@@ -134,6 +137,28 @@ import { signIn, signUp, signOut, useSession } from "$lib/auth-client";
 VITE_AUTH_BASE_URL=http://localhost:8787
 ```
 
+### Salon Web (`apps/salon-web`)
+
+React + TypeScript + Vite app for Supasalon.
+
+**Scripts:**
+
+- `bun run dev` - Starts the Vite dev server
+- `bun run build` - Runs TypeScript build and Vite production build
+- `bun run lint` - Runs Biome lint checks
+- `bun run preview` - Serves the production build locally
+
+**Tooling:** Uses Biome via the root `biome.json` configuration.
+
+### Salon API (`apps/salon-api`)
+
+Elysia + Bun runtime template app.
+
+**Development:**
+
+- `bun run dev` - Starts local development server
+- Default local URL: `http://localhost:3000`
+
 ### Shared Packages
 
 **`@repo/constants`:**
@@ -151,13 +176,12 @@ VITE_AUTH_BASE_URL=http://localhost:8787
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) (Latest LTS recommended)
-- [pnpm](https://pnpm.io/) (Package manager)
-- [Bun](https://bun.sh/) (Only required for the web deploy script)
+- [Bun](https://bun.sh/) (Package manager)
 
 ### Install Dependencies
 
 ```bash
-pnpm install
+bun install
 ```
 
 ### First-Time Database Setup
@@ -165,23 +189,23 @@ pnpm install
 ```bash
 cd apps/api
 cp .dev.vars.example .dev.vars  # Edit with your secrets
-pnpm run db:generate            # Generate migration
-pnpm run db:migrate:local       # Apply to local D1
+bun run db:generate            # Generate migration
+bun run db:migrate:local       # Apply to local D1
 ```
 
 ### Development
 
 ```bash
 # Start web + api
-pnpm run dev
+bun run dev
 
 # Start all apps (web, api, mobile)
-pnpm run dev:all
+bun run dev:all
 
 # Or individually via turbo filters (defined in package.json):
-pnpm run dev:web          # Web on http://localhost:5173
-pnpm run dev:api          # API on http://localhost:8787
-pnpm run dev:mobile       # Expo mobile
+bun run dev:web          # Web on http://localhost:5173
+bun run dev:api          # API on http://localhost:8787
+bun run dev:mobile       # Expo mobile
 ```
 
 ## Database Development
@@ -195,25 +219,25 @@ cd apps/api
 ### Workflow
 
 1. **Edit schema** - `src/db/schema.ts`
-2. **Generate migration** - `pnpm run db:generate`
-3. **Apply locally** - `pnpm run db:migrate:local`
-4. **Apply to production** - `pnpm run db:migrate:prod`
+2. **Generate migration** - `bun run db:generate`
+3. **Apply locally** - `bun run db:migrate:local`
+4. **Apply to production** - `bun run db:migrate:prod`
 
 ### Commands
 
-| Command                     | Description                            |
-| --------------------------- | -------------------------------------- |
-| `pnpm run db:generate`      | Generate migration from schema changes |
-| `pnpm run db:migrate:local` | Apply migrations to local D1           |
-| `pnpm run db:migrate:prod`  | Apply migrations to remote D1          |
-| `pnpm run db:studio`        | Open Drizzle Studio GUI                |
+| Command                    | Description                            |
+| -------------------------- | -------------------------------------- |
+| `bun run db:generate`      | Generate migration from schema changes |
+| `bun run db:migrate:local` | Apply migrations to local D1           |
+| `bun run db:migrate:prod`  | Apply migrations to remote D1          |
+| `bun run db:studio`        | Open Drizzle Studio GUI                |
 
 ### Better Auth Schema
 
 Regenerate auth tables if needed:
 
 ```bash
-pnpm exec @better-auth/cli generate --config src/lib/auth.ts
+bunx @better-auth/cli generate --config src/lib/auth.ts
 ```
 
 ## Deployment
@@ -222,14 +246,14 @@ pnpm exec @better-auth/cli generate --config src/lib/auth.ts
 
 ```bash
 cd apps/api
-pnpm run deploy
+bun run deploy
 ```
 
 ### Web (Cloudflare Pages)
 
 ```bash
 cd apps/web
-pnpm run deploy
+bun run deploy
 ```
 
 ## Key Files Reference
