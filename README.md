@@ -1,93 +1,77 @@
-# Salon Pro
+# Supasalon
 
-A monorepo for salon management with web and mobile apps.
+A salon management monorepo with salon web, salon API, and mobile apps.
 
 ## Tech Stack
 
-- **Web**: Next.js 16 + React 19 + Tailwind CSS
-- **API**: Elysia (Bun-native HTTP framework)
-- **Mobile**: Expo + React Native
-- **Database**: PostgreSQL (backend TBD)
-- **Monorepo**: Bun workspaces
-- **Hosting**: Cloudflare Workers (via OpenNext)
+| Layer       | Technology                          |
+| ----------- | ----------------------------------- |
+| Salon Web   | React + TypeScript + Vite           |
+| Salon API   | Elysia + Bun + Drizzle ORM          |
+| Mobile      | Expo + React Native                 |
+| Database    | PostgreSQL + Drizzle ORM            |
+| Monorepo    | Bun workspaces + Turbo              |
+
+## Project Structure
+
+```text
+supasalon/
+|-- apps/
+|   |-- salon-api/
+|   |-- salon-web/
+|   `-- mobile/
+`-- packages/
+    |-- constants/
+    `-- database/
+```
 
 ## Getting Started
 
 ### Prerequisites
 
-- [Bun](https://bun.sh/) (package manager & runtime)
+- Node.js (LTS recommended)
+- Bun
 
-### Install Dependencies
+### Install
 
 ```bash
 bun install
 ```
 
-### Development
+### Run Development
 
 ```bash
-# Start web app
-bun dev:web
+# run salon web + salon api
+bun run dev
 
-# Start API server
-bun dev:api
+# run all workspaces
+bun run dev:all
 
-# Start mobile app
-bun dev:mobile
-
-# Start mobile on specific platform
-bun dev:mobile:ios
-bun dev:mobile:android
-bun dev:mobile:web
+# run individual apps
+bun run dev:web
+bun run dev:api
+bun run dev:mobile
 ```
 
-### Build
+## Common Commands
 
-```bash
-# Build web
-bun build:web
+| Command                    | Description                         |
+| -------------------------- | ----------------------------------- |
+| `bun run build`            | Build all workspaces                |
+| `bun run build:web`        | Build salon web app                 |
+| `bun run lint`             | Lint repo with Biome                |
+| `bun run format`           | Format repo with Biome              |
+| `bun run db:generate`      | Generate migrations for salon API   |
+| `bun run db:migrate:local` | Run local DB migrations for API     |
+| `bun run db:studio`        | Open Drizzle Studio for salon API   |
 
-# Build mobile
-bun build:mobile:web
-bun build:mobile:ios
-bun build:mobile:android
-```
+## Key Paths
 
-## Project Structure
-
-```
-salon-pro/
-├── apps/
-│   ├── web/          # Next.js web app
-│   ├── api/          # Elysia API server
-│   └── mobile/       # Expo mobile app
-└── packages/
-    ├── database/     # Database types
-    └── constants/    # Shared constants
-```
-
-## Deployment
-
-### Cloudflare Workers (Web App)
-
-**Local commands:**
-
-```bash
-cd apps/web
-
-# Build for Cloudflare
-bun run cf:build
-
-# Deploy to Cloudflare
-bun run cf:deploy
-
-# Local dev with Cloudflare runtime
-bun run cf:dev
-```
-
-**CI/CD:** Push to `master` triggers auto-deploy via GitHub Actions.
-
-**Required GitHub Secrets:**
-
-- `CLOUDFLARE_API_TOKEN` - [Create here](https://dash.cloudflare.com/profile/api-tokens)
-- `CLOUDFLARE_ACCOUNT_ID` - Found in Cloudflare Dashboard → Overview
+| Path                                  | Purpose                          |
+| ------------------------------------- | -------------------------------- |
+| `apps/salon-api/src/index.ts`         | API entry point                  |
+| `apps/salon-api/src/db/schema.ts`     | Database schema                  |
+| `apps/salon-web/src/main.tsx`         | Web app bootstrap                |
+| `apps/mobile/app`                     | Expo Router app screens          |
+| `packages/constants`                  | Shared constants                 |
+| `packages/database`                   | Shared database types/helpers    |

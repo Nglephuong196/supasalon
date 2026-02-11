@@ -1,0 +1,9 @@
+
+> supasalon@ build E:\projects\supasalon
+> turbo build
+
+• turbo 2.8.0
+  x Could not resolve workspaces.
+  `-> Missing `packageManager` field in package.json
+
+ ELIFECYCLE  Command failed with exit code 1.

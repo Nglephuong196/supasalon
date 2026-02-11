@@ -1,0 +1,172 @@
+import { apiClient } from "@/lib/api";
+import { ACTIONS, type Action, RESOURCES, type Resource } from "@repo/constants";
+import type { EmployeeMember } from "./employees.service";
+import type { ProductCategory, ProductItem } from "./products.service";
+import type { ServiceCategory, ServiceItem } from "./services.service";
+
+export type MembershipTier = {
+  id: number;
+  name: string;
+  minSpending: number;
+  discountPercent: number;
+  minSpendingToMaintain: number | null;
+  sortOrder: number;
+};
+
+export type CommissionRule = {
+  id: number;
+  staffId: string;
+  itemType: "service" | "product";
+  itemId: number;
+  commissionType: "percent" | "fixed";
+  commissionValue: number;
+};
+
+export type CommissionRulePayload = Omit<CommissionRule, "id">;
+
+export type PermissionMap = Record<string, string[]>;
+
+export type SettingsBundle = {
+  tiers: MembershipTier[];
+  members: EmployeeMember[];
+  services: ServiceItem[];
+  products: ProductItem[];
+  serviceCategories: ServiceCategory[];
+  productCategories: ProductCategory[];
+  commissionRules: CommissionRule[];
+  bookingPolicy: BookingPolicy;
+};
+
+export type BookingPolicy = {
+  id: number;
+  organizationId: string;
+  preventStaffOverlap: boolean;
+  bufferMinutes: number;
+  requireDeposit: boolean;
+  defaultDepositAmount: number;
+  cancellationWindowHours: number;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+};
+
+export type CommissionPayoutPreviewItem = {
+  staffId: string;
+  staffName: string;
+  totalAmount: number;
+  totalItems: number;
+};
+
+export type CommissionPayout = {
+  id: number;
+  organizationId: string;
+  staffId: string;
+  fromDate: string;
+  toDate: string;
+  totalAmount: number;
+  status: "draft" | "paid";
+  notes?: string | null;
+  paidAt?: string | null;
+  createdAt: string;
+  staff?: EmployeeMember & { user?: { name?: string; email?: string } };
+};
+
+export const permissionGroups: Array<{ resource: Resource; label: string; actions: Action[] }> = [
+  {
+    resource: RESOURCES.CUSTOMER,
+    label: "Khách hàng",
+    actions: [ACTIONS.READ, ACTIONS.CREATE, ACTIONS.UPDATE, ACTIONS.DELETE],
+  },
+  {
+    resource: RESOURCES.INVOICE,
+    label: "Hóa đơn",
+    actions: [ACTIONS.READ, ACTIONS.CREATE, ACTIONS.UPDATE, ACTIONS.DELETE],
+  },
+  {
+    resource: RESOURCES.SERVICE,
+    label: "Dịch vụ",
+    actions: [ACTIONS.READ, ACTIONS.CREATE, ACTIONS.UPDATE, ACTIONS.DELETE],
+  },
+  {
+    resource: RESOURCES.BOOKING,
+    label: "Lịch hẹn",
+    actions: [ACTIONS.READ, ACTIONS.CREATE, ACTIONS.UPDATE, ACTIONS.DELETE],
+  },
+  { resource: RESOURCES.EMPLOYEE, label: "Nhân viên", actions: [ACTIONS.READ, ACTIONS.UPDATE] },
+  { resource: RESOURCES.REPORT, label: "Báo cáo", actions: [ACTIONS.READ] },
+];
+
+export const settingsService = {
+  listBundle() {
+    return Promise.all([
+      apiClient.get<MembershipTier[]>("/membership-tiers"),
+      apiClient.get<EmployeeMember[]>("/members"),
+      apiClient.get<ServiceItem[]>("/services"),
+      apiClient.get<ProductItem[]>("/products"),
+      apiClient.get<ServiceCategory[]>("/service-categories"),
+      apiClient.get<ProductCategory[]>("/product-categories"),
+      apiClient.get<CommissionRule[]>("/staff-commission-rules"),
+      apiClient.get<BookingPolicy>("/booking-policies"),
+    ]).then(
+      ([
+        tiers,
+        members,
+        services,
+        products,
+        serviceCategories,
+        productCategories,
+        commissionRules,
+        bookingPolicy,
+      ]) =>
+        ({
+          tiers,
+          members,
+          services,
+          products,
+          serviceCategories,
+          productCategories,
+          commissionRules,
+          bookingPolicy,
+        }) satisfies SettingsBundle,
+    );
+  },
+  createTier(payload: Omit<MembershipTier, "id">) {
+    return apiClient.post<MembershipTier>("/membership-tiers", payload);
+  },
+  updateTier(id: number, payload: Partial<Omit<MembershipTier, "id">>) {
+    return apiClient.put<MembershipTier>(`/membership-tiers/${id}`, payload);
+  },
+  deleteTier(id: number) {
+    return apiClient.delete<{ message: string }>(`/membership-tiers/${id}`);
+  },
+  updateMemberPermissions(memberId: string, permissions: PermissionMap) {
+    return apiClient.put(`/members/${memberId}/permissions`, { permissions });
+  },
+  upsertCommissionRule(payload: CommissionRulePayload) {
+    return apiClient.post<CommissionRule>("/staff-commission-rules/upsert", payload);
+  },
+  bulkUpsertCommissionRules(payload: { rules: CommissionRulePayload[] }) {
+    return apiClient.post<{ rules: CommissionRule[] }>("/staff-commission-rules/bulk-upsert", payload);
+  },
+  deleteCommissionRule(id: number) {
+    return apiClient.delete<{ success: boolean }>(`/staff-commission-rules/${id}`);
+  },
+  updateBookingPolicy(payload: Partial<BookingPolicy>) {
+    return apiClient.put<BookingPolicy>("/booking-policies", payload);
+  },
+  previewCommissionPayouts(payload: { from: string; to: string }) {
+    return apiClient.post<CommissionPayoutPreviewItem[]>("/commission-payouts/preview", payload);
+  },
+  createCommissionPayoutCycle(payload: { from: string; to: string; notes?: string }) {
+    return apiClient.post<CommissionPayout[]>("/commission-payouts", payload);
+  },
+  listCommissionPayouts(filters?: { from?: string; to?: string }) {
+    const params = new URLSearchParams();
+    if (filters?.from) params.set("from", filters.from);
+    if (filters?.to) params.set("to", filters.to);
+    const query = params.toString();
+    return apiClient.get<CommissionPayout[]>(query ? `/commission-payouts?${query}` : "/commission-payouts");
+  },
+  markCommissionPayoutPaid(id: number) {
+    return apiClient.patch<CommissionPayout>(`/commission-payouts/${id}/pay`);
+  },
+};
