@@ -50,7 +50,7 @@ function Modal(props: {
   );
 }
 
-type Tab = "tiers" | "permissions" | "commissions";
+type Tab = "tiers" | "permissions" | "commissions" | "booking-rules";
 
 const emptyTier = {
   name: "",
@@ -69,6 +69,14 @@ const emptyRule = {
 };
 const NONE_OPTION_VALUE = "__none__";
 
+const defaultBookingPolicyForm = {
+  preventStaffOverlap: true,
+  bufferMinutes: "0",
+  requireDeposit: false,
+  defaultDepositAmount: "0",
+  cancellationWindowHours: "2",
+};
+
 export function SettingsPage() {
   const queryClient = useQueryClient();
 
@@ -85,6 +93,7 @@ export function SettingsPage() {
   const [permissionOpen, setPermissionOpen] = useState(false);
 
   const [ruleForm, setRuleForm] = useState(emptyRule);
+  const [bookingPolicyForm, setBookingPolicyForm] = useState(defaultBookingPolicyForm);
 
   useEffect(() => {
     document.title = "Cài đặt | SupaSalon";
@@ -167,6 +176,21 @@ export function SettingsPage() {
     },
   });
 
+  const updateBookingPolicyMutation = useMutation({
+    mutationFn: (payload: {
+      preventStaffOverlap: boolean;
+      bufferMinutes: number;
+      requireDeposit: boolean;
+      defaultDepositAmount: number;
+      cancellationWindowHours: number;
+    }) => settingsService.updateBookingPolicy(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.settingsBundle,
+      });
+    },
+  });
+
   const tiers = bundleQuery.data?.tiers ?? [];
   const members = bundleQuery.data?.members ?? [];
   const services = (bundleQuery.data?.services ?? []).map((item) => ({
@@ -178,6 +202,18 @@ export function SettingsPage() {
     name: item.name,
   }));
   const rules = bundleQuery.data?.commissionRules ?? [];
+  const bookingPolicy = bundleQuery.data?.bookingPolicy;
+
+  useEffect(() => {
+    if (!bookingPolicy) return;
+    setBookingPolicyForm({
+      preventStaffOverlap: bookingPolicy.preventStaffOverlap,
+      bufferMinutes: String(bookingPolicy.bufferMinutes ?? 0),
+      requireDeposit: bookingPolicy.requireDeposit,
+      defaultDepositAmount: String(bookingPolicy.defaultDepositAmount ?? 0),
+      cancellationWindowHours: String(bookingPolicy.cancellationWindowHours ?? 2),
+    });
+  }, [bookingPolicy]);
 
   const loading = bundleQuery.isLoading;
   const saving =
@@ -186,7 +222,8 @@ export function SettingsPage() {
     deleteTierMutation.isPending ||
     updatePermissionsMutation.isPending ||
     upsertRuleMutation.isPending ||
-    deleteRuleMutation.isPending;
+    deleteRuleMutation.isPending ||
+    updateBookingPolicyMutation.isPending;
 
   const error =
     actionError ??
@@ -198,7 +235,10 @@ export function SettingsPage() {
       ? updatePermissionsMutation.error.message
       : null) ??
     (upsertRuleMutation.error instanceof Error ? upsertRuleMutation.error.message : null) ??
-    (deleteRuleMutation.error instanceof Error ? deleteRuleMutation.error.message : null);
+    (deleteRuleMutation.error instanceof Error ? deleteRuleMutation.error.message : null) ??
+    (updateBookingPolicyMutation.error instanceof Error
+      ? updateBookingPolicyMutation.error.message
+      : null);
 
   function openCreateTier() {
     setTierEditing(null);
@@ -328,6 +368,38 @@ export function SettingsPage() {
     setActionError(null);
     try {
       await deleteRuleMutation.mutateAsync(id);
+    } catch {
+      // handled by mutation state
+    }
+  }
+
+  async function saveBookingPolicy() {
+    const bufferMinutes = Number(bookingPolicyForm.bufferMinutes);
+    const defaultDepositAmount = Number(bookingPolicyForm.defaultDepositAmount);
+    const cancellationWindowHours = Number(bookingPolicyForm.cancellationWindowHours);
+
+    if (!Number.isFinite(bufferMinutes) || bufferMinutes < 0) {
+      setActionError("Buffer phút không hợp lệ");
+      return;
+    }
+    if (!Number.isFinite(defaultDepositAmount) || defaultDepositAmount < 0) {
+      setActionError("Mức cọc mặc định không hợp lệ");
+      return;
+    }
+    if (!Number.isFinite(cancellationWindowHours) || cancellationWindowHours < 0) {
+      setActionError("Giờ hủy miễn phí không hợp lệ");
+      return;
+    }
+
+    setActionError(null);
+    try {
+      await updateBookingPolicyMutation.mutateAsync({
+        preventStaffOverlap: bookingPolicyForm.preventStaffOverlap,
+        bufferMinutes,
+        requireDeposit: bookingPolicyForm.requireDeposit,
+        defaultDepositAmount,
+        cancellationWindowHours,
+      });
     } catch {
       // handled by mutation state
     }
@@ -523,6 +595,12 @@ export function SettingsPage() {
         >
           Hoa hồng
         </Button>
+        <Button
+          variant={activeTab === "booking-rules" ? "default" : "ghost"}
+          onClick={() => setActiveTab("booking-rules")}
+        >
+          Quy tắc lịch hẹn
+        </Button>
       </div>
 
       {loading ? (
@@ -680,6 +758,98 @@ export function SettingsPage() {
             <div className="max-h-[420px] overflow-auto rounded-lg border">
               <DataTable data={rules} columns={ruleColumns} />
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {!loading && activeTab === "booking-rules" ? (
+        <div className="rounded-xl border bg-white p-4">
+          <h2 className="mb-1 font-semibold">Quy tắc lịch hẹn</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Chống trùng lịch theo nhân viên, thời gian đệm và chính sách đặt cọc mặc định.
+          </p>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={bookingPolicyForm.preventStaffOverlap}
+                onChange={(event) =>
+                  setBookingPolicyForm((prev) => ({
+                    ...prev,
+                    preventStaffOverlap: event.target.checked,
+                  }))
+                }
+              />
+              Chặn trùng lịch theo nhân viên
+            </label>
+
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={bookingPolicyForm.requireDeposit}
+                onChange={(event) =>
+                  setBookingPolicyForm((prev) => ({
+                    ...prev,
+                    requireDeposit: event.target.checked,
+                  }))
+                }
+              />
+              Yêu cầu đặt cọc cho lịch hẹn
+            </label>
+
+            <div className="grid gap-2">
+              <Label>Buffer giữa lịch (phút)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={bookingPolicyForm.bufferMinutes}
+                onChange={(event) =>
+                  setBookingPolicyForm((prev) => ({
+                    ...prev,
+                    bufferMinutes: event.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Mức cọc mặc định (₫)</Label>
+              <Input
+                type="number"
+                min={0}
+                step="1000"
+                value={bookingPolicyForm.defaultDepositAmount}
+                onChange={(event) =>
+                  setBookingPolicyForm((prev) => ({
+                    ...prev,
+                    defaultDepositAmount: event.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Hạn hủy miễn phí (giờ)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={bookingPolicyForm.cancellationWindowHours}
+                onChange={(event) =>
+                  setBookingPolicyForm((prev) => ({
+                    ...prev,
+                    cancellationWindowHours: event.target.value,
+                  }))
+                }
+              />
+            </div>
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <Button onClick={() => void saveBookingPolicy()} disabled={saving}>
+              <Save className="mr-2 h-4 w-4" />
+              Lưu quy tắc
+            </Button>
           </div>
         </div>
       ) : null}

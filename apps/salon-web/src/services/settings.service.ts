@@ -34,6 +34,40 @@ export type SettingsBundle = {
   serviceCategories: ServiceCategory[];
   productCategories: ProductCategory[];
   commissionRules: CommissionRule[];
+  bookingPolicy: BookingPolicy;
+};
+
+export type BookingPolicy = {
+  id: number;
+  organizationId: string;
+  preventStaffOverlap: boolean;
+  bufferMinutes: number;
+  requireDeposit: boolean;
+  defaultDepositAmount: number;
+  cancellationWindowHours: number;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+};
+
+export type CommissionPayoutPreviewItem = {
+  staffId: string;
+  staffName: string;
+  totalAmount: number;
+  totalItems: number;
+};
+
+export type CommissionPayout = {
+  id: number;
+  organizationId: string;
+  staffId: string;
+  fromDate: string;
+  toDate: string;
+  totalAmount: number;
+  status: "draft" | "paid";
+  notes?: string | null;
+  paidAt?: string | null;
+  createdAt: string;
+  staff?: EmployeeMember & { user?: { name?: string; email?: string } };
 };
 
 export const permissionGroups: Array<{ resource: Resource; label: string; actions: Action[] }> = [
@@ -71,6 +105,7 @@ export const settingsService = {
       apiClient.get<ServiceCategory[]>("/service-categories"),
       apiClient.get<ProductCategory[]>("/product-categories"),
       apiClient.get<CommissionRule[]>("/staff-commission-rules"),
+      apiClient.get<BookingPolicy>("/booking-policies"),
     ]).then(
       ([
         tiers,
@@ -80,6 +115,7 @@ export const settingsService = {
         serviceCategories,
         productCategories,
         commissionRules,
+        bookingPolicy,
       ]) =>
         ({
           tiers,
@@ -89,6 +125,7 @@ export const settingsService = {
           serviceCategories,
           productCategories,
           commissionRules,
+          bookingPolicy,
         }) satisfies SettingsBundle,
     );
   },
@@ -112,5 +149,24 @@ export const settingsService = {
   },
   deleteCommissionRule(id: number) {
     return apiClient.delete<{ success: boolean }>(`/staff-commission-rules/${id}`);
+  },
+  updateBookingPolicy(payload: Partial<BookingPolicy>) {
+    return apiClient.put<BookingPolicy>("/booking-policies", payload);
+  },
+  previewCommissionPayouts(payload: { from: string; to: string }) {
+    return apiClient.post<CommissionPayoutPreviewItem[]>("/commission-payouts/preview", payload);
+  },
+  createCommissionPayoutCycle(payload: { from: string; to: string; notes?: string }) {
+    return apiClient.post<CommissionPayout[]>("/commission-payouts", payload);
+  },
+  listCommissionPayouts(filters?: { from?: string; to?: string }) {
+    const params = new URLSearchParams();
+    if (filters?.from) params.set("from", filters.from);
+    if (filters?.to) params.set("to", filters.to);
+    const query = params.toString();
+    return apiClient.get<CommissionPayout[]>(query ? `/commission-payouts?${query}` : "/commission-payouts");
+  },
+  markCommissionPayoutPaid(id: number) {
+    return apiClient.patch<CommissionPayout>(`/commission-payouts/${id}/pay`);
   },
 };

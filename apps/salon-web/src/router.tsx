@@ -2,7 +2,9 @@ import { AuthShell } from "@/components/layout/auth-shell";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PublicBookingShell } from "@/components/layout/public-booking-shell";
 import { ApiContextSync } from "@/components/providers/api-context-sync";
+import { useSession } from "@/lib/auth-client";
 import {
+  Navigate,
   Outlet,
   createRootRoute,
   createRoute,
@@ -38,6 +40,26 @@ const InvoicesPage = lazyRouteComponent(
   () => import("@/pages/dashboard/invoices-page"),
   "InvoicesPage",
 );
+const PrepaidPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/prepaid-page"),
+  "PrepaidPage",
+);
+const BranchesPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/branches-page"),
+  "BranchesPage",
+);
+const BookingRemindersPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/booking-reminders-page"),
+  "BookingRemindersPage",
+);
+const ApprovalsPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/approvals-page"),
+  "ApprovalsPage",
+);
+const CashManagementPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/cash-management-page"),
+  "CashManagementPage",
+);
 const SettingsPage = lazyRouteComponent(
   () => import("@/pages/dashboard/settings-page"),
   "SettingsPage",
@@ -50,6 +72,10 @@ const CommissionSettingsPage = lazyRouteComponent(
   () => import("@/pages/dashboard/commission-settings-page"),
   "CommissionSettingsPage",
 );
+const PayrollPage = lazyRouteComponent(
+  () => import("@/pages/dashboard/payroll-page"),
+  "PayrollPage",
+);
 const UnauthorizedPage = lazyRouteComponent(
   () => import("@/pages/dashboard/unauthorized-page"),
   "UnauthorizedPage",
@@ -60,6 +86,29 @@ const PublicBookingPage = lazyRouteComponent(
   () => import("@/pages/public/booking-page"),
   "PublicBookingPage",
 );
+
+function ProtectedDashboardLayout() {
+  const session = useSession();
+  const hasUser = Boolean((session.data as { user?: { id?: string } } | null)?.user?.id);
+
+  if (session.isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        Đang kiểm tra phiên đăng nhập...
+      </div>
+    );
+  }
+
+  if (!hasUser) {
+    return <Navigate to="/signin" replace />;
+  }
+
+  return (
+    <DashboardShell>
+      <Outlet />
+    </DashboardShell>
+  );
+}
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -73,11 +122,7 @@ const rootRoute = createRootRoute({
 const dashboardLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: "dashboard-layout",
-  component: () => (
-    <DashboardShell>
-      <Outlet />
-    </DashboardShell>
-  ),
+  component: ProtectedDashboardLayout,
 });
 
 const authLayoutRoute = createRoute({
@@ -142,6 +187,36 @@ const invoicesRoute = createRoute({
   component: InvoicesPage,
 });
 
+const prepaidRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/prepaid",
+  component: PrepaidPage,
+});
+
+const branchesRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/branches",
+  component: BranchesPage,
+});
+
+const bookingRemindersRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/booking-reminders",
+  component: BookingRemindersPage,
+});
+
+const approvalsRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/approvals",
+  component: ApprovalsPage,
+});
+
+const cashManagementRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/cash-management",
+  component: CashManagementPage,
+});
+
 const settingsRoute = createRoute({
   getParentRoute: () => dashboardLayoutRoute,
   path: "/settings",
@@ -158,6 +233,12 @@ const commissionSettingsRoute = createRoute({
   getParentRoute: () => dashboardLayoutRoute,
   path: "/commission-settings",
   component: CommissionSettingsPage,
+});
+
+const payrollRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/payroll",
+  component: PayrollPage,
 });
 
 const unauthorizedRoute = createRoute({
@@ -193,9 +274,15 @@ const routeTree = rootRoute.addChildren([
     servicesRoute,
     productsRoute,
     invoicesRoute,
+    prepaidRoute,
+    branchesRoute,
+    bookingRemindersRoute,
+    approvalsRoute,
+    cashManagementRoute,
     settingsRoute,
     profileRoute,
     commissionSettingsRoute,
+    payrollRoute,
     unauthorizedRoute,
   ]),
   authLayoutRoute.addChildren([signInRoute, signUpRoute]),

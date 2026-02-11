@@ -56,6 +56,7 @@ const statusText: Record<BookingStatus, string> = {
   checkin: "Đã check-in",
   completed: "Hoàn thành",
   cancelled: "Đã hủy",
+  no_show: "Không đến (No-show)",
 };
 
 const statusClass: Record<BookingStatus, string> = {
@@ -64,6 +65,7 @@ const statusClass: Record<BookingStatus, string> = {
   checkin: "bg-purple-100 text-purple-700",
   completed: "bg-blue-100 text-blue-700",
   cancelled: "bg-rose-100 text-rose-700",
+  no_show: "bg-red-100 text-red-700",
 };
 
 const emptyStats: BookingStats = {
@@ -72,7 +74,10 @@ const emptyStats: BookingStats = {
   confirmed: 0,
   completed: 0,
   cancelled: 0,
+  noShow: 0,
   cancelRate: 0,
+  noShowRate: 0,
+  lostRate: 0,
 };
 const NONE_OPTION_VALUE = "__none__";
 
@@ -88,6 +93,7 @@ export function BookingsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [branchFilter, setBranchFilter] = useState("all");
   const [fromDate, setFromDate] = useState(todayString());
   const [toDate, setToDate] = useState(todayString());
 
@@ -98,11 +104,15 @@ export function BookingsPage() {
   const [selectedBooking, setSelectedBooking] = useState<BookingItem | null>(null);
 
   const [formCustomerId, setFormCustomerId] = useState("");
+  const [formBranchId, setFormBranchId] = useState("");
   const [formDate, setFormDate] = useState("");
   const [formGuestCount, setFormGuestCount] = useState("1");
   const [formServiceId, setFormServiceId] = useState("");
   const [formMemberId, setFormMemberId] = useState("");
   const [formStatus, setFormStatus] = useState<BookingStatus>("pending");
+  const [formDepositAmount, setFormDepositAmount] = useState("0");
+  const [formDepositPaid, setFormDepositPaid] = useState("0");
+  const [formNoShowReason, setFormNoShowReason] = useState("");
   const [formNotes, setFormNotes] = useState("");
 
   useEffect(() => {
@@ -118,6 +128,7 @@ export function BookingsPage() {
 
   const filters = useMemo(
     () => ({
+      branchId: branchFilter === "all" ? undefined : Number(branchFilter),
       from: fromDate,
       to: toDate,
       status: statusFilter,
@@ -125,7 +136,7 @@ export function BookingsPage() {
       page: 1,
       limit: 100,
     }),
-    [debouncedSearchQuery, fromDate, statusFilter, toDate],
+    [branchFilter, debouncedSearchQuery, fromDate, statusFilter, toDate],
   );
 
   const dependenciesQuery = useQuery({
@@ -139,8 +150,17 @@ export function BookingsPage() {
   });
 
   const statsQuery = useQuery({
-    queryKey: queryKeys.bookingStats(fromDate, toDate),
-    queryFn: () => bookingsService.stats(fromDate, toDate),
+    queryKey: queryKeys.bookingStats(
+      fromDate,
+      toDate,
+      branchFilter === "all" ? undefined : Number(branchFilter),
+    ),
+    queryFn: () =>
+      bookingsService.stats(
+        fromDate,
+        toDate,
+        branchFilter === "all" ? undefined : Number(branchFilter),
+      ),
   });
 
   const createMutation = useMutation({
@@ -170,8 +190,15 @@ export function BookingsPage() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: BookingStatus }) =>
-      bookingsService.updateStatus(id, status),
+    mutationFn: ({
+      id,
+      status,
+      noShowReason,
+    }: {
+      id: number;
+      status: BookingStatus;
+      noShowReason?: string;
+    }) => bookingsService.updateStatus(id, status, noShowReason),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["bookings"] }),
@@ -193,6 +220,7 @@ export function BookingsPage() {
   const customers = dependenciesQuery.data?.[0] ?? [];
   const services = dependenciesQuery.data?.[1] ?? [];
   const members = dependenciesQuery.data?.[2] ?? [];
+  const branches = dependenciesQuery.data?.[3] ?? [];
 
   const bookings = bookingsQuery.data?.data ?? [];
   const stats = statsQuery.data ?? emptyStats;
@@ -216,17 +244,25 @@ export function BookingsPage() {
 
   function resetForm() {
     setFormCustomerId("");
+    setFormBranchId("");
     setFormDate("");
     setFormGuestCount("1");
     setFormServiceId("");
     setFormMemberId("");
     setFormStatus("pending");
+    setFormDepositAmount("0");
+    setFormDepositPaid("0");
+    setFormNoShowReason("");
     setFormNotes("");
   }
 
   const customerById = useMemo(
     () => new Map(customers.map((item) => [String(item.id), item])),
     [customers],
+  );
+  const branchById = useMemo(
+    () => new Map(branches.map((item) => [item.id, item])),
+    [branches],
   );
 
   const serviceById = useMemo(() => new Map(services.map((item) => [item.id, item])), [services]);
@@ -267,6 +303,14 @@ export function BookingsPage() {
       ),
     },
     {
+      id: "branch",
+      header: "Chi nhánh",
+      cell: ({ row }) => {
+        const branchId = Number(row.original.branchId ?? 0);
+        return row.original.branch?.name || branchById.get(branchId)?.name || "Toàn hệ thống";
+      },
+    },
+    {
       id: "service",
       header: "Dịch vụ",
       cell: ({ row }) => {
@@ -290,11 +334,36 @@ export function BookingsPage() {
       accessorKey: "status",
       header: "Trạng thái",
       cell: ({ row }) => (
-        <span
-          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClass[row.original.status]}`}
-        >
-          {statusText[row.original.status]}
-        </span>
+        <div className="space-y-1">
+          <span
+            className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusClass[row.original.status]}`}
+          >
+            {statusText[row.original.status]}
+          </span>
+          {row.original.status === "no_show" && row.original.noShowReason ? (
+            <div className="max-w-52 truncate text-[11px] text-muted-foreground">
+              Lý do: {row.original.noShowReason}
+            </div>
+          ) : null}
+        </div>
+      ),
+    },
+    {
+      id: "deposit",
+      header: "Đặt cọc",
+      meta: {
+        className: "text-right",
+        headerClassName: "text-right",
+      },
+      cell: ({ row }) => (
+        <div className="text-right">
+          <div className="font-medium">
+            {Number(row.original.depositPaid ?? 0).toLocaleString("vi-VN")}đ
+          </div>
+          <div className="text-xs text-muted-foreground">
+            / {Number(row.original.depositAmount ?? 0).toLocaleString("vi-VN")}đ
+          </div>
+        </div>
       ),
     },
     {
@@ -344,11 +413,18 @@ export function BookingsPage() {
 
   function buildPayload(): BookingPayload | null {
     const customerId = Number(formCustomerId);
+    const branchId = formBranchId ? Number(formBranchId) : undefined;
     const guestCount = Number(formGuestCount);
     const serviceId = Number(formServiceId);
+    const depositAmount = Number(formDepositAmount);
+    const depositPaid = Number(formDepositPaid);
 
     if (!Number.isInteger(customerId) || customerId <= 0) {
       setActionError("Vui lòng chọn khách hàng");
+      return null;
+    }
+    if (typeof branchId === "number" && (!Number.isInteger(branchId) || branchId <= 0)) {
+      setActionError("Chi nhánh không hợp lệ");
       return null;
     }
     if (!formDate) {
@@ -361,6 +437,22 @@ export function BookingsPage() {
     }
     if (!Number.isInteger(serviceId) || serviceId <= 0) {
       setActionError("Vui lòng chọn dịch vụ");
+      return null;
+    }
+    if (!Number.isFinite(depositAmount) || depositAmount < 0) {
+      setActionError("Số tiền cọc không hợp lệ");
+      return null;
+    }
+    if (!Number.isFinite(depositPaid) || depositPaid < 0) {
+      setActionError("Số tiền đã cọc không hợp lệ");
+      return null;
+    }
+    if (depositPaid > depositAmount) {
+      setActionError("Số tiền đã cọc không thể lớn hơn số tiền cần cọc");
+      return null;
+    }
+    if (formStatus === "no_show" && !formNoShowReason.trim()) {
+      setActionError("Vui lòng nhập lý do no-show");
       return null;
     }
 
@@ -383,10 +475,14 @@ export function BookingsPage() {
 
     return {
       customerId,
+      branchId,
       guests,
       guestCount,
       date: new Date(formDate).toISOString(),
       status: formStatus,
+      depositAmount,
+      depositPaid,
+      noShowReason: formStatus === "no_show" ? formNoShowReason.trim() : undefined,
       notes: formNotes,
     };
   }
@@ -409,6 +505,7 @@ export function BookingsPage() {
   function openEdit(booking: BookingItem) {
     setSelectedBooking(booking);
     setFormCustomerId(String(booking.customerId));
+    setFormBranchId(booking.branchId ? String(booking.branchId) : "");
     const iso = new Date(booking.date).toISOString();
     setFormDate(iso.slice(0, 16));
     setFormGuestCount(String(booking.guestCount));
@@ -416,6 +513,9 @@ export function BookingsPage() {
     setFormServiceId(firstService?.serviceId ? String(firstService.serviceId) : "");
     setFormMemberId(firstService?.memberId || "");
     setFormStatus(booking.status);
+    setFormDepositAmount(String(booking.depositAmount ?? 0));
+    setFormDepositPaid(String(booking.depositPaid ?? 0));
+    setFormNoShowReason(booking.noShowReason ?? "");
     setFormNotes(booking.notes ?? "");
     setEditOpen(true);
   }
@@ -444,7 +544,12 @@ export function BookingsPage() {
   async function quickStatus(id: number, status: BookingStatus) {
     setActionError(null);
     try {
-      await updateStatusMutation.mutateAsync({ id, status });
+      await updateStatusMutation.mutateAsync({
+        id,
+        status,
+        noShowReason:
+          status === "no_show" ? "Đánh dấu no-show nhanh từ danh sách lịch hẹn" : undefined,
+      });
     } catch {
       // handled by mutation state
     }
@@ -486,6 +591,26 @@ export function BookingsPage() {
               {customers.map((item) => (
                 <SelectItem key={item.id} value={String(item.id)}>
                   {item.name} - {item.phone}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-2">
+          <Label>Chi nhánh</Label>
+          <Select
+            value={formBranchId || NONE_OPTION_VALUE}
+            onValueChange={(value) => setFormBranchId(value === NONE_OPTION_VALUE ? "" : value)}
+          >
+            <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE_OPTION_VALUE}>Tự động theo mặc định</SelectItem>
+              {branches.map((branch) => (
+                <SelectItem key={branch.id} value={String(branch.id)}>
+                  {branch.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -573,6 +698,41 @@ export function BookingsPage() {
           </Select>
         </div>
 
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <Label>Số tiền cọc (₫)</Label>
+            <Input
+              type="number"
+              min={0}
+              step="1000"
+              value={formDepositAmount}
+              onChange={(event) => setFormDepositAmount(event.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label>Đã cọc (₫)</Label>
+            <Input
+              type="number"
+              min={0}
+              step="1000"
+              value={formDepositPaid}
+              onChange={(event) => setFormDepositPaid(event.target.value)}
+            />
+          </div>
+        </div>
+
+        {formStatus === "no_show" ? (
+          <div className="grid gap-2">
+            <Label>Lý do no-show</Label>
+            <textarea
+              className="min-h-20 rounded-md border px-3 py-2 text-sm"
+              value={formNoShowReason}
+              onChange={(event) => setFormNoShowReason(event.target.value)}
+              placeholder="Ví dụ: Khách báo bận sát giờ, không thể đến..."
+            />
+          </div>
+        ) : null}
+
         <div className="grid gap-2">
           <Label>Ghi chú</Label>
           <textarea
@@ -630,7 +790,7 @@ export function BookingsPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         <div className="rounded-xl border bg-white p-3">
           <div className="text-xs text-muted-foreground">Tổng</div>
           <div className="text-xl font-semibold">{stats.total}</div>
@@ -648,8 +808,13 @@ export function BookingsPage() {
           <div className="text-xl font-semibold text-blue-700">{stats.completed}</div>
         </div>
         <div className="rounded-xl border bg-white p-3">
-          <div className="text-xs text-muted-foreground">Tỷ lệ huỷ</div>
-          <div className="text-xl font-semibold text-rose-700">{stats.cancelRate.toFixed(1)}%</div>
+          <div className="text-xs text-muted-foreground">No-show</div>
+          <div className="text-xl font-semibold text-red-700">{stats.noShow}</div>
+          <div className="text-xs text-muted-foreground">{stats.noShowRate.toFixed(1)}%</div>
+        </div>
+        <div className="rounded-xl border bg-white p-3">
+          <div className="text-xs text-muted-foreground">Tỷ lệ mất lịch</div>
+          <div className="text-xl font-semibold text-rose-700">{stats.lostRate.toFixed(1)}%</div>
         </div>
       </div>
 
@@ -672,6 +837,19 @@ export function BookingsPage() {
             {Object.entries(statusText).map(([value, label]) => (
               <SelectItem key={value} value={value}>
                 {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={branchFilter} onValueChange={setBranchFilter}>
+          <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tất cả chi nhánh</SelectItem>
+            {branches.map((branch) => (
+              <SelectItem key={branch.id} value={String(branch.id)}>
+                {branch.name}
               </SelectItem>
             ))}
           </SelectContent>

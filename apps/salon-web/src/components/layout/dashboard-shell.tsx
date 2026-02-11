@@ -4,17 +4,23 @@ import { signOut } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
+  Building2,
   CalendarDays,
   CreditCard,
+  Gift,
+  HandCoins,
   LayoutDashboard,
+  BellRing,
   LogOut,
   Menu,
   Package,
   Scissors,
   Settings,
+  ShieldCheck,
   UserCircle2,
   UserCog,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -43,6 +49,12 @@ const managementNav: NavItem[] = [
 
 const systemNav: NavItem[] = [
   { label: "Hóa đơn", to: "/invoices", icon: CreditCard },
+  { label: "Chi nhánh", to: "/branches", icon: Building2 },
+  { label: "Bảng lương", to: "/payroll", icon: HandCoins },
+  { label: "Gói trả trước", to: "/prepaid", icon: Gift },
+  { label: "Nhắc lịch", to: "/booking-reminders", icon: BellRing },
+  { label: "Quỹ tiền mặt", to: "/cash-management", icon: Wallet },
+  { label: "Phê duyệt", to: "/approvals", icon: ShieldCheck },
   { label: "Cài đặt", to: "/settings", icon: Settings },
   { label: "Hoa hồng", to: "/commission-settings", icon: Settings },
 ];
@@ -114,7 +126,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
-  const mobileItems = [mainNav[0], mainNav[1], managementNav[2], managementNav[3], systemNav[1]];
+  const mobileItems = [mainNav[0], mainNav[1], systemNav[0], systemNav[2], systemNav[5]];
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 

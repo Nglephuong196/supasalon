@@ -3,7 +3,8 @@ import { Elysia } from "elysia";
 import { z } from "zod/v4";
 
 import { db } from "../db";
-import { bookings, customers, member, organization, serviceCategories, services, user } from "../db";
+import { customers, member, organization, serviceCategories, services, user } from "../db";
+import { BookingsService } from "../services";
 
 const createPublicBookingSchema = z.object({
   customerName: z.string().trim().min(2, "Tên khách hàng phải có ít nhất 2 ký tự"),
@@ -187,9 +188,9 @@ export const publicBookingRoutes = new Elysia({ name: "public-booking-routes" })
       customer = createdCustomer;
     }
 
-    const [createdBooking] = await db
-      .insert(bookings)
-      .values({
+    let createdBooking: { id: number } | null = null;
+    try {
+      const created = await new BookingsService(db).create({
         organizationId: org.id,
         customerId: customer.id,
         date: bookingDate,
@@ -197,8 +198,16 @@ export const publicBookingRoutes = new Elysia({ name: "public-booking-routes" })
         guestCount: normalizedGuests.length,
         notes: body.notes?.trim() || "",
         guests: normalizedGuests,
-      })
-      .returning({ id: bookings.id });
+      });
+      if (!created) {
+        set.status = 500;
+        return { error: "Không thể tạo lịch hẹn" };
+      }
+      createdBooking = { id: created.id };
+    } catch (error: any) {
+      set.status = 400;
+      return { error: error?.message ?? "Không thể đặt lịch vào thời điểm này" };
+    }
 
     set.status = 201;
     return {

@@ -9,6 +9,10 @@ export const createBookingSchema = z.object({
   customerId: z
     .union([z.number(), z.string().transform((val) => parseInt(val, 10))])
     .pipe(z.number().int().positive()),
+  branchId: z
+    .union([z.number(), z.string().transform((val) => parseInt(val, 10))])
+    .pipe(z.number().int().positive())
+    .optional(),
   guests: z
     .array(
       z.object({
@@ -37,15 +41,27 @@ export const createBookingSchema = z.object({
     .datetime({ message: "Date must be a valid ISO datetime string" })
     .transform((str) => new Date(str)),
   notes: z.string().max(500).optional().default(""),
+  depositAmount: z
+    .union([z.number(), z.string().transform((val) => parseFloat(val))])
+    .pipe(z.number().min(0))
+    .optional()
+    .default(0),
+  depositPaid: z
+    .union([z.number(), z.string().transform((val) => parseFloat(val))])
+    .pipe(z.number().min(0))
+    .optional()
+    .default(0),
   status: z
-    .enum(["pending", "confirmed", "checkin", "completed", "cancelled"])
+    .enum(["pending", "confirmed", "checkin", "completed", "cancelled", "no_show"])
     .optional()
     .default("pending"),
+  noShowReason: z.string().max(500).optional(),
 });
 // Removed refine check as guests array min(1) covers it.
 
 export const updateBookingSchema = z.object({
   customerId: z.number().int().positive().optional(),
+  branchId: z.number().int().positive().nullable().optional(),
   serviceId: z.number().int().positive().optional(),
   date: z
     .string()
@@ -53,7 +69,21 @@ export const updateBookingSchema = z.object({
     .transform((str) => new Date(str))
     .optional(),
   notes: z.string().max(500).optional(),
-  status: z.enum(["pending", "confirmed", "checkin", "completed", "cancelled"]).optional(),
+  status: z.enum(["pending", "confirmed", "checkin", "completed", "cancelled", "no_show"]).optional(),
+  depositAmount: z
+    .union([z.number(), z.string().transform((val) => parseFloat(val))])
+    .pipe(z.number().min(0))
+    .optional(),
+  depositPaid: z
+    .union([z.number(), z.string().transform((val) => parseFloat(val))])
+    .pipe(z.number().min(0))
+    .optional(),
+  noShowReason: z.string().max(500).optional(),
+  noShowAt: z
+    .string()
+    .datetime()
+    .transform((str) => new Date(str))
+    .optional(),
   guestCount: z
     .union([z.number(), z.string().transform((val) => parseInt(val, 10))])
     .pipe(z.number().int().positive())
@@ -79,11 +109,13 @@ export const updateBookingSchema = z.object({
 });
 
 export const updateStatusSchema = z.object({
-  status: z.enum(["pending", "confirmed", "checkin", "completed", "cancelled"]),
+  status: z.enum(["pending", "confirmed", "checkin", "completed", "cancelled", "no_show"]),
+  noShowReason: z.string().max(500).optional(),
 });
 
 export const bookingQuerySchema = z.object({
   customerId: z.string().optional(),
+  branchId: z.string().optional(),
   from: z.string().optional(),
   to: z.string().optional(),
   status: z.string().optional(),

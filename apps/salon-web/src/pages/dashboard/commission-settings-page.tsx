@@ -9,9 +9,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { queryKeys } from "@/lib/query-client";
-import { type CommissionRule, type CommissionRulePayload, settingsService } from "@/services/settings.service";
+import {
+  type CommissionPayoutPreviewItem,
+  type CommissionRule,
+  type CommissionRulePayload,
+  settingsService,
+} from "@/services/settings.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { DollarSign, Search, Users } from "lucide-react";
+import { CheckCircle2, DollarSign, Download, Search, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 const NONE_OPTION_VALUE = "__none__";
@@ -23,6 +28,15 @@ type Draft = {
   commissionType: CommissionType;
   commissionValue: string;
 };
+
+function isoDate(date: Date) {
+  return date.toISOString().split("T")[0] ?? "";
+}
+
+function monthStartISO() {
+  const now = new Date();
+  return isoDate(new Date(now.getFullYear(), now.getMonth(), 1));
+}
 
 export function CommissionSettingsPage() {
   const queryClient = useQueryClient();
@@ -40,6 +54,10 @@ export function CommissionSettingsPage() {
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [rowLoading, setRowLoading] = useState<Record<string, boolean>>({});
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [payoutFrom, setPayoutFrom] = useState(monthStartISO());
+  const [payoutTo, setPayoutTo] = useState(isoDate(new Date()));
+  const [payoutNotes, setPayoutNotes] = useState("");
+  const [payoutPreview, setPayoutPreview] = useState<CommissionPayoutPreviewItem[]>([]);
 
   useEffect(() => {
     document.title = "Cài đặt hoa hồng | SupaSalon";
@@ -68,6 +86,30 @@ export function CommissionSettingsPage() {
     },
   });
 
+  const payoutsQuery = useQuery({
+    queryKey: ["commission-payouts", payoutFrom, payoutTo],
+    queryFn: () => settingsService.listCommissionPayouts({ from: payoutFrom, to: payoutTo }),
+  });
+
+  const previewPayoutMutation = useMutation({
+    mutationFn: (payload: { from: string; to: string }) => settingsService.previewCommissionPayouts(payload),
+  });
+
+  const createPayoutMutation = useMutation({
+    mutationFn: (payload: { from: string; to: string; notes?: string }) =>
+      settingsService.createCommissionPayoutCycle(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["commission-payouts"] });
+    },
+  });
+
+  const markPayoutPaidMutation = useMutation({
+    mutationFn: (id: number) => settingsService.markCommissionPayoutPaid(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["commission-payouts"] });
+    },
+  });
+
   const members = bundleQuery.data?.members ?? [];
   const services = (bundleQuery.data?.services ?? []).map((item) => ({
     id: item.id,
@@ -93,14 +135,24 @@ export function CommissionSettingsPage() {
     setSelectedStaffId(members[0]?.id ?? "");
   }, [members, selectedStaffId]);
 
-  const loading = bundleQuery.isLoading;
-  const saving = upsertRuleMutation.isPending || deleteRuleMutation.isPending || bulkLoading;
+  const loading = bundleQuery.isLoading || payoutsQuery.isLoading;
+  const saving =
+    upsertRuleMutation.isPending ||
+    deleteRuleMutation.isPending ||
+    bulkLoading ||
+    previewPayoutMutation.isPending ||
+    createPayoutMutation.isPending ||
+    markPayoutPaidMutation.isPending;
 
   const error =
     actionError ??
     (bundleQuery.error instanceof Error ? bundleQuery.error.message : null) ??
     (upsertRuleMutation.error instanceof Error ? upsertRuleMutation.error.message : null) ??
-    (deleteRuleMutation.error instanceof Error ? deleteRuleMutation.error.message : null);
+    (deleteRuleMutation.error instanceof Error ? deleteRuleMutation.error.message : null) ??
+    (payoutsQuery.error instanceof Error ? payoutsQuery.error.message : null) ??
+    (previewPayoutMutation.error instanceof Error ? previewPayoutMutation.error.message : null) ??
+    (createPayoutMutation.error instanceof Error ? createPayoutMutation.error.message : null) ??
+    (markPayoutPaidMutation.error instanceof Error ? markPayoutPaidMutation.error.message : null);
 
   const currentItems = useMemo(() => {
     const source = itemType === "service" ? services : products;
@@ -289,6 +341,71 @@ export function CommissionSettingsPage() {
     } finally {
       setBulkLoading(false);
     }
+  }
+
+  async function previewPayouts() {
+    if (!payoutFrom || !payoutTo) {
+      setActionError("Vui lòng chọn khoảng thời gian để xem preview");
+      return;
+    }
+    setActionError(null);
+    try {
+      const data = await previewPayoutMutation.mutateAsync({
+        from: payoutFrom,
+        to: payoutTo,
+      });
+      setPayoutPreview(data);
+    } catch {
+      // handled by mutation state
+    }
+  }
+
+  async function createPayoutCycle() {
+    if (!payoutFrom || !payoutTo) {
+      setActionError("Vui lòng chọn khoảng thời gian");
+      return;
+    }
+    setActionError(null);
+    try {
+      await createPayoutMutation.mutateAsync({
+        from: payoutFrom,
+        to: payoutTo,
+        notes: payoutNotes.trim() || undefined,
+      });
+      await previewPayouts();
+    } catch {
+      // handled by mutation state
+    }
+  }
+
+  async function markPayoutPaid(id: number) {
+    setActionError(null);
+    try {
+      await markPayoutPaidMutation.mutateAsync(id);
+    } catch {
+      // handled by mutation state
+    }
+  }
+
+  function exportPreviewCsv() {
+    if (payoutPreview.length === 0) {
+      setActionError("Chưa có dữ liệu preview để xuất");
+      return;
+    }
+    const headers = ["staff_id", "staff_name", "total_items", "total_amount"];
+    const rows = payoutPreview.map((row) =>
+      [row.staffId, row.staffName, String(row.totalItems), String(row.totalAmount)].join(","),
+    );
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `commission-preview-${payoutFrom}-to-${payoutTo}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -583,6 +700,126 @@ export function CommissionSettingsPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-xl border bg-white p-4">
+              <h2 className="mb-3 font-semibold">Kỳ chi hoa hồng</h2>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label>Từ ngày</Label>
+                  <Input type="date" value={payoutFrom} onChange={(e) => setPayoutFrom(e.target.value)} />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Đến ngày</Label>
+                  <Input type="date" value={payoutTo} onChange={(e) => setPayoutTo(e.target.value)} />
+                </div>
+              </div>
+              <div className="mt-3 grid gap-2">
+                <Label>Ghi chú kỳ chi</Label>
+                <Input value={payoutNotes} onChange={(e) => setPayoutNotes(e.target.value)} />
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => void previewPayouts()} disabled={saving}>
+                  Xem preview
+                </Button>
+                <Button onClick={() => void createPayoutCycle()} disabled={saving}>
+                  Chốt kỳ chi
+                </Button>
+                <Button variant="ghost" onClick={exportPreviewCsv} disabled={saving}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Xuất CSV
+                </Button>
+              </div>
+
+              <div className="mt-4 overflow-auto rounded-lg border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/30 text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium">Nhân viên</th>
+                      <th className="px-3 py-2 text-right font-medium">Số dòng</th>
+                      <th className="px-3 py-2 text-right font-medium">Tổng hoa hồng</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payoutPreview.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="px-3 py-4 text-center text-muted-foreground">
+                          Chưa có dữ liệu preview
+                        </td>
+                      </tr>
+                    ) : (
+                      payoutPreview.map((row) => (
+                        <tr key={row.staffId} className="border-t border-border/60">
+                          <td className="px-3 py-2">{row.staffName}</td>
+                          <td className="px-3 py-2 text-right">{row.totalItems}</td>
+                          <td className="px-3 py-2 text-right">
+                            {new Intl.NumberFormat("vi-VN").format(row.totalAmount)}đ
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="rounded-xl border bg-white p-4">
+              <h2 className="mb-3 font-semibold">Lịch sử kỳ chi</h2>
+              <div className="max-h-[380px] overflow-auto rounded-lg border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/30 text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium">Nhân viên</th>
+                      <th className="px-3 py-2 text-left font-medium">Khoảng thời gian</th>
+                      <th className="px-3 py-2 text-right font-medium">Tổng</th>
+                      <th className="px-3 py-2 text-right font-medium">Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(payoutsQuery.data ?? []).length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-3 py-4 text-center text-muted-foreground">
+                          Chưa có kỳ chi nào
+                        </td>
+                      </tr>
+                    ) : (
+                      (payoutsQuery.data ?? []).map((row) => (
+                        <tr key={row.id} className="border-t border-border/60">
+                          <td className="px-3 py-2">
+                            {row.staff?.user?.name || row.staff?.user?.email || row.staffId}
+                          </td>
+                          <td className="px-3 py-2">
+                            {new Date(row.fromDate).toLocaleDateString("vi-VN")} -{" "}
+                            {new Date(row.toDate).toLocaleDateString("vi-VN")}
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            {new Intl.NumberFormat("vi-VN").format(row.totalAmount)}đ
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            {row.status === "paid" ? (
+                              <span className="inline-flex rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
+                                Đã chi
+                              </span>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => void markPayoutPaid(row.id)}
+                                disabled={saving}
+                              >
+                                <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+                                Đánh dấu đã chi
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </>
