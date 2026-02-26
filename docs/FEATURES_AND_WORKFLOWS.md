@@ -2,7 +2,7 @@
 
 This document is generated from the current implementation in:
 - `apps/salon-api`
-- `apps/salon-web`
+- `apps/web`
 
 It focuses on real behavior in code: routes, permission checks, business rules, and UI workflows.
 
@@ -10,7 +10,7 @@ It focuses on real behavior in code: routes, permission checks, business rules, 
 
 SupaSalon is a multi-tenant salon management app with:
 - `salon-api`: Elysia + Drizzle + PostgreSQL backend
-- `salon-web`: React + TanStack Router + TanStack Query frontend
+- `web`: React + TanStack Router + TanStack Query frontend
 
 Primary business domains:
 - Authentication and tenant context
@@ -27,7 +27,7 @@ Primary business domains:
 ## 2. High-Level Architecture
 
 Request lifecycle for protected API calls:
-1. Client sends cookies + `X-Organization-Id` and optional `sessionId` header (see `apps/salon-web/src/lib/api.ts`).
+1. Client sends cookies + `X-Organization-Id` and optional `sessionId` header (see `apps/web/src/lib/api.ts`).
 2. `requireTenant()` validates session via Better Auth and confirms user belongs to organization (`apps/salon-api/src/lib/tenant.ts`).
 3. `requirePermissionFor()` checks role/permission when route enforces resource/action (`apps/salon-api/src/routes/protected/plugin.ts`, `apps/salon-api/src/lib/permission.ts`).
 4. Route handler calls service layer.
@@ -44,8 +44,8 @@ Public flow:
 - Auth routes mounted via `app.mount(auth.handler)` at `/api/auth/*` (`apps/salon-api/src/index.ts`).
 
 ### Frontend auth
-- `signIn`, `signUp`, `signOut`, `useSession`, and `organization` come from Better Auth React client (`apps/salon-web/src/lib/auth-client.ts`).
-- `ApiContextSync` stores `organizationId` and session token into runtime/localStorage for API headers (`apps/salon-web/src/components/providers/api-context-sync.tsx`).
+- `signIn`, `signUp`, `signOut`, `useSession`, and `organization` come from Better Auth React client (`apps/web/src/lib/auth-client.ts`).
+- `ApiContextSync` stores `organizationId` and session token into runtime/localStorage for API headers (`apps/web/src/components/providers/api-context-sync.tsx`).
 
 ### Tenant resolution
 - Candidate organization from header (`X-Organization-Id`/`X-Salon-Id`) or session active org.
@@ -319,11 +319,11 @@ Provides:
 - Top stylists by revenue attribution from invoice item staff commissions
 - Low stock products list
 
-## 7. Frontend Feature Map (`salon-web`)
+## 7. Frontend Feature Map (`web`)
 
 ## 7.1 Route structure
 
-Defined in `apps/salon-web/src/router.tsx`:
+Defined in `apps/web/src/router.tsx`:
 - Public auth layout:
   - `/signin`
   - `/signup`
@@ -353,7 +353,7 @@ Protected layout gate:
 
 ## 7.2 API client behavior
 
-From `apps/salon-web/src/lib/api.ts`:
+From `apps/web/src/lib/api.ts`:
 - Base URL from `VITE_API_URL`/`PUBLIC_API_URL`/`VITE_AUTH_BASE_URL`.
 - Auto includes cookies (`credentials: include`).
 - For non-public/non-auth routes, ensures organization ID is available:
@@ -363,7 +363,7 @@ From `apps/salon-web/src/lib/api.ts`:
 
 ## 7.3 Query model
 
-From `apps/salon-web/src/lib/query-client.ts`:
+From `apps/web/src/lib/query-client.ts`:
 - Centralized query keys for all modules (dashboard, bookings, invoices, cash, payroll, reminders, approvals, settings, etc.).
 - Query defaults:
   - `refetchOnWindowFocus=false`
@@ -373,7 +373,7 @@ From `apps/salon-web/src/lib/query-client.ts`:
 
 ## 7.4 Dashboard shell and navigation
 
-From `apps/salon-web/src/components/layout/dashboard-shell.tsx`:
+From `apps/web/src/components/layout/dashboard-shell.tsx`:
 - Desktop left nav sections:
   - Main: Overview, Bookings
   - Management: Services, Products, Customers, Employees
@@ -383,21 +383,21 @@ From `apps/salon-web/src/components/layout/dashboard-shell.tsx`:
 
 ## 7.5 Auth and onboarding workflows (UI)
 
-### Sign up (`apps/salon-web/src/pages/sign-up-page.tsx`)
+### Sign up (`apps/web/src/pages/sign-up-page.tsx`)
 1. Validates owner/email/password/salon info/phone.
 2. Normalizes slug and checks slug availability via `/public/organization/check-slug`.
 3. Creates user using `signUp.email()`.
 4. Creates organization via `organization.create({name, slug})`.
 5. Redirects to sign-in.
 
-### Sign in (`apps/salon-web/src/pages/sign-in-page.tsx`)
+### Sign in (`apps/web/src/pages/sign-in-page.tsx`)
 1. Validates email/password.
 2. Calls `signIn.email()`.
 3. On success navigates to `/`.
 
 ## 7.6 Public booking workflow (UI)
 
-From `apps/salon-web/src/pages/public/booking-page.tsx`:
+From `apps/web/src/pages/public/booking-page.tsx`:
 1. Fetch salon options via `/public/booking/:slug/options`.
 2. User selects customer info, datetime, service, optional staff, guest count.
 3. UI expands single service selection across guest count.
@@ -545,10 +545,10 @@ Backend core:
 - `apps/salon-api/src/services/*.ts`
 
 Frontend core:
-- `apps/salon-web/src/router.tsx`
-- `apps/salon-web/src/lib/api.ts`
-- `apps/salon-web/src/lib/auth-client.ts`
-- `apps/salon-web/src/lib/query-client.ts`
-- `apps/salon-web/src/components/layout/*.tsx`
-- `apps/salon-web/src/pages/**/*.tsx`
-- `apps/salon-web/src/services/*.ts`
+- `apps/web/src/router.tsx`
+- `apps/web/src/lib/api.ts`
+- `apps/web/src/lib/auth-client.ts`
+- `apps/web/src/lib/query-client.ts`
+- `apps/web/src/components/layout/*.tsx`
+- `apps/web/src/pages/**/*.tsx`
+- `apps/web/src/services/*.ts`

@@ -18,7 +18,7 @@ A salon management monorepo with salon web, salon API, and mobile apps.
 supasalon/
 |-- apps/
 |   |-- salon-api/
-|   |-- salon-web/
+|   |-- web/
 |   `-- mobile/
 `-- packages/
     |-- constants/
@@ -71,7 +71,7 @@ bun run dev:mobile
 | ------------------------------------- | -------------------------------- |
 | `apps/salon-api/src/index.ts`         | API entry point                  |
 | `apps/salon-api/src/db/schema.ts`     | Database schema                  |
-| `apps/salon-web/src/main.tsx`         | Web app bootstrap                |
+| `apps/web/src/main.tsx`         | Web app bootstrap                |
 | `apps/mobile/app`                     | Expo Router app screens          |
 | `packages/constants`                  | Shared constants                 |
 | `packages/database`                   | Shared database types/helpers    |
