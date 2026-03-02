@@ -104,3 +104,15 @@ dist-ssr/
 
 # npm lockfile
 package-lock.json
+
+# apps/api* (.NET)
+apps/api*/bin/
+apps/api*/obj/
+apps/api*/.vs/
+apps/api*/*.user
+apps/api*/*.rsuser
+apps/api*/*.suo
+apps/api*/appsettings.Development.json
+apps/api.Tests/TestResults/
+apps/api.Tests/*.trx
+apps/api.Tests/*.coverage
