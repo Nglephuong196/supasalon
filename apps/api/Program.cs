@@ -1,13 +1,9 @@
-using Api.Api.Configuration;
-using Api.Application.Common.Interfaces.Repositories;
-using Api.Application.Common.Interfaces.Services;
-using Api.Application.Features.Bookings;
-using Api.Application.Features.Customers;
-using Api.Application.Features.Invoices;
-using Api.Infrastructure.Persistence;
-using Api.Infrastructure.Persistence.Repositories;
-using Api.Api.Endpoints;
-using Api.Domain.Entities;
+using Api.Models;
+using Api.Interfaces;
+using Api.Data;
+using Api.Repositories;
+using Api.Services;
+using Api.Endpoints;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +28,7 @@ if (string.IsNullOrWhiteSpace(jwtOptions.Audience))
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is missing.");
 
-builder.Services.AddDbContext<SalonDbContext>(options =>
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
@@ -53,7 +49,7 @@ builder.Services
         options.Password.RequireLowercase = true;
         options.Password.RequireNonAlphanumeric = false;
     })
-    .AddEntityFrameworkStores<SalonDbContext>()
+    .AddEntityFrameworkStores<AppDbContext>()
     .AddSignInManager<SignInManager<User>>()
     .AddDefaultTokenProviders();
 
