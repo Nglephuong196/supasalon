@@ -2,78 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { apiClient } from "@/lib/api";
-import { organization, useSession } from "@/lib/auth-client";
-import { queryKeys } from "@/lib/query-client";
+import { useSession } from "@/lib/auth-client";
 import { profileService } from "@/services/profile.service";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 
-type OrganizationInfo = {
-  id: string;
-  name: string;
-  slug: string | null;
-};
-
-async function fetchOrganizationInfo(sessionData: unknown): Promise<OrganizationInfo | null> {
-  let resolvedOrg: OrganizationInfo | null = null;
-  let resolvedOrgId =
-    (typeof localStorage !== "undefined" ? localStorage.getItem("organizationId") : null) || null;
-
-  const activeOrgIdFromSession = (
-    sessionData as {
-      session?: { activeOrganizationId?: string | null };
-    } | null
-  )?.session?.activeOrganizationId;
-
-  if (!resolvedOrgId && activeOrgIdFromSession) {
-    resolvedOrgId = activeOrgIdFromSession;
-  }
-
-  if (resolvedOrgId) {
-    try {
-      resolvedOrg = await apiClient.post<OrganizationInfo>(
-        "/api/auth/organization/get-full-organization",
-        {
-          organizationId: resolvedOrgId,
-        },
-      );
-    } catch {
-      resolvedOrg = null;
-    }
-  }
-
-  if (!resolvedOrg) {
-    const listResult = (await organization.list()) as {
-      data?: Array<{ id?: string; name?: string; slug?: string | null }> | undefined;
-    };
-    const list = listResult.data ?? [];
-    const match = resolvedOrgId ? list.find((item) => item.id === resolvedOrgId) : null;
-    const chosen = match ?? list[0];
-    if (chosen?.id) {
-      resolvedOrgId = chosen.id;
-      try {
-        await organization.setActive({ organizationId: chosen.id });
-      } catch {
-        // best-effort only
-      }
-      resolvedOrg = {
-        id: chosen.id,
-        name: chosen.name ?? "",
-        slug: chosen.slug ?? null,
-      };
-    }
-  }
-
-  if (resolvedOrgId && typeof localStorage !== "undefined") {
-    localStorage.setItem("organizationId", resolvedOrgId);
-  }
-
-  return resolvedOrg;
-}
-
 export function ProfilePage() {
-  const queryClient = useQueryClient();
   const session = useSession();
 
   const defaults = useMemo(
@@ -94,12 +28,6 @@ export function ProfilePage() {
     document.title = "Hồ sơ | SupaSalon";
   }, []);
 
-  const organizationQuery = useQuery({
-    queryKey: queryKeys.profileOrganization,
-    queryFn: () => fetchOrganizationInfo(session.data),
-    staleTime: 5 * 60_000,
-  });
-
   const saveProfileMutation = useMutation({
     mutationFn: (payload: {
       name: string;
@@ -107,9 +35,6 @@ export function ProfilePage() {
       organizationName: string;
       organizationSlug: string;
     }) => profileService.updateProfile(payload),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.profileOrganization });
-    },
   });
 
   useEffect(() => {
@@ -120,16 +45,6 @@ export function ProfilePage() {
       image: defaults.image,
     }));
   }, [defaults]);
-
-  useEffect(() => {
-    const org = organizationQuery.data;
-    if (!org) return;
-    setForm((prev) => ({
-      ...prev,
-      organizationName: org.name || prev.organizationName,
-      organizationSlug: org.slug || "",
-    }));
-  }, [organizationQuery.data]);
 
   function setField<K extends keyof typeof form>(field: K, value: (typeof form)[K]) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -151,11 +66,8 @@ export function ProfilePage() {
     }
   }
 
-  const loadingOrg = organizationQuery.isLoading;
   const saving = saveProfileMutation.isPending;
-  const error =
-    (saveProfileMutation.error instanceof Error ? saveProfileMutation.error.message : null) ??
-    (organizationQuery.error instanceof Error ? organizationQuery.error.message : null);
+  const error = saveProfileMutation.error instanceof Error ? saveProfileMutation.error.message : null;
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -218,7 +130,6 @@ export function ProfilePage() {
                   placeholder="Tên salon"
                   value={form.organizationName}
                   onChange={(event) => setField("organizationName", event.target.value)}
-                  disabled={loadingOrg}
                 />
               </div>
               <div className="grid gap-2">
@@ -229,13 +140,9 @@ export function ProfilePage() {
                   placeholder="vd: beauty-spa-nail"
                   value={form.organizationSlug}
                   onChange={(event) => setField("organizationSlug", event.target.value)}
-                  disabled={loadingOrg}
                 />
                 <p className="text-xs text-muted-foreground">
-                  URL đặt lịch dự kiến:{" "}
-                  <span className="font-medium">
-                    /book/{form.organizationSlug || "slug-cua-ban"}
-                  </span>
+                  URL đặt lịch dự kiến: <span className="font-medium">/book/{form.organizationSlug || "slug-cua-ban"}</span>
                 </p>
               </div>
             </div>

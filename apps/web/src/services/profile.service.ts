@@ -1,6 +1,3 @@
-import { apiClient } from "@/lib/api";
-import { organization } from "@/lib/auth-client";
-
 export type ProfilePayload = {
   name: string;
   image: string;
@@ -32,44 +29,8 @@ export const profileService = {
       throw new Error("Slug chỉ gồm chữ thường, số và dấu gạch ngang (không ở đầu/cuối)");
     }
 
-    await apiClient.patch("/users/me", {
-      name: payload.name,
-      image: payload.image,
-    });
-
-    let organizationId =
-      (typeof localStorage !== "undefined" ? localStorage.getItem("organizationId") : null) ?? null;
-
-    if (!organizationId) {
-      try {
-        const listResult = (await organization.list()) as {
-          data?: Array<{ id?: string }> | undefined;
-        };
-        const firstOrgId = listResult.data?.[0]?.id;
-        if (firstOrgId) {
-          organizationId = firstOrgId;
-          if (typeof localStorage !== "undefined") {
-            localStorage.setItem("organizationId", firstOrgId);
-          }
-        }
-      } catch {
-        // no-op, org update below will be skipped
-      }
-    }
-
-    const updateData: Record<string, string> = {};
-    if (payload.organizationName.trim()) {
-      updateData.name = payload.organizationName.trim();
-    }
-    if (organizationSlug) {
-      updateData.slug = organizationSlug;
-    }
-
-    if (organizationId && Object.keys(updateData).length > 0) {
-      await apiClient.post("/api/auth/organization/update", {
-        organizationId,
-        data: updateData,
-      });
-    }
+    void payload.name;
+    void payload.image;
+    throw new Error("Profile/organization update endpoints are not available in apps/api yet.");
   },
 };

@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { queryKeys } from "@/lib/query-client";
 import { cashManagementService } from "@/services/cash-management.service";
 import type { ApprovalPendingResponse } from "@/services/invoices.service";
@@ -439,8 +440,7 @@ export function CashManagementPage() {
             </div>
             <div className="grid gap-1">
               <Label>Ghi chú</Label>
-              <textarea
-                className="min-h-20 rounded-md border px-3 py-2 text-sm"
+              <Textarea
                 value={openNotes}
                 onChange={(event) => setOpenNotes(event.target.value)}
                 placeholder="Ví dụ: bắt đầu ca sáng"
@@ -511,8 +511,7 @@ export function CashManagementPage() {
               </div>
               <div className="grid gap-1">
                 <Label>Ghi chú đóng ca</Label>
-                <textarea
-                  className="min-h-20 rounded-md border px-3 py-2 text-sm"
+                <Textarea
                   value={closeNotes}
                   onChange={(event) => setCloseNotes(event.target.value)}
                   placeholder="Ví dụ: lệch do thiếu hóa đơn chuyển khoản"
@@ -567,8 +566,7 @@ export function CashManagementPage() {
               </div>
               <div className="grid gap-1">
                 <Label>Ghi chú</Label>
-                <textarea
-                  className="min-h-20 rounded-md border px-3 py-2 text-sm"
+                <Textarea
                   value={txNotes}
                   onChange={(event) => setTxNotes(event.target.value)}
                   placeholder="Nội dung thu/chi"

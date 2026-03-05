@@ -2,6 +2,7 @@ import { AuthShell } from "@/components/layout/auth-shell";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PublicBookingShell } from "@/components/layout/public-booking-shell";
 import { ApiContextSync } from "@/components/providers/api-context-sync";
+import { Toaster } from "@/components/ui/sonner";
 import { useSession } from "@/lib/auth-client";
 import {
   Navigate,
@@ -115,6 +116,7 @@ const rootRoute = createRootRoute({
     <div className="min-h-screen">
       <ApiContextSync />
       <Outlet />
+      <Toaster richColors />
     </div>
   ),
 });

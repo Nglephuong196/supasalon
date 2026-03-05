@@ -9,7 +9,6 @@ export type CashSessionStatus = "open" | "closed";
 
 export type CashSession = {
   id: number;
-  organizationId: string;
   openedByUserId?: string | null;
   closedByUserId?: string | null;
   openingBalance: number;
@@ -46,7 +45,6 @@ export type CashSessionSnapshot = {
 
 export type CashTransaction = {
   id: number;
-  organizationId: string;
   cashSessionId: number;
   type: "in" | "out";
   category: string;

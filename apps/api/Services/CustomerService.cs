@@ -17,9 +17,9 @@ public class CustomerService(ICustomerRepository repository) : ICustomerService
             result.TotalPages);
     }
 
-    public async Task<CustomerDto> CreateAsync(CreateCustomerRequest request, CancellationToken ct = default)
+    public async Task<CustomerDto> CreateAsync(string organizationId, CreateCustomerRequest request, CancellationToken ct = default)
     {
-        var entity = request.ToEntity();
+        var entity = request.ToEntity(organizationId);
         var created = await repository.AddAsync(entity, ct);
         return created.ToDto();
     }

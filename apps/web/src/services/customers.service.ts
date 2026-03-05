@@ -42,25 +42,29 @@ export type PaginatedCustomers = {
 };
 
 export const customersService = {
-  list() {
-    return apiClient.get<Customer[]>("/customers");
+  async list() {
+    const query = new URLSearchParams({
+      page: "1",
+      limit: "200",
+    });
+    const result = await apiClient.get<PaginatedCustomers>(`/customers?${query.toString()}`);
+    return result.data;
   },
   listPaginated(params: CustomerListParams) {
     const query = new URLSearchParams();
-    query.set("paginated", "1");
     query.set("page", String(params.page));
     query.set("limit", String(params.limit));
     if (params.search) query.set("search", params.search);
-    if (params.vipOnly) query.set("vip", "1");
+    if (params.vipOnly) query.set("vipOnly", "true");
     return apiClient.get<PaginatedCustomers>(`/customers?${query.toString()}`);
   },
   create(payload: CustomerPayload) {
-    return apiClient.post<unknown>("/customers", payload);
+    return apiClient.post<Customer>("/customers", payload);
   },
-  update(id: number, payload: CustomerPayload) {
-    return apiClient.put<unknown>(`/customers/${id}`, payload);
+  async update(_: number, __: CustomerPayload) {
+    throw new Error("Customer update endpoint is not available in apps/api yet.");
   },
-  remove(id: number) {
-    return apiClient.delete<unknown>(`/customers/${id}`);
+  async remove(_: number) {
+    throw new Error("Customer delete endpoint is not available in apps/api yet.");
   },
 };

@@ -1,7 +1,6 @@
 namespace Api.Models;
 
 public record CreateInvoiceRequest(
-    string OrganizationId,
     int? CustomerId,
     int? BookingId,
     int? BranchId,

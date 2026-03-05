@@ -1,7 +1,6 @@
 namespace Api.Models;
 
 public record RecordInvoicePaymentRequest(
-    string OrganizationId,
     string Method,
     double Amount,
     string? Status = null,

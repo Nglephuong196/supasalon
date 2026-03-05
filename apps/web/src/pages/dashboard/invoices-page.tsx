@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -9,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { queryKeys } from "@/lib/query-client";
 import { branchesService } from "@/services/branches.service";
 import {
@@ -735,12 +737,11 @@ export function InvoicesPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12 text-center">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={allChecked}
                         onChange={toggleSelectAll}
                         aria-label="Chọn tất cả"
-                        className="h-4 w-4"
+                        className="mx-auto"
                       />
                     </TableHead>
                     <TableHead>Mã hóa đơn</TableHead>
@@ -769,12 +770,11 @@ export function InvoicesPage() {
                     filteredInvoices.map((invoice) => (
                       <TableRow key={invoice.id}>
                         <TableCell className="text-center">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={selectedIds.has(invoice.id)}
                             onChange={() => toggleSelect(invoice.id)}
                             aria-label={`Chọn hóa đơn #${invoice.id}`}
-                            className="h-4 w-4"
+                            className="mx-auto"
                           />
                         </TableCell>
                         <TableCell className="font-medium">#{invoice.id}</TableCell>
@@ -1174,11 +1174,7 @@ export function InvoicesPage() {
           </div>
           <div className="grid gap-2">
             <Label>Ghi chú</Label>
-            <textarea
-              className="min-h-20 rounded-md border px-3 py-2 text-sm"
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-            />
+            <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
           </div>
           <div className="rounded-md border bg-muted/30 p-3 text-sm">
             Thành tiền dự kiến: {formatMoney(Number(quantity || "0") * Number(unitPrice || "0"))}
@@ -1324,8 +1320,7 @@ export function InvoicesPage() {
           </div>
           <div className="grid gap-2">
             <Label>Lý do hủy</Label>
-            <textarea
-              className="min-h-20 rounded-md border px-3 py-2 text-sm"
+            <Textarea
               value={cancelReason}
               onChange={(event) => setCancelReason(event.target.value)}
               placeholder="Nhập lý do để lưu audit log..."
@@ -1353,8 +1348,7 @@ export function InvoicesPage() {
           </div>
           <div className="grid gap-2">
             <Label>Lý do hoàn tiền</Label>
-            <textarea
-              className="min-h-20 rounded-md border px-3 py-2 text-sm"
+            <Textarea
               value={refundReason}
               onChange={(event) => setRefundReason(event.target.value)}
               placeholder="Ví dụ: Khách đổi dịch vụ / nhập sai hóa đơn..."

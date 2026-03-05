@@ -6,9 +6,9 @@ namespace Api.Services;
 
 public class InvoicePaymentService(IInvoiceRepository repository) : IInvoicePaymentService
 {
-    public async Task<InvoiceDto> RecordPaymentAsync(int invoiceId, RecordInvoicePaymentRequest request, CancellationToken ct = default)
+    public async Task<InvoiceDto> RecordPaymentAsync(string organizationId, int invoiceId, RecordInvoicePaymentRequest request, CancellationToken ct = default)
     {
-        var invoice = await repository.FindByIdAsync(request.OrganizationId, invoiceId, ct);
+        var invoice = await repository.FindByIdAsync(organizationId, invoiceId, ct);
         if (invoice is null)
         {
             throw new InvalidOperationException("Invoice not found");
@@ -38,12 +38,12 @@ public class InvoicePaymentService(IInvoiceRepository repository) : IInvoicePaym
         }
 
         var openCashSessionId = method == "cash"
-            ? await repository.FindOpenCashSessionIdAsync(request.OrganizationId, ct)
+            ? await repository.FindOpenCashSessionIdAsync(organizationId, ct)
             : null;
 
         var payment = new InvoicePaymentTransaction
         {
-            OrganizationId = request.OrganizationId,
+            OrganizationId = organizationId,
             InvoiceId = invoiceId,
             CashSessionId = openCashSessionId,
             Kind = kind,
@@ -58,7 +58,7 @@ public class InvoicePaymentService(IInvoiceRepository repository) : IInvoicePaym
         };
 
         await repository.AddPaymentAsync(payment, ct);
-        var confirmedRows = await repository.GetConfirmedPaymentsAsync(request.OrganizationId, invoiceId, ct);
+        var confirmedRows = await repository.GetConfirmedPaymentsAsync(organizationId, invoiceId, ct);
 
         var netPaid = CalcNetPaid(confirmedRows);
         var methodNet = BuildMethodNet(confirmedRows);

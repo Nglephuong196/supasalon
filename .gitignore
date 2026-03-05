@@ -13,20 +13,6 @@ node_modules/
 # testing
 /coverage
 
-# next.js
-.next/
-/out/
-
-# cloudflare workers
-.wrangler/
-.dev.vars
-
-# sveltekit
-.svelte-kit/
-.netlify/
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
-
 # apps/mobile (expo)
 .expo/
 dist/
@@ -106,6 +92,7 @@ dist-ssr/
 package-lock.json
 
 # apps/api* (.NET)
+apps/api/bin/
 apps/api*/bin/
 apps/api*/obj/
 apps/api*/.vs/

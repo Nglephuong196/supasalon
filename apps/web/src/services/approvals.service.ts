@@ -2,7 +2,6 @@ import { apiClient } from "@/lib/api";
 
 export type ApprovalPolicy = {
   id: number;
-  organizationId: string;
   requireInvoiceCancelApproval: boolean;
   requireInvoiceRefundApproval: boolean;
   invoiceRefundThreshold: number;
@@ -14,7 +13,6 @@ export type ApprovalPolicy = {
 
 export type ApprovalRequest = {
   id: number;
-  organizationId: string;
   entityType: "invoice" | "cash_transaction" | "booking" | "commission_payout" | "prepaid_card";
   entityId?: number | null;
   action: string;

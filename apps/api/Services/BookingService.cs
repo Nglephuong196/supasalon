@@ -17,9 +17,9 @@ public class BookingService(IBookingRepository repository, IBookingConflictServi
             result.TotalPages);
     }
 
-    public async Task<BookingDto> CreateAsync(CreateBookingRequest request, CancellationToken ct = default)
+    public async Task<BookingDto> CreateAsync(string organizationId, CreateBookingRequest request, CancellationToken ct = default)
     {
-        var entity = request.ToEntity();
+        var entity = request.ToEntity(organizationId);
         var policy = await repository.FindBookingPolicyAsync(entity.OrganizationId, ct);
 
         if (policy?.RequireDeposit == true && entity.DepositAmount <= 0)

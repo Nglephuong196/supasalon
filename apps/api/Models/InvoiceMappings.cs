@@ -42,10 +42,10 @@ public static class InvoiceMappings
             invoice.Notes,
             invoice.CreatedAt);
 
-    public static Invoice ToEntity(this CreateInvoiceRequest request) =>
+    public static Invoice ToEntity(this CreateInvoiceRequest request, string organizationId) =>
         new()
         {
-            OrganizationId = request.OrganizationId,
+            OrganizationId = organizationId,
             CustomerId = request.CustomerId,
             BookingId = request.BookingId,
             BranchId = request.BranchId,

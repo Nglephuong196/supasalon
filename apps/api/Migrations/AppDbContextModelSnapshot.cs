@@ -536,6 +536,10 @@ namespace api.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("actual_closing_balance");
 
+                    b.Property<int?>("BranchId")
+                        .HasColumnType("integer")
+                        .HasColumnName("branch_id");
+
                     b.Property<DateTime?>("ClosedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("closed_at");
@@ -588,11 +592,13 @@ namespace api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("ClosedByUserId");
 
                     b.HasIndex("OpenedByUserId");
 
-                    b.HasIndex("OrganizationId");
+                    b.HasIndex("OrganizationId", "BranchId", "Status");
 
                     b.ToTable("cash_sessions");
                 });
@@ -609,6 +615,10 @@ namespace api.Migrations
                     b.Property<double>("Amount")
                         .HasColumnType("double precision")
                         .HasColumnName("amount");
+
+                    b.Property<int?>("BranchId")
+                        .HasColumnType("integer")
+                        .HasColumnName("branch_id");
 
                     b.Property<int?>("CashSessionId")
                         .HasColumnType("integer")
@@ -643,11 +653,13 @@ namespace api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("CashSessionId");
 
                     b.HasIndex("CreatedByUserId");
 
-                    b.HasIndex("OrganizationId");
+                    b.HasIndex("OrganizationId", "BranchId", "CreatedAt");
 
                     b.ToTable("cash_transactions");
                 });
@@ -1273,7 +1285,9 @@ namespace api.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("member_user_id_unique");
 
                     b.ToTable("member");
                 });
@@ -2364,6 +2378,10 @@ namespace api.Migrations
 
             modelBuilder.Entity("Api.Models.CashSession", b =>
                 {
+                    b.HasOne("Api.Models.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId");
+
                     b.HasOne("Api.Models.User", null)
                         .WithMany()
                         .HasForeignKey("ClosedByUserId");
@@ -2381,6 +2399,10 @@ namespace api.Migrations
 
             modelBuilder.Entity("Api.Models.CashTransaction", b =>
                 {
+                    b.HasOne("Api.Models.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId");
+
                     b.HasOne("Api.Models.CashSession", null)
                         .WithMany()
                         .HasForeignKey("CashSessionId");

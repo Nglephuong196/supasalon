@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { queryKeys } from "@/lib/query-client";
 import {
   type ProductCategory,
@@ -473,24 +474,26 @@ export function ProductsPage() {
             Chọn danh mục để lọc nhanh sản phẩm theo nhóm.
           </p>
           <div className="space-y-1">
-            <button
+            <Button
               type="button"
-              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${selectedCategory === null ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              variant="ghost"
+              className={`h-auto w-full justify-between rounded-lg px-3 py-2 text-left text-sm ${selectedCategory === null ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" : "hover:bg-muted"}`}
               onClick={() => setSelectedCategory(null)}
             >
               <span>Tất cả</span>
               <span className="text-xs">{products.length}</span>
-            </button>
+            </Button>
             {categories.map((category) => (
               <div key={category.id} className="group flex items-center gap-2">
-                <button
+                <Button
                   type="button"
-                  className={`flex flex-1 items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${selectedCategory === category.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  variant="ghost"
+                  className={`h-auto flex-1 justify-between rounded-lg px-3 py-2 text-left text-sm ${selectedCategory === category.id ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" : "hover:bg-muted"}`}
                   onClick={() => setSelectedCategory(category.id)}
                 >
                   <span className="truncate">{category.name}</span>
                   <span className="text-xs">{categoryProductCount.get(category.id) ?? 0}</span>
-                </button>
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -683,8 +686,7 @@ export function ProductsPage() {
           </div>
           <div className="grid gap-2">
             <Label>Mô tả</Label>
-            <textarea
-              className="min-h-20 rounded-md border px-3 py-2 text-sm"
+            <Textarea
               value={productForm.description}
               onChange={(event) =>
                 setProductForm((prev) => ({

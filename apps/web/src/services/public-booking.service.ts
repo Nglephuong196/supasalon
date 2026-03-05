@@ -35,13 +35,14 @@ export type CreatePublicBookingPayload = {
 };
 
 export const publicBookingService = {
-  getOptions(slug: string) {
-    return apiClient.get<PublicBookingOption>(`/public/booking/${slug}/options`);
+  async getOptions(_: string): Promise<PublicBookingOption> {
+    void apiClient;
+    throw new Error("Public booking endpoints are not available in apps/api yet.");
   },
-  create(slug: string, payload: CreatePublicBookingPayload) {
-    return apiClient.post<{ success: boolean; message: string; bookingId?: number }>(
-      `/public/booking/${slug}`,
-      payload,
-    );
+  async create(
+    _: string,
+    __: CreatePublicBookingPayload,
+  ): Promise<{ success: boolean; message: string; bookingId?: number }> {
+    throw new Error("Public booking endpoints are not available in apps/api yet.");
   },
 };

@@ -7,7 +7,6 @@ export type PayrollSalaryType = "monthly" | "daily" | "hourly";
 
 export type PayrollConfig = {
   id: number;
-  organizationId: string;
   branchId?: number | null;
   staffId: string;
   salaryType: PayrollSalaryType;
@@ -43,7 +42,6 @@ export type PayrollPreviewItem = {
 
 export type PayrollCycle = {
   id: number;
-  organizationId: string;
   branchId?: number | null;
   name: string;
   fromDate: string;
@@ -63,7 +61,6 @@ export type PayrollCycle = {
 
 export type PayrollItem = {
   id: number;
-  organizationId: string;
   cycleId: number;
   staffId: string;
   branchId?: number | null;

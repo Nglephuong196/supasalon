@@ -11,10 +11,10 @@
     "packageManager": "bun@1.3.9",
     "private": true,
     "scripts": {
-        "dev": "turbo dev --filter=web --filter=salon-api",
-        "dev:all": "turbo dev",
+        "dev": "bun run dev:web & bun run dev:api",
+        "dev:all": "turbo dev --filter=web --filter=mobile & bun run dev:api",
         "dev:web": "turbo dev --filter=web",
-        "dev:api": "turbo dev --filter=salon-api",
+        "dev:api": "DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER=1 dotnet watch --project apps/api run",
         "dev:mobile": "turbo dev --filter=mobile",
         "dev:mobile:android": "turbo dev:android --filter=mobile",
         "dev:mobile:android:offline": "bun --filter=mobile run dev:android:offline",
@@ -26,9 +26,9 @@
         "lint:fix": "biome lint --write .",
         "format": "biome format --write .",
         "format:check": "biome format .",
-        "db:generate": "turbo db:generate --filter=salon-api",
-        "db:migrate:local": "turbo db:migrate:local --filter=salon-api",
-        "db:studio": "turbo db:studio --filter=salon-api"
+        "db:generate": "sh -c 'dotnet ef migrations add \"$1\" --project apps/api --startup-project apps/api --output-dir Migrations' --",
+        "db:migrate:local": "dotnet ef database update --project apps/api --startup-project apps/api",
+        "db:studio": "dotnet ef migrations list --project apps/api --startup-project apps/api"
     },
     "workspaces": [
         "apps/*",

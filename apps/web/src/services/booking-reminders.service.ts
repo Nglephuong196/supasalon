@@ -4,7 +4,6 @@ export type ReminderChannel = "sms" | "zalo" | "email";
 
 export type BookingReminderSettings = {
   id: number;
-  organizationId: string;
   enabled: boolean;
   channels: {
     sms: boolean;
@@ -20,7 +19,6 @@ export type BookingReminderSettings = {
 
 export type BookingReminderLog = {
   id: number;
-  organizationId: string;
   bookingId: number;
   channel: ReminderChannel;
   status: "queued" | "sent" | "failed" | "cancelled";

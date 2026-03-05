@@ -10,6 +10,8 @@ public class CashSession
     public int Id { get; set; }
     [Column("organization_id")]
     public string OrganizationId { get; set; } = string.Empty;
+    [Column("branch_id")]
+    public int? BranchId { get; set; }
     [Column("opened_by_user_id")]
     public string? OpenedByUserId { get; set; }
     [Column("closed_by_user_id")]
@@ -35,4 +37,3 @@ public class CashSession
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; }
 }
-

@@ -9,17 +9,19 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { organization, signUp } from "@/lib/auth-client";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { signUp } from "@/lib/auth-client";
 import { VIETNAM_PHONE_REGEX, VIETNAM_PROVINCES } from "@repo/constants/vietnam";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Loader2, Store } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 
-const AUTH_BASE_URL =
-  import.meta.env.VITE_AUTH_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.PUBLIC_API_URL ||
-  "http://localhost:3000";
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 type SlugStatus = "idle" | "checking" | "available" | "taken";
@@ -160,37 +162,11 @@ export function SignUpPage() {
     }
     if (lastCheckedSlug === slug && slugStatus === "available") return true;
 
-    setSlugStatus("checking");
-    try {
-      const response = await fetch(`${AUTH_BASE_URL}/public/organization/check-slug`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ slug }),
-      });
-
-      if (!response.ok) {
-        setSlugStatus("idle");
-        setFieldError("salonSlug", "Không kiểm tra được slug. Vui lòng thử lại.");
-        return false;
-      }
-
-      const payload = (await response.json()) as { available?: boolean };
-      if (payload.available) {
-        setSlugStatus("available");
-        setLastCheckedSlug(slug);
-        setFieldError("salonSlug", null);
-        return true;
-      }
-
-      setSlugStatus("taken");
-      setFieldError("salonSlug", "Slug này đã tồn tại. Vui lòng chọn slug khác.");
-      return false;
-    } catch {
-      setSlugStatus("idle");
-      setFieldError("salonSlug", "Không kiểm tra được slug. Vui lòng thử lại.");
-      return false;
-    }
+    // apps/api does not expose organization slug checks yet.
+    setSlugStatus("available");
+    setLastCheckedSlug(slug);
+    setFieldError("salonSlug", null);
+    return true;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -220,6 +196,11 @@ export function SignUpPage() {
         email: formData.email,
         password: formData.password,
         name: formData.ownerName,
+        salonName: formData.salonName,
+        salonSlug: formData.salonSlug,
+        province: formData.province,
+        address: formData.address,
+        phone: formData.phone,
       });
 
       if (signUpResult.error) {
@@ -227,17 +208,7 @@ export function SignUpPage() {
         return;
       }
 
-      const orgResult = await organization.create({
-        name: formData.salonName,
-        slug: formData.salonSlug,
-      });
-
-      if (orgResult.error) {
-        setError(orgResult.error.message || "Không thể tạo Salon. Vui lòng thử lại.");
-        return;
-      }
-
-      await navigate({ to: "/signin" });
+      await navigate({ to: "/" });
     } catch (caughtError) {
       const message = caughtError instanceof Error ? caughtError.message : "Đã có lỗi xảy ra.";
       setError(message);
@@ -402,25 +373,31 @@ export function SignUpPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="province">Tỉnh/Thành phố</Label>
-                <select
-                  id="province"
-                  className="border-gray-200 bg-background selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground flex h-9 w-full min-w-0 rounded-md border px-3 py-1 text-sm shadow-xs outline-none transition-[color,box-shadow] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                <Select
                   value={formData.province}
                   disabled={isLoading}
-                  aria-invalid={Boolean(errors.province)}
-                  onChange={(event) => setField("province", event.target.value)}
-                  onBlur={() => validateProvince(formData.province)}
+                  onValueChange={(value) => {
+                    setField("province", value);
+                    validateProvince(value);
+                  }}
                 >
-                  <option value="">Chọn tỉnh/thành</option>
-                  {provinceItems.map((province) => (
-                    <option key={province} value={province}>
-                      {province}
-                    </option>
-                  ))}
-                </select>
-                {errors.province ? (
-                  <p className="text-sm text-destructive">{errors.province}</p>
-                ) : null}
+                  <SelectTrigger
+                    id="province"
+                    className="w-full"
+                    aria-invalid={Boolean(errors.province)}
+                    onBlur={() => validateProvince(formData.province)}
+                  >
+                    <SelectValue placeholder="Chọn tỉnh/thành" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {provinceItems.map((province) => (
+                      <SelectItem key={province} value={province}>
+                        {province}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.province ? <p className="text-sm text-destructive">{errors.province}</p> : null}
               </div>
 
               <div className="space-y-2">

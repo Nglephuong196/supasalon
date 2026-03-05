@@ -17,9 +17,9 @@ public class InvoiceService(IInvoiceRepository repository) : IInvoiceService
             result.TotalPages);
     }
 
-    public async Task<InvoiceDto> CreateAsync(CreateInvoiceRequest request, CancellationToken ct = default)
+    public async Task<InvoiceDto> CreateAsync(string organizationId, CreateInvoiceRequest request, CancellationToken ct = default)
     {
-        var entity = request.ToEntity();
+        var entity = request.ToEntity(organizationId);
 
         if (entity.BranchId is int branchId)
         {

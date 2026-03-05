@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -545,8 +546,7 @@ export function SettingsPage() {
               key={`${row.original.resource}-${action}`}
               className="inline-flex items-center gap-2 text-xs"
             >
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={hasPermission(row.original.resource, action)}
                 onChange={(event) =>
                   togglePermission(row.original.resource, action, event.target.checked)
@@ -771,8 +771,7 @@ export function SettingsPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={bookingPolicyForm.preventStaffOverlap}
                 onChange={(event) =>
                   setBookingPolicyForm((prev) => ({
@@ -785,8 +784,7 @@ export function SettingsPage() {
             </label>
 
             <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={bookingPolicyForm.requireDeposit}
                 onChange={(event) =>
                   setBookingPolicyForm((prev) => ({

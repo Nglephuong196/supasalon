@@ -1,16 +1,21 @@
 using Api.Models;
 using Api.Dtos;
+using Api.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Api.Endpoints;
 
 public static class AuthEndpoints
 {
+    private static readonly Regex SlugRegex = new("^[a-z0-9]+(?:-[a-z0-9]+)*$", RegexOptions.Compiled);
+
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
         var auth = app.MapGroup("/api/auth");
@@ -22,12 +27,37 @@ public static class AuthEndpoints
         return app;
     }
 
-    private static async Task<IResult> Register(RegisterRequest request, UserManager<User> userManager)
+    private static async Task<IResult> Register(
+        RegisterRequest request,
+        UserManager<User> userManager,
+        AppDbContext db,
+        IOptions<JwtOptions> jwtOptionsAccessor)
     {
         var existingUser = await userManager.FindByEmailAsync(request.Email);
         if (existingUser is not null)
         {
             return Results.Conflict(new { message = "Email is already registered." });
+        }
+
+        var organizationName = string.IsNullOrWhiteSpace(request.SalonName)
+            ? "Salon của tôi"
+            : request.SalonName.Trim();
+        var organizationSlug = string.IsNullOrWhiteSpace(request.SalonSlug)
+            ? NormalizeSlug(organizationName)
+            : NormalizeSlug(request.SalonSlug);
+
+        if (string.IsNullOrWhiteSpace(organizationSlug) || !SlugRegex.IsMatch(organizationSlug))
+        {
+            return Results.BadRequest(new
+            {
+                message = "Slug chỉ gồm chữ thường, số và dấu gạch ngang (không ở đầu/cuối)."
+            });
+        }
+
+        var slugTaken = await db.Organizations.AsNoTracking().AnyAsync(x => x.Slug == organizationSlug);
+        if (slugTaken)
+        {
+            return Results.Conflict(new { message = "Slug is already taken." });
         }
 
         var user = new User
@@ -45,7 +75,67 @@ public static class AuthEndpoints
             return Results.BadRequest(new { errors = result.Errors.Select(e => e.Description) });
         }
 
-        return Results.Ok(new { message = "Registration succeeded." });
+        try
+        {
+            var now = DateTime.UtcNow;
+
+            var organization = new Organization
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Name = organizationName,
+                Slug = organizationSlug,
+                CreatedAt = now
+            };
+            db.Organizations.Add(organization);
+
+            var member = new Member
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                OrganizationId = organization.Id,
+                UserId = user.Id,
+                Role = "owner",
+                CreatedAt = now
+            };
+            db.Members.Add(member);
+
+            var branchAddress = BuildBranchAddress(request.Address, request.Province);
+            var mainBranch = new Branch
+            {
+                OrganizationId = organization.Id,
+                Name = "Chi nhánh chính",
+                Address = branchAddress,
+                Phone = string.IsNullOrWhiteSpace(request.Phone) ? null : request.Phone.Trim(),
+                ManagerMemberId = member.Id,
+                IsActive = true,
+                IsDefault = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+            db.Branches.Add(mainBranch);
+
+            await db.SaveChangesAsync();
+
+            db.MemberBranches.Add(new MemberBranch
+            {
+                OrganizationId = organization.Id,
+                BranchId = mainBranch.Id,
+                MemberId = member.Id,
+                IsPrimary = true,
+                CreatedAt = now
+            });
+            await db.SaveChangesAsync();
+
+            var jwtOptions = jwtOptionsAccessor.Value;
+            var expiresAt = now.AddMinutes(jwtOptions.AccessTokenExpiryMinutes);
+            var token = CreateAccessToken(user, jwtOptions, expiresAt);
+
+            return Results.Ok(new RegisterResponse(token, expiresAt, organization.Id, mainBranch.Id));
+        }
+        catch
+        {
+            await userManager.DeleteAsync(user);
+            return Results.Problem("Registration failed while creating organization and main branch.");
+        }
     }
 
     private static async Task<IResult> Login(
@@ -111,5 +201,29 @@ public static class AuthEndpoints
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private static string NormalizeSlug(string value)
+    {
+        var normalized = value
+            .Trim()
+            .ToLowerInvariant();
+        normalized = Regex.Replace(normalized, @"\s+", "-");
+        normalized = Regex.Replace(normalized, @"[^a-z0-9-]", "");
+        normalized = Regex.Replace(normalized, @"-+", "-");
+        return normalized.Trim('-');
+    }
+
+    private static string? BuildBranchAddress(string? address, string? province)
+    {
+        var trimmedAddress = string.IsNullOrWhiteSpace(address) ? null : address.Trim();
+        var trimmedProvince = string.IsNullOrWhiteSpace(province) ? null : province.Trim();
+
+        if (trimmedAddress is not null && trimmedProvince is not null)
+        {
+            return $"{trimmedAddress}, {trimmedProvince}";
+        }
+
+        return trimmedAddress ?? trimmedProvince;
     }
 }

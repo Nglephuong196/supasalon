@@ -1,8 +1,7 @@
-using Api.Application.Common.Interfaces.Repositories;
-using Api.Application.Common.Interfaces.Services;
-using Api.Application.Common.Models;
-using Api.Application.Features.Bookings;
-using Api.Domain.Entities;
+using Api.Interfaces;
+using Api.Models;
+using Api.Services;
+using Api.Dtos;
 using System.Text.Json;
 
 namespace api.Tests;
@@ -26,7 +25,6 @@ public class BookingServiceTests
         var service = new BookingService(repo, conflict);
 
         var request = new CreateBookingRequest(
-            OrganizationId: "org-1",
             CustomerId: 10,
             BranchId: null,
             Date: DateTime.UtcNow,
@@ -37,7 +35,7 @@ public class BookingServiceTests
             Notes: null,
             Guests: JsonDocument.Parse("[]"));
 
-        var result = await service.CreateAsync(request);
+        var result = await service.CreateAsync("org-1", request);
 
         Assert.Equal(100, result.DepositAmount);
         Assert.NotNull(repo.LastAdded);
@@ -56,7 +54,6 @@ public class BookingServiceTests
         var service = new BookingService(repo, conflict);
 
         var request = new CreateBookingRequest(
-            OrganizationId: "org-1",
             CustomerId: 10,
             BranchId: 99,
             Date: DateTime.UtcNow,
@@ -67,7 +64,7 @@ public class BookingServiceTests
             Notes: null,
             Guests: null);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateAsync(request));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateAsync("org-1", request));
     }
 
     [Fact]
@@ -82,7 +79,6 @@ public class BookingServiceTests
         var service = new BookingService(repo, conflict);
 
         var request = new CreateBookingRequest(
-            OrganizationId: "org-1",
             CustomerId: 10,
             BranchId: null,
             Date: DateTime.UtcNow,
@@ -93,7 +89,7 @@ public class BookingServiceTests
             Notes: null,
             Guests: null);
 
-        await service.CreateAsync(request);
+        await service.CreateAsync("org-1", request);
 
         Assert.True(conflict.Called);
     }

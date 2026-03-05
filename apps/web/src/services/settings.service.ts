@@ -39,7 +39,6 @@ export type SettingsBundle = {
 
 export type BookingPolicy = {
   id: number;
-  organizationId: string;
   preventStaffOverlap: boolean;
   bufferMinutes: number;
   requireDeposit: boolean;
@@ -58,7 +57,6 @@ export type CommissionPayoutPreviewItem = {
 
 export type CommissionPayout = {
   id: number;
-  organizationId: string;
   staffId: string;
   fromDate: string;
   toDate: string;

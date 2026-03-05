@@ -9,6 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "@/components/ui/sonner";
+import { Textarea } from "@/components/ui/textarea";
 import { queryKeys } from "@/lib/query-client";
 import {
   type ServiceCategory,
@@ -53,7 +55,7 @@ const emptyServiceForm = {
   name: "",
   categoryId: "",
   price: "",
-  duration: "",
+  duration: "30",
   description: "",
 };
 const NONE_OPTION_VALUE = "__none__";
@@ -244,11 +246,10 @@ export function ServicesPage() {
   async function submitCategory(event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
     if (!categoryName.trim()) {
-      setError("Vui lòng nhập tên danh mục");
+      toast.error("Vui lòng nhập tên danh mục");
       return;
     }
 
-    setError(null);
     try {
       if (editingCategory) {
         await updateCategoryMutation.mutateAsync({
@@ -262,8 +263,9 @@ export function ServicesPage() {
       }
       setIsCategoryOpen(false);
       resetCategoryForm();
+      toast.success(editingCategory ? "Đã cập nhật danh mục" : "Đã tạo danh mục");
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Không thể lưu danh mục");
+      toast.error(caughtError instanceof Error ? caughtError.message : "Không thể lưu danh mục");
     }
   }
 
@@ -275,23 +277,22 @@ export function ServicesPage() {
     const duration = Number(serviceForm.duration);
 
     if (!serviceForm.name.trim()) {
-      setError("Vui lòng nhập tên dịch vụ");
+      toast.error("Vui lòng nhập tên dịch vụ");
       return;
     }
     if (!Number.isInteger(categoryId) || categoryId <= 0) {
-      setError("Vui lòng chọn danh mục");
+      toast.error("Vui lòng chọn danh mục");
       return;
     }
     if (!Number.isFinite(price)) {
-      setError("Giá dịch vụ không hợp lệ");
+      toast.error("Giá dịch vụ không hợp lệ");
       return;
     }
     if (!Number.isInteger(duration) || duration <= 0) {
-      setError("Thời gian dịch vụ không hợp lệ");
+      toast.error("Thời gian dịch vụ không hợp lệ");
       return;
     }
 
-    setError(null);
     try {
       const payload: ServicePayload = {
         name: serviceForm.name.trim(),
@@ -312,29 +313,30 @@ export function ServicesPage() {
 
       setIsServiceOpen(false);
       resetServiceForm();
+      toast.success(editingService ? "Đã cập nhật dịch vụ" : "Đã tạo dịch vụ");
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Không thể lưu dịch vụ");
+      toast.error(caughtError instanceof Error ? caughtError.message : "Không thể lưu dịch vụ");
     }
   }
 
   async function deleteCategory(id: number) {
-    setError(null);
     try {
       await deleteCategoryMutation.mutateAsync(id);
       if (selectedCategory === id) setSelectedCategory(null);
       setCategoryDeleteId(null);
+      toast.success("Đã xóa danh mục");
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Không thể xóa danh mục");
+      toast.error(caughtError instanceof Error ? caughtError.message : "Không thể xóa danh mục");
     }
   }
 
   async function deleteService(id: number) {
-    setError(null);
     try {
       await deleteServiceMutation.mutateAsync(id);
       setServiceDeleteId(null);
+      toast.success("Đã xóa dịch vụ");
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Không thể xóa dịch vụ");
+      toast.error(caughtError instanceof Error ? caughtError.message : "Không thể xóa dịch vụ");
     }
   }
 
@@ -451,24 +453,26 @@ export function ServicesPage() {
             Chọn danh mục để lọc nhanh dịch vụ theo nhóm.
           </p>
           <div className="space-y-1">
-            <button
+            <Button
               type="button"
-              className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${selectedCategory === null ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              variant="ghost"
+              className={`h-auto w-full justify-between rounded-lg px-3 py-2 text-left text-sm ${selectedCategory === null ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" : "hover:bg-muted"}`}
               onClick={() => setSelectedCategory(null)}
             >
               <span>Tất cả</span>
               <span className="text-xs">{services.length}</span>
-            </button>
+            </Button>
             {categories.map((category) => (
               <div key={category.id} className="group flex items-center gap-2">
-                <button
+                <Button
                   type="button"
-                  className={`flex flex-1 items-center justify-between rounded-lg px-3 py-2 text-left text-sm ${selectedCategory === category.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  variant="ghost"
+                  className={`h-auto flex-1 justify-between rounded-lg px-3 py-2 text-left text-sm ${selectedCategory === category.id ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" : "hover:bg-muted"}`}
                   onClick={() => setSelectedCategory(category.id)}
                 >
                   <span className="truncate">{category.name}</span>
                   <span className="text-xs">{categoryServiceCount.get(category.id) ?? 0}</span>
-                </button>
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -636,8 +640,7 @@ export function ServicesPage() {
           </div>
           <div className="grid gap-2">
             <Label>Mô tả</Label>
-            <textarea
-              className="min-h-20 rounded-md border px-3 py-2 text-sm"
+            <Textarea
               value={serviceForm.description}
               onChange={(event) =>
                 setServiceForm((prev) => ({

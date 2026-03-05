@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { queryKeys } from "@/lib/query-client";
 import { publicBookingService } from "@/services/public-booking.service";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -228,11 +229,7 @@ export function PublicBookingPage() {
 
             <div className="grid gap-2">
               <Label>Ghi chú</Label>
-              <textarea
-                className="min-h-20 w-full rounded-md border px-3 py-2 text-sm"
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-              />
+              <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} />
             </div>
 
             <Button type="submit" disabled={submitting || loading}>

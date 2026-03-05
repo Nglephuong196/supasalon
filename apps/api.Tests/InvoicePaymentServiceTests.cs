@@ -1,7 +1,7 @@
-using Api.Application.Common.Interfaces.Repositories;
-using Api.Application.Common.Models;
-using Api.Application.Features.Invoices;
-using Api.Domain.Entities;
+using Api.Interfaces;
+using Api.Models;
+using Api.Services;
+using Api.Dtos;
 
 namespace api.Tests;
 
@@ -28,8 +28,7 @@ public class InvoicePaymentServiceTests
         };
         var service = new InvoicePaymentService(repo);
 
-        var result = await service.RecordPaymentAsync(11, new RecordInvoicePaymentRequest(
-            OrganizationId: "org-1",
+        var result = await service.RecordPaymentAsync("org-1", 11, new RecordInvoicePaymentRequest(
             Method: "cash",
             Amount: 500));
 
@@ -49,8 +48,7 @@ public class InvoicePaymentServiceTests
         var service = new InvoicePaymentService(repo);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            service.RecordPaymentAsync(11, new RecordInvoicePaymentRequest(
-                OrganizationId: "org-1",
+            service.RecordPaymentAsync("org-1", 11, new RecordInvoicePaymentRequest(
                 Method: "crypto",
                 Amount: 100)));
     }
@@ -68,8 +66,7 @@ public class InvoicePaymentServiceTests
         };
         var service = new InvoicePaymentService(repo);
 
-        var result = await service.RecordPaymentAsync(11, new RecordInvoicePaymentRequest(
-            OrganizationId: "org-1",
+        var result = await service.RecordPaymentAsync("org-1", 11, new RecordInvoicePaymentRequest(
             Method: "cash",
             Amount: 500,
             Kind: "refund"));

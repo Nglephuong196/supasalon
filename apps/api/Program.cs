@@ -4,6 +4,9 @@ using Api.Data;
 using Api.Repositories;
 using Api.Services;
 using Api.Endpoints;
+using Api.Middleware;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +14,26 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>()?
+    .Where(origin => !string.IsNullOrWhiteSpace(origin))
+    .Select(origin => origin.TrimEnd('/'))
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray()
+    ?? ["http://localhost:5173", "http://127.0.0.1:5173"];
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("WebClient", policy =>
+    {
+        policy
+            .WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? throw new InvalidOperationException("Jwt settings are missing.");
 if (string.IsNullOrWhiteSpace(jwtOptions.Key))
@@ -70,10 +93,37 @@ builder.Services
         };
     });
 builder.Services.AddAuthorization();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var feature = context.Features.Get<IExceptionHandlerFeature>();
+        var exception = feature?.Error;
+        var statusCode = exception is InvalidOperationException
+            ? StatusCodes.Status400BadRequest
+            : StatusCodes.Status500InternalServerError;
+
+        context.Response.StatusCode = statusCode;
+        context.Response.ContentType = "application/problem+json";
+
+        var problem = new ProblemDetails
+        {
+            Status = statusCode,
+            Title = statusCode == 400 ? "Bad Request" : "Internal Server Error",
+            Detail = app.Environment.IsDevelopment() ? exception?.Message : null
+        };
+
+        await context.Response.WriteAsJsonAsync(problem);
+    });
+});
+
+app.UseCors("WebClient");
 app.UseAuthentication();
+app.UseMiddleware<OrganizationContextMiddleware>();
 app.UseAuthorization();
 
 app.MapGet("/", () => "Salon API is running");

@@ -1,5 +1,6 @@
 using Api.Models;
 using Api.Dtos;
+using Api.Utils;
 using System.Linq.Expressions;
 
 namespace Api.Models;
@@ -36,13 +37,13 @@ public static class BookingMappings
             booking.Guests,
             booking.CreatedAt);
 
-    public static Booking ToEntity(this CreateBookingRequest request) =>
+    public static Booking ToEntity(this CreateBookingRequest request, string organizationId) =>
         new()
         {
-            OrganizationId = request.OrganizationId,
+            OrganizationId = organizationId,
             CustomerId = request.CustomerId,
             BranchId = request.BranchId,
-            Date = request.Date,
+            Date = UtcDateTime.EnsureUtc(request.Date),
             Status = string.IsNullOrWhiteSpace(request.Status) ? "pending" : request.Status,
             DepositAmount = request.DepositAmount ?? 0,
             DepositPaid = request.DepositPaid ?? 0,

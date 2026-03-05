@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signIn } from "@/lib/auth-client";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Loader2, Sparkles } from "lucide-react";
+import { CircleAlert, Loader2, Sparkles } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 
 function validateEmail(value: string): string | null {
@@ -25,6 +25,37 @@ function validatePassword(value: string): string | null {
   if (!value) return "Vui lòng nhập mật khẩu";
   if (value.length < 6) return "Mật khẩu phải có ít nhất 6 ký tự";
   return null;
+}
+
+function getFriendlySignInErrorMessage(message?: string): string {
+  if (!message) {
+    return "Email hoặc mật khẩu chưa đúng. Vui lòng kiểm tra và thử lại.";
+  }
+
+  const normalizedMessage = message.toLowerCase();
+  const hasInvalidCredentialsError =
+    normalizedMessage.includes("unauthorized") ||
+    normalizedMessage.includes("unthorize") ||
+    normalizedMessage.includes("unauthorize") ||
+    normalizedMessage.includes("invalid credentials") ||
+    normalizedMessage.includes("401") ||
+    normalizedMessage.includes("email") ||
+    normalizedMessage.includes("mật khẩu");
+
+  if (hasInvalidCredentialsError) {
+    return "Email hoặc mật khẩu chưa đúng. Vui lòng kiểm tra và thử lại.";
+  }
+
+  const hasNetworkError =
+    normalizedMessage.includes("network") ||
+    normalizedMessage.includes("failed to fetch") ||
+    normalizedMessage.includes("load failed");
+
+  if (hasNetworkError) {
+    return "Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng và thử lại.";
+  }
+
+  return "Đăng nhập chưa thành công. Vui lòng thử lại sau ít phút.";
 }
 
 export function SignInPage() {
@@ -64,9 +95,7 @@ export function SignInPage() {
       });
 
       if (result.error) {
-        setError(
-          result.error.message || "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.",
-        );
+        setError(getFriendlySignInErrorMessage(result.error.message));
       }
     } finally {
       setIsLoading(false);
@@ -91,8 +120,19 @@ export function SignInPage() {
       <CardContent className="space-y-6 px-8">
         <div aria-live="polite">
           {error ? (
-            <div className="flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 p-3 text-sm font-medium text-red-600">
-              {error}
+            <div
+              role="alert"
+              className="rounded-xl border border-red-200 bg-linear-to-r from-rose-50 to-red-50 p-4 shadow-sm"
+            >
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 rounded-full bg-red-100 p-1.5 text-red-600">
+                  <CircleAlert className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-red-700">Đăng nhập chưa thành công</p>
+                  <p className="mt-1 text-sm text-red-700/95">{error}</p>
+                </div>
+              </div>
             </div>
           ) : null}
         </div>

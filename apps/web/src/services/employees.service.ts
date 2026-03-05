@@ -52,8 +52,8 @@ export const employeesService = {
     return apiClient.put<unknown>("/members/update-member-role", payload);
   },
   remove(payload: { memberIdOrEmail: string }) {
-    return apiClient.delete<unknown>("/members/remove-member", {
-      json: payload,
-    });
+    const query = new URLSearchParams();
+    query.set("memberIdOrEmail", payload.memberIdOrEmail);
+    return apiClient.delete<unknown>(`/members/remove-member?${query.toString()}`);
   },
 };

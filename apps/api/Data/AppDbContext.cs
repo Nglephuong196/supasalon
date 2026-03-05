@@ -1,11 +1,15 @@
 using Api.Models;
+using Api.Middleware;
+using Api.Utils;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Api.Data;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<User>(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor httpContextAccessor) : IdentityDbContext<User>(options)
 {
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<Member> Members => Set<Member>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
@@ -45,5 +49,82 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+        ApplyUtcDateTimeConverters(modelBuilder);
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ApplyOrganizationScope();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        ApplyOrganizationScope();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private void ApplyOrganizationScope()
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext is null)
+        {
+            return;
+        }
+
+        var organizationId = httpContext.Items[OrganizationContextMiddleware.OrganizationItemKey] as string;
+
+        if (string.IsNullOrWhiteSpace(organizationId))
+        {
+            return;
+        }
+
+        foreach (var entry in ChangeTracker.Entries()
+                     .Where(x => x.State is EntityState.Added or EntityState.Modified))
+        {
+            var property = entry.Metadata.FindProperty("OrganizationId");
+            if (property is null || property.ClrType != typeof(string))
+            {
+                continue;
+            }
+
+            var current = entry.Property("OrganizationId").CurrentValue as string;
+            if (string.IsNullOrWhiteSpace(current))
+            {
+                entry.Property("OrganizationId").CurrentValue = organizationId;
+                continue;
+            }
+
+            if (!string.Equals(current, organizationId, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException("organizationId mismatch between request context and entity.");
+            }
+        }
+    }
+
+    private static void ApplyUtcDateTimeConverters(ModelBuilder modelBuilder)
+    {
+        var dateTimeConverter = new ValueConverter<DateTime, DateTime>(
+            value => UtcDateTime.EnsureUtc(value),
+            value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
+
+        var nullableDateTimeConverter = new ValueConverter<DateTime?, DateTime?>(
+            value => value.HasValue ? UtcDateTime.EnsureUtc(value.Value) : value,
+            value => value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : value);
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(DateTime))
+                {
+                    property.SetValueConverter(dateTimeConverter);
+                }
+                else if (property.ClrType == typeof(DateTime?))
+                {
+                    property.SetValueConverter(nullableDateTimeConverter);
+                }
+            }
+        }
     }
 }

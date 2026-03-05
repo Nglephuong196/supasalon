@@ -1,12 +1,11 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ??
-  import.meta.env.PUBLIC_API_URL ??
-  import.meta.env.VITE_AUTH_BASE_URL ??
-  "http://localhost:3000";
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5263";
+
+const ACCESS_TOKEN_KEY = "api.accessToken";
+const BRANCH_ID_KEY = "branchId";
+const BRANCH_HEADER_NAME = "X-Branch-Id";
 
 type ApiContext = {
-  organizationId: string | null;
-  sessionId: string | null;
+  branchId: string | null;
 };
 
 type RequestOptions = Omit<RequestInit, "body"> & {
@@ -15,131 +14,81 @@ type RequestOptions = Omit<RequestInit, "body"> & {
 };
 
 const runtimeContext: ApiContext = {
-  organizationId: null,
-  sessionId: null,
+  branchId: null,
 };
-let organizationBootstrapPromise: Promise<string | null> | null = null;
 
-function readCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
+function readStorage(key: string): string | null {
+  if (typeof localStorage === "undefined") return null;
+  return localStorage.getItem(key);
 }
 
-function getDefaultOrganizationId(): string | null {
-  return (
-    runtimeContext.organizationId ??
-    readCookie("organizationId") ??
-    (typeof localStorage !== "undefined" ? localStorage.getItem("organizationId") : null)
-  );
+function writeStorage(key: string, value: string | null) {
+  if (typeof localStorage === "undefined") return;
+  if (value) localStorage.setItem(key, value);
+  else localStorage.removeItem(key);
 }
 
-function getDefaultSessionId(): string | null {
-  return (
-    runtimeContext.sessionId ??
-    readCookie("sessionId") ??
-    readCookie("better-auth.session_token") ??
-    (typeof localStorage !== "undefined" ? localStorage.getItem("sessionId") : null)
-  );
+export function getApiAuthToken(): string | null {
+  return readStorage(ACCESS_TOKEN_KEY);
 }
 
-function extractActiveOrganizationId(payload: unknown): string | null {
-  if (!payload || typeof payload !== "object") return null;
-  const record = payload as Record<string, unknown>;
-  const session = (record.session ?? record.data) as Record<string, unknown> | undefined;
-  const directActive = session?.activeOrganizationId ?? record.activeOrganizationId;
-  return typeof directActive === "string" && directActive.length > 0 ? directActive : null;
+export function setApiAuthToken(token: string) {
+  writeStorage(ACCESS_TOKEN_KEY, token);
 }
 
-function extractOrganizationList(payload: unknown): Array<{ id: string }> {
-  if (!payload || typeof payload !== "object") return [];
-  const record = payload as Record<string, unknown>;
-  const source = (record.data ?? record.organizations ?? record) as unknown;
-  if (!Array.isArray(source)) return [];
-  return source
-    .map((item) => {
-      if (!item || typeof item !== "object") return null;
-      const id = (item as Record<string, unknown>).id;
-      return typeof id === "string" ? { id } : null;
-    })
-    .filter((item): item is { id: string } => item !== null);
+export function clearApiAuthToken() {
+  writeStorage(ACCESS_TOKEN_KEY, null);
 }
 
-async function bootstrapOrganizationId(): Promise<string | null> {
-  // 1) Try current session for active organization.
-  try {
-    const sessionResponse = await fetch(`${API_BASE_URL}/api/auth/get-session`, {
-      credentials: "include",
-    });
-    if (sessionResponse.ok) {
-      const sessionPayload = await sessionResponse.json();
-      const activeOrganizationId = extractActiveOrganizationId(sessionPayload);
-      if (activeOrganizationId) {
-        runtimeContext.organizationId = activeOrganizationId;
-        if (typeof localStorage !== "undefined") {
-          localStorage.setItem("organizationId", activeOrganizationId);
-        }
-        return activeOrganizationId;
-      }
-    }
-  } catch {
-    // Ignore and continue with organization list fallback.
-  }
-
-  // 2) Fallback: list organizations and set first active.
-  try {
-    const listResponse = await fetch(`${API_BASE_URL}/api/auth/organization/list`, {
-      credentials: "include",
-    });
-    if (!listResponse.ok) return null;
-    const listPayload = await listResponse.json();
-    const organizations = extractOrganizationList(listPayload);
-    const firstOrganization = organizations[0];
-    if (!firstOrganization) return null;
-
-    await fetch(`${API_BASE_URL}/api/auth/organization/set-active`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ organizationId: firstOrganization.id }),
-    });
-
-    runtimeContext.organizationId = firstOrganization.id;
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem("organizationId", firstOrganization.id);
-    }
-    return firstOrganization.id;
-  } catch {
-    return null;
-  }
+function getDefaultBranchId(): string | null {
+  return runtimeContext.branchId ?? readStorage(BRANCH_ID_KEY) ?? null;
 }
 
-async function ensureOrganizationId(): Promise<string | null> {
-  const existing = getDefaultOrganizationId();
-  if (existing) return existing;
-
-  if (!organizationBootstrapPromise) {
-    organizationBootstrapPromise = bootstrapOrganizationId().finally(() => {
-      organizationBootstrapPromise = null;
-    });
-  }
-  return organizationBootstrapPromise;
+function saveBranchId(branchId: string | null) {
+  writeStorage(BRANCH_ID_KEY, branchId);
 }
 
 export function setApiContext(partial: Partial<ApiContext>) {
-  if (typeof partial.organizationId !== "undefined") {
-    runtimeContext.organizationId = partial.organizationId;
-  }
-  if (typeof partial.sessionId !== "undefined") {
-    runtimeContext.sessionId = partial.sessionId;
+  if (typeof partial.branchId !== "undefined") {
+    runtimeContext.branchId = partial.branchId;
+    saveBranchId(partial.branchId ?? null);
   }
 }
 
 export function clearApiContext() {
-  runtimeContext.organizationId = null;
-  runtimeContext.sessionId = null;
+  runtimeContext.branchId = null;
+}
+
+function normalizePath(path: string): string {
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+
+  if (path.startsWith("/api/") || path === "/api") {
+    return path;
+  }
+
+  if (path.startsWith("/public/")) {
+    return path;
+  }
+
+  if (path.startsWith("/")) {
+    return `/api${path}`;
+  }
+
+  return `/api/${path}`;
+}
+
+function requiresApiContext(path: string): boolean {
+  if (!path.startsWith("/api/")) return false;
+  if (path.startsWith("/api/auth/")) return false;
+  return true;
+}
+
+function shouldAttachAuth(path: string): boolean {
+  if (!path.startsWith("/api")) return false;
+  if (path === "/api/auth/login" || path === "/api/auth/register") return false;
+  return true;
 }
 
 async function parseApiError(response: Response): Promise<string> {
@@ -147,6 +96,11 @@ async function parseApiError(response: Response): Promise<string> {
     const payload = (await response.json()) as Record<string, unknown>;
     const message = payload.error ?? payload.message;
     if (typeof message === "string") return message;
+
+    const errors = payload.errors;
+    if (Array.isArray(errors) && errors.every((item) => typeof item === "string")) {
+      return errors.join("; ");
+    }
   } catch {
     // Ignore parse failures and fallback to status text.
   }
@@ -156,28 +110,31 @@ async function parseApiError(response: Response): Promise<string> {
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { json, headers, body, ...rest } = options;
 
-  const organizationId =
-    path.startsWith("/api/auth") || path.startsWith("/public/")
-      ? getDefaultOrganizationId()
-      : await ensureOrganizationId();
-  const sessionId = getDefaultSessionId();
+  let requestPath = normalizePath(path);
+  const branchId = getDefaultBranchId();
+  const needApiContext = requiresApiContext(requestPath);
 
   const requestHeaders = new Headers(headers);
+  const token = getApiAuthToken();
+
   if (json !== undefined) {
     requestHeaders.set("Content-Type", "application/json");
   }
-  if (organizationId) {
-    requestHeaders.set("X-Organization-Id", organizationId);
-  }
-  if (sessionId) {
-    // Backend expects a plain sessionId header.
-    requestHeaders.set("sessionId", sessionId);
+  if (branchId && needApiContext) {
+    requestHeaders.set(BRANCH_HEADER_NAME, branchId);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    credentials: "include",
+  if (token && shouldAttachAuth(requestPath)) {
+    requestHeaders.set("Authorization", `Bearer ${token}`);
+  }
+
+  const finalJson = json;
+
+  const requestUrl = requestPath.startsWith("http") ? requestPath : `${API_BASE_URL}${requestPath}`;
+
+  const response = await fetch(requestUrl, {
     headers: requestHeaders,
-    body: json !== undefined ? JSON.stringify(json) : body,
+    body: finalJson !== undefined ? JSON.stringify(finalJson) : body,
     ...rest,
   });
 

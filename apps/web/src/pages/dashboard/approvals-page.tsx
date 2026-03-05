@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -187,8 +188,7 @@ export function ApprovalsPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="inline-flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={requireInvoiceCancelApproval}
               onChange={(event) => setRequireInvoiceCancelApproval(event.target.checked)}
             />
@@ -196,8 +196,7 @@ export function ApprovalsPage() {
           </label>
 
           <label className="inline-flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={requireInvoiceRefundApproval}
               onChange={(event) => setRequireInvoiceRefundApproval(event.target.checked)}
             />
@@ -216,8 +215,7 @@ export function ApprovalsPage() {
           </div>
 
           <label className="inline-flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={requireCashOutApproval}
               onChange={(event) => setRequireCashOutApproval(event.target.checked)}
             />

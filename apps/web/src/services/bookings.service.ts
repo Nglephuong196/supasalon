@@ -1,8 +1,8 @@
 import { apiClient } from "@/lib/api";
-import type { BranchItem } from "./branches.service";
+import { branchesService, type BranchItem } from "./branches.service";
 import type { Customer } from "./customers.service";
-import type { EmployeeMember } from "./employees.service";
-import type { ServiceItem } from "./services.service";
+import { employeesService } from "./employees.service";
+import { servicesService } from "./services.service";
 
 export type BookingStatus =
   | "pending"
@@ -101,32 +101,62 @@ export const bookingsService = {
     const query = toQuery(filters);
     return apiClient.get<BookingListResponse>(query ? `/bookings?${query}` : "/bookings");
   },
-  stats(from?: string, to?: string, branchId?: number) {
-    const params = new URLSearchParams();
-    if (from) params.set("from", from);
-    if (to) params.set("to", to);
-    if (branchId) params.set("branchId", String(branchId));
-    const query = params.toString();
-    return apiClient.get<BookingStats>(query ? `/bookings/stats?${query}` : "/bookings/stats");
+  async stats(from?: string, to?: string, branchId?: number) {
+    const query = toQuery({
+      from,
+      to,
+      branchId,
+      page: 1,
+      limit: 500,
+    });
+    const list = await apiClient.get<BookingListResponse>(query ? `/bookings?${query}` : "/bookings");
+
+    const stats = {
+      total: list.total,
+      pending: 0,
+      confirmed: 0,
+      completed: 0,
+      cancelled: 0,
+      noShow: 0,
+      cancelRate: 0,
+      noShowRate: 0,
+      lostRate: 0,
+    };
+
+    for (const item of list.data) {
+      if (item.status === "pending") stats.pending += 1;
+      if (item.status === "confirmed") stats.confirmed += 1;
+      if (item.status === "completed") stats.completed += 1;
+      if (item.status === "cancelled") stats.cancelled += 1;
+      if (item.status === "no_show") stats.noShow += 1;
+    }
+
+    if (stats.total > 0) {
+      stats.cancelRate = (stats.cancelled / stats.total) * 100;
+      stats.noShowRate = (stats.noShow / stats.total) * 100;
+      stats.lostRate = ((stats.cancelled + stats.noShow) / stats.total) * 100;
+    }
+
+    return stats as BookingStats;
   },
   listDependencies() {
     return Promise.all([
-      apiClient.get<Customer[]>("/customers"),
-      apiClient.get<ServiceItem[]>("/services"),
-      apiClient.get<EmployeeMember[]>("/members"),
-      apiClient.get<BranchItem[]>("/branches"),
+      apiClient.get<{ data: Customer[] }>("/customers?page=1&limit=200").then((result) => result.data),
+      servicesService.listServices(),
+      employeesService.list(),
+      branchesService.list(),
     ]);
   },
   create(payload: BookingPayload) {
     return apiClient.post<BookingItem>("/bookings", payload);
   },
-  update(id: number, payload: Partial<BookingPayload>) {
-    return apiClient.put<BookingItem>(`/bookings/${id}`, payload);
+  async update(_: number, __: Partial<BookingPayload>) {
+    throw new Error("Booking update endpoint is not available in apps/api yet.");
   },
-  updateStatus(id: number, status: BookingStatus, noShowReason?: string) {
-    return apiClient.patch<BookingItem>(`/bookings/${id}/status`, { status, noShowReason });
+  async updateStatus(_: number, __: BookingStatus, ___?: string) {
+    throw new Error("Booking status endpoint is not available in apps/api yet.");
   },
-  remove(id: number) {
-    return apiClient.delete<{ message: string }>(`/bookings/${id}`);
+  async remove(_: number) {
+    throw new Error("Booking delete endpoint is not available in apps/api yet.");
   },
 };

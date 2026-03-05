@@ -9,6 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/sonner";
 import { queryKeys } from "@/lib/query-client";
 import {
   type BookingItem,
@@ -17,6 +19,8 @@ import {
   type BookingStatus,
   bookingsService,
 } from "@/services/bookings.service";
+import { customersService } from "@/services/customers.service";
+import { servicesService } from "@/services/services.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { CalendarDays, Check, Pencil, Plus, Search, Trash2, X } from "lucide-react";
@@ -35,7 +39,7 @@ function Modal(props: {
       onClick={props.onClose}
     >
       <div
-        className="w-full max-w-2xl rounded-xl border border-border bg-white p-5 shadow-xl"
+        className="w-full max-w-6xl max-h-[92vh] overflow-hidden rounded-xl border border-border bg-white p-5 shadow-xl"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between gap-3">
@@ -80,6 +84,29 @@ const emptyStats: BookingStats = {
   lostRate: 0,
 };
 const NONE_OPTION_VALUE = "__none__";
+type ServiceSelectionForm = {
+  categoryId: string;
+  serviceId: string;
+  memberId: string;
+};
+
+type GuestServicesForm = {
+  services: ServiceSelectionForm[];
+};
+
+function createEmptyServiceSelection(): ServiceSelectionForm {
+  return {
+    categoryId: "",
+    serviceId: "",
+    memberId: "",
+  };
+}
+
+function createEmptyGuestServices(): GuestServicesForm {
+  return {
+    services: [createEmptyServiceSelection()],
+  };
+}
 
 function todayString() {
   return new Date().toISOString().split("T")[0] ?? "";
@@ -107,13 +134,14 @@ export function BookingsPage() {
   const [formBranchId, setFormBranchId] = useState("");
   const [formDate, setFormDate] = useState("");
   const [formGuestCount, setFormGuestCount] = useState("1");
-  const [formServiceId, setFormServiceId] = useState("");
-  const [formMemberId, setFormMemberId] = useState("");
+  const [formGuests, setFormGuests] = useState<GuestServicesForm[]>([createEmptyGuestServices()]);
   const [formStatus, setFormStatus] = useState<BookingStatus>("pending");
   const [formDepositAmount, setFormDepositAmount] = useState("0");
-  const [formDepositPaid, setFormDepositPaid] = useState("0");
   const [formNoShowReason, setFormNoShowReason] = useState("");
   const [formNotes, setFormNotes] = useState("");
+  const [quickCustomerOpen, setQuickCustomerOpen] = useState(false);
+  const [quickCustomerName, setQuickCustomerName] = useState("");
+  const [quickCustomerPhone, setQuickCustomerPhone] = useState("");
 
   useEffect(() => {
     document.title = "Lịch hẹn | SupaSalon";
@@ -143,6 +171,10 @@ export function BookingsPage() {
     queryKey: queryKeys.bookingDependencies,
     queryFn: () => bookingsService.listDependencies(),
   });
+  const serviceCategoriesQuery = useQuery({
+    queryKey: queryKeys.serviceCategories,
+    queryFn: () => servicesService.listCategories(),
+  });
 
   const bookingsQuery = useQuery({
     queryKey: queryKeys.bookings(filters),
@@ -171,6 +203,18 @@ export function BookingsPage() {
         queryClient.invalidateQueries({ queryKey: ["booking-stats"] }),
       ]);
     },
+  });
+
+  const createCustomerMutation = useMutation({
+    mutationFn: (payload: { name: string; phone: string }) =>
+      customersService.create({
+        name: payload.name,
+        phone: payload.phone,
+        email: null,
+        notes: "",
+        gender: null,
+        location: null,
+      }),
   });
 
   const updateMutation = useMutation({
@@ -225,8 +269,13 @@ export function BookingsPage() {
   const bookings = bookingsQuery.data?.data ?? [];
   const stats = statsQuery.data ?? emptyStats;
 
-  const loading = dependenciesQuery.isLoading || bookingsQuery.isLoading || statsQuery.isLoading;
+  const loading =
+    dependenciesQuery.isLoading ||
+    serviceCategoriesQuery.isLoading ||
+    bookingsQuery.isLoading ||
+    statsQuery.isLoading;
   const saving =
+    createCustomerMutation.isPending ||
     createMutation.isPending ||
     updateMutation.isPending ||
     updateStatusMutation.isPending ||
@@ -235,8 +284,10 @@ export function BookingsPage() {
   const error =
     actionError ??
     (dependenciesQuery.error instanceof Error ? dependenciesQuery.error.message : null) ??
+    (serviceCategoriesQuery.error instanceof Error ? serviceCategoriesQuery.error.message : null) ??
     (bookingsQuery.error instanceof Error ? bookingsQuery.error.message : null) ??
     (statsQuery.error instanceof Error ? statsQuery.error.message : null) ??
+    (createCustomerMutation.error instanceof Error ? createCustomerMutation.error.message : null) ??
     (createMutation.error instanceof Error ? createMutation.error.message : null) ??
     (updateMutation.error instanceof Error ? updateMutation.error.message : null) ??
     (updateStatusMutation.error instanceof Error ? updateStatusMutation.error.message : null) ??
@@ -247,13 +298,14 @@ export function BookingsPage() {
     setFormBranchId("");
     setFormDate("");
     setFormGuestCount("1");
-    setFormServiceId("");
-    setFormMemberId("");
+    setFormGuests([createEmptyGuestServices()]);
     setFormStatus("pending");
     setFormDepositAmount("0");
-    setFormDepositPaid("0");
     setFormNoShowReason("");
     setFormNotes("");
+    setQuickCustomerOpen(false);
+    setQuickCustomerName("");
+    setQuickCustomerPhone("");
   }
 
   const customerById = useMemo(
@@ -266,12 +318,92 @@ export function BookingsPage() {
   );
 
   const serviceById = useMemo(() => new Map(services.map((item) => [item.id, item])), [services]);
+  const serviceCategoryOptions = useMemo(() => {
+    const categories = serviceCategoriesQuery.data ?? [];
+    if (categories.length > 0) {
+      return categories.map((item) => ({ id: item.id, name: item.name }));
+    }
+
+    const categoryMap = new Map<number, string>();
+    for (const service of services) {
+      if (!categoryMap.has(service.categoryId)) {
+        categoryMap.set(service.categoryId, `Nhóm #${service.categoryId}`);
+      }
+    }
+    return Array.from(categoryMap.entries()).map(([id, name]) => ({ id, name }));
+  }, [serviceCategoriesQuery.data, services]);
 
   const memberById = useMemo(() => {
     return new Map(
       members.map((item) => [item.id, item.user?.name ?? item.user?.email ?? item.id]),
     );
   }, [members]);
+
+  function setGuestCount(nextValue: string) {
+    setFormGuestCount(nextValue);
+    const nextCount = Number(nextValue);
+    if (!Number.isInteger(nextCount) || nextCount <= 0) return;
+
+    setFormGuests((previous) => {
+      if (previous.length === nextCount) return previous;
+      if (previous.length > nextCount) return previous.slice(0, nextCount);
+      return [
+        ...previous,
+        ...Array.from({ length: nextCount - previous.length }, () => createEmptyGuestServices()),
+      ];
+    });
+  }
+
+  function updateGuestService(
+    guestIndex: number,
+    serviceIndex: number,
+    field: keyof ServiceSelectionForm,
+    value: string,
+  ) {
+    setFormGuests((previous) =>
+      previous.map((guest, index) => {
+        if (index !== guestIndex) return guest;
+        return {
+          ...guest,
+          services: guest.services.map((service, entryIndex) => {
+            if (entryIndex !== serviceIndex) return service;
+            const next = { ...service, [field]: value };
+            if (field === "categoryId") {
+              next.serviceId = "";
+            }
+            if (field === "serviceId") {
+              const selectedService = value ? serviceById.get(Number(value)) : undefined;
+              next.categoryId = selectedService ? String(selectedService.categoryId) : service.categoryId;
+            }
+            return next;
+          }),
+        };
+      }),
+    );
+  }
+
+  function addGuestService(guestIndex: number) {
+    setFormGuests((previous) =>
+      previous.map((guest, index) =>
+        index === guestIndex
+          ? { ...guest, services: [...guest.services, createEmptyServiceSelection()] }
+          : guest,
+      ),
+    );
+  }
+
+  function removeGuestService(guestIndex: number, serviceIndex: number) {
+    setFormGuests((previous) =>
+      previous.map((guest, index) => {
+        if (index !== guestIndex) return guest;
+        const nextServices = guest.services.filter((_, entryIndex) => entryIndex !== serviceIndex);
+        return {
+          ...guest,
+          services: nextServices.length > 0 ? nextServices : [createEmptyServiceSelection()],
+        };
+      }),
+    );
+  }
 
   const bookingColumns: Array<ColumnDef<BookingItem>> = [
     {
@@ -350,19 +482,14 @@ export function BookingsPage() {
     },
     {
       id: "deposit",
-      header: "Đặt cọc",
+      header: "Tiền cọc",
       meta: {
         className: "text-right",
         headerClassName: "text-right",
       },
       cell: ({ row }) => (
-        <div className="text-right">
-          <div className="font-medium">
-            {Number(row.original.depositPaid ?? 0).toLocaleString("vi-VN")}đ
-          </div>
-          <div className="text-xs text-muted-foreground">
-            / {Number(row.original.depositAmount ?? 0).toLocaleString("vi-VN")}đ
-          </div>
+        <div className="text-right font-medium">
+          {Number(row.original.depositPaid ?? row.original.depositAmount ?? 0).toLocaleString("vi-VN")}đ
         </div>
       ),
     },
@@ -411,80 +538,104 @@ export function BookingsPage() {
     },
   ];
 
+  function setFormError(message: string) {
+    setActionError(message);
+    toast.error(message);
+  }
+
   function buildPayload(): BookingPayload | null {
     const customerId = Number(formCustomerId);
     const branchId = formBranchId ? Number(formBranchId) : undefined;
     const guestCount = Number(formGuestCount);
-    const serviceId = Number(formServiceId);
     const depositAmount = Number(formDepositAmount);
-    const depositPaid = Number(formDepositPaid);
 
     if (!Number.isInteger(customerId) || customerId <= 0) {
-      setActionError("Vui lòng chọn khách hàng");
+      setFormError("Vui lòng chọn khách hàng");
       return null;
     }
     if (typeof branchId === "number" && (!Number.isInteger(branchId) || branchId <= 0)) {
-      setActionError("Chi nhánh không hợp lệ");
+      setFormError("Chi nhánh không hợp lệ");
       return null;
     }
     if (!formDate) {
-      setActionError("Vui lòng chọn ngày giờ");
+      setFormError("Vui lòng chọn ngày giờ");
       return null;
     }
     if (!Number.isInteger(guestCount) || guestCount <= 0) {
-      setActionError("Số lượng khách không hợp lệ");
-      return null;
-    }
-    if (!Number.isInteger(serviceId) || serviceId <= 0) {
-      setActionError("Vui lòng chọn dịch vụ");
+      setFormError("Số lượng khách không hợp lệ");
       return null;
     }
     if (!Number.isFinite(depositAmount) || depositAmount < 0) {
-      setActionError("Số tiền cọc không hợp lệ");
-      return null;
-    }
-    if (!Number.isFinite(depositPaid) || depositPaid < 0) {
-      setActionError("Số tiền đã cọc không hợp lệ");
-      return null;
-    }
-    if (depositPaid > depositAmount) {
-      setActionError("Số tiền đã cọc không thể lớn hơn số tiền cần cọc");
+      setFormError("Số tiền cọc không hợp lệ");
       return null;
     }
     if (formStatus === "no_show" && !formNoShowReason.trim()) {
-      setActionError("Vui lòng nhập lý do no-show");
+      setFormError("Vui lòng nhập lý do no-show");
       return null;
     }
 
-    const service = serviceById.get(serviceId);
-    if (!service) {
-      setActionError("Dịch vụ không tồn tại");
+    if (formGuests.length !== guestCount) {
+      setFormError("Số lượng khu vực dịch vụ chưa khớp số khách");
       return null;
     }
 
-    const guests = Array.from({ length: guestCount }, () => ({
-      services: [
-        {
-          categoryId: service.categoryId,
-          serviceId,
-          memberId: formMemberId || undefined,
-          price: service.price,
-        },
-      ],
-    }));
+    try {
+      const guests = formGuests.map((guest, guestIndex) => {
+        if (!guest.services.length) {
+          throw new Error(`Vui lòng chọn ít nhất 1 dịch vụ cho khách ${guestIndex + 1}`);
+        }
 
-    return {
-      customerId,
-      branchId,
-      guests,
-      guestCount,
-      date: new Date(formDate).toISOString(),
-      status: formStatus,
-      depositAmount,
-      depositPaid,
-      noShowReason: formStatus === "no_show" ? formNoShowReason.trim() : undefined,
-      notes: formNotes,
-    };
+        const mappedServices = guest.services.map((entry, serviceIndex) => {
+          const categoryId = Number(entry.categoryId);
+          const serviceId = Number(entry.serviceId);
+          if (!Number.isInteger(categoryId) || categoryId <= 0) {
+            throw new Error(
+              `Vui lòng chọn nhóm dịch vụ cho khách ${guestIndex + 1}, mục ${serviceIndex + 1}`,
+            );
+          }
+          if (!Number.isInteger(serviceId) || serviceId <= 0) {
+            throw new Error(`Vui lòng chọn dịch vụ cho khách ${guestIndex + 1}, mục ${serviceIndex + 1}`);
+          }
+
+          const service = serviceById.get(serviceId);
+          if (!service) {
+            throw new Error(
+              `Dịch vụ đã chọn cho khách ${guestIndex + 1}, mục ${serviceIndex + 1} không tồn tại`,
+            );
+          }
+          if (service.categoryId !== categoryId) {
+            throw new Error(
+              `Nhóm dịch vụ không khớp với dịch vụ đã chọn ở khách ${guestIndex + 1}, mục ${serviceIndex + 1}`,
+            );
+          }
+
+          return {
+            categoryId,
+            serviceId,
+            memberId: entry.memberId || undefined,
+            price: service.price,
+          };
+        });
+
+        return { services: mappedServices };
+      });
+
+      return {
+        customerId,
+        branchId,
+        guests,
+        guestCount,
+        date: new Date(formDate).toISOString(),
+        status: formStatus,
+        depositAmount,
+        depositPaid: depositAmount,
+        noShowReason: formStatus === "no_show" ? formNoShowReason.trim() : undefined,
+        notes: formNotes,
+      };
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Dữ liệu lịch hẹn không hợp lệ");
+      return null;
+    }
   }
 
   async function createBooking(event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) {
@@ -495,8 +646,43 @@ export function BookingsPage() {
     setActionError(null);
     try {
       await createMutation.mutateAsync(payload);
+      toast.success("Tạo lịch hẹn thành công");
       setCreateOpen(false);
       resetForm();
+    } catch {
+      // handled by mutation state
+    }
+  }
+
+  async function quickCreateCustomer() {
+    const name = quickCustomerName.trim();
+    const phone = quickCustomerPhone.trim();
+
+    if (!name) {
+      setFormError("Vui lòng nhập tên khách hàng");
+      return;
+    }
+    if (!phone) {
+      setFormError("Vui lòng nhập số điện thoại khách hàng");
+      return;
+    }
+
+    setActionError(null);
+    try {
+      const created = await createCustomerMutation.mutateAsync({ name, phone });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.bookingDependencies });
+      const refreshed = await dependenciesQuery.refetch();
+      const refreshedCustomers = refreshed.data?.[0] ?? [];
+      const matchedCustomer =
+        refreshedCustomers.find((item) => item.id === created.id) ??
+        refreshedCustomers.find((item) => item.phone === phone && item.name === name);
+      if (matchedCustomer) {
+        setFormCustomerId(String(matchedCustomer.id));
+      }
+      setQuickCustomerName("");
+      setQuickCustomerPhone("");
+      setQuickCustomerOpen(false);
+      toast.success("Đã tạo khách hàng mới");
     } catch {
       // handled by mutation state
     }
@@ -509,12 +695,30 @@ export function BookingsPage() {
     const iso = new Date(booking.date).toISOString();
     setFormDate(iso.slice(0, 16));
     setFormGuestCount(String(booking.guestCount));
-    const firstService = booking.guests?.[0]?.services?.[0];
-    setFormServiceId(firstService?.serviceId ? String(firstService.serviceId) : "");
-    setFormMemberId(firstService?.memberId || "");
+    const mappedGuests =
+      booking.guests.length > 0
+        ? booking.guests.map((guest) => ({
+            services:
+              guest.services.length > 0
+                ? guest.services.map((serviceEntry) => ({
+                    categoryId: String(
+                      serviceEntry.categoryId ?? serviceById.get(serviceEntry.serviceId)?.categoryId ?? "",
+                    ),
+                    serviceId: String(serviceEntry.serviceId),
+                    memberId: serviceEntry.memberId ?? "",
+                  }))
+                : [createEmptyServiceSelection()],
+          }))
+        : Array.from({ length: Math.max(booking.guestCount, 1) }, () => createEmptyGuestServices());
+    const normalizedGuestCount = Math.max(booking.guestCount, 1);
+    if (mappedGuests.length < normalizedGuestCount) {
+      mappedGuests.push(
+        ...Array.from({ length: normalizedGuestCount - mappedGuests.length }, () => createEmptyGuestServices()),
+      );
+    }
+    setFormGuests(mappedGuests.slice(0, normalizedGuestCount));
     setFormStatus(booking.status);
-    setFormDepositAmount(String(booking.depositAmount ?? 0));
-    setFormDepositPaid(String(booking.depositPaid ?? 0));
+    setFormDepositAmount(String(booking.depositPaid ?? booking.depositAmount ?? 0));
     setFormNoShowReason(booking.noShowReason ?? "");
     setFormNotes(booking.notes ?? "");
     setEditOpen(true);
@@ -533,6 +737,7 @@ export function BookingsPage() {
         id: selectedBooking.id,
         payload,
       });
+      toast.success("Cập nhật lịch hẹn thành công");
       setEditOpen(false);
       setSelectedBooking(null);
       resetForm();
@@ -577,169 +782,281 @@ export function BookingsPage() {
   ) {
     return (
       <form className="grid gap-4" onSubmit={onSubmit}>
-        <div className="grid gap-2">
-          <Label>Khách hàng</Label>
-          <Select
-            value={formCustomerId || NONE_OPTION_VALUE}
-            onValueChange={(value) => setFormCustomerId(value === NONE_OPTION_VALUE ? "" : value)}
-          >
-            <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NONE_OPTION_VALUE}>Chọn khách hàng</SelectItem>
-              {customers.map((item) => (
-                <SelectItem key={item.id} value={String(item.id)}>
-                  {item.name} - {item.phone}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-start">
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <Label>Khách hàng</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setQuickCustomerOpen((previous) => !previous)}
+                >
+                  <Plus className="mr-1 h-3.5 w-3.5" />
+                  Tạo nhanh khách
+                </Button>
+              </div>
+              <Select
+                value={formCustomerId || NONE_OPTION_VALUE}
+                onValueChange={(value) => setFormCustomerId(value === NONE_OPTION_VALUE ? "" : value)}
+              >
+                <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE_OPTION_VALUE}>Chọn khách hàng</SelectItem>
+                  {customers.map((item) => (
+                    <SelectItem key={item.id} value={String(item.id)}>
+                      {item.name} - {item.phone}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {quickCustomerOpen ? (
+                <div className="mt-1 grid gap-3 rounded-lg border border-border/70 bg-muted/20 p-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                  <div className="grid gap-1.5">
+                    <Label>Tên khách</Label>
+                    <Input
+                      value={quickCustomerName}
+                      onChange={(event) => setQuickCustomerName(event.target.value)}
+                      placeholder="Ví dụ: Nguyễn Thị A"
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label>Số điện thoại</Label>
+                    <Input
+                      value={quickCustomerPhone}
+                      onChange={(event) => setQuickCustomerPhone(event.target.value)}
+                      placeholder="Ví dụ: 09xxxxxxxx"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => void quickCreateCustomer()}
+                    disabled={createCustomerMutation.isPending}
+                  >
+                    {createCustomerMutation.isPending ? "Đang tạo..." : "Tạo khách"}
+                  </Button>
+                </div>
+              ) : null}
+            </div>
 
-        <div className="grid gap-2">
-          <Label>Chi nhánh</Label>
-          <Select
-            value={formBranchId || NONE_OPTION_VALUE}
-            onValueChange={(value) => setFormBranchId(value === NONE_OPTION_VALUE ? "" : value)}
-          >
-            <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NONE_OPTION_VALUE}>Tự động theo mặc định</SelectItem>
-              {branches.map((branch) => (
-                <SelectItem key={branch.id} value={String(branch.id)}>
-                  {branch.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <div className="grid gap-2">
+              <Label>Chi nhánh</Label>
+              <Select
+                value={formBranchId || NONE_OPTION_VALUE}
+                onValueChange={(value) => setFormBranchId(value === NONE_OPTION_VALUE ? "" : value)}
+              >
+                <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE_OPTION_VALUE}>Tự động theo mặc định</SelectItem>
+                  {branches.map((branch) => (
+                    <SelectItem key={branch.id} value={String(branch.id)}>
+                      {branch.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="grid gap-2">
-            <Label>Ngày giờ</Label>
-            <Input
-              type="datetime-local"
-              value={formDate}
-              onChange={(event) => setFormDate(event.target.value)}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label>Số khách</Label>
-            <Input
-              type="number"
-              min={1}
-              max={10}
-              value={formGuestCount}
-              onChange={(event) => setFormGuestCount(event.target.value)}
-            />
-          </div>
-        </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label>Ngày giờ</Label>
+                <Input
+                  type="datetime-local"
+                  value={formDate}
+                  onChange={(event) => setFormDate(event.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Số khách</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={formGuestCount}
+                  onChange={(event) => setGuestCount(event.target.value)}
+                />
+              </div>
+            </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="grid gap-2">
-            <Label>Dịch vụ</Label>
-            <Select
-              value={formServiceId || NONE_OPTION_VALUE}
-              onValueChange={(value) => setFormServiceId(value === NONE_OPTION_VALUE ? "" : value)}
-            >
-              <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE_OPTION_VALUE}>Chọn dịch vụ</SelectItem>
-                {services.map((item) => (
-                  <SelectItem key={item.id} value={String(item.id)}>
-                    {item.name} - {item.price.toLocaleString("vi-VN")}đ
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-2">
-            <Label>Nhân viên (tuỳ chọn)</Label>
-            <Select
-              value={formMemberId || NONE_OPTION_VALUE}
-              onValueChange={(value) => setFormMemberId(value === NONE_OPTION_VALUE ? "" : value)}
-            >
-              <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE_OPTION_VALUE}>Không chỉ định</SelectItem>
-                {members.map((item) => (
-                  <SelectItem key={item.id} value={String(item.id)}>
-                    {item.user?.name || item.user?.email || item.id}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+            <div className="grid gap-2">
+              <Label>Trạng thái</Label>
+              <Select
+                value={formStatus}
+                onValueChange={(value) => setFormStatus(value as BookingStatus)}
+              >
+                <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(statusText).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="grid gap-2">
-          <Label>Trạng thái</Label>
-          <Select
-            value={formStatus}
-            onValueChange={(value) => setFormStatus(value as BookingStatus)}
-          >
-            <SelectTrigger className="h-10 rounded-md border px-3 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(statusText).map(([value, label]) => (
-                <SelectItem key={value} value={value}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <div className="grid gap-2">
+              <Label>Tiền cọc (₫)</Label>
+              <Input
+                type="number"
+                min={0}
+                step="1000"
+                value={formDepositAmount}
+                onChange={(event) => setFormDepositAmount(event.target.value)}
+              />
+            </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="grid gap-2">
-            <Label>Số tiền cọc (₫)</Label>
-            <Input
-              type="number"
-              min={0}
-              step="1000"
-              value={formDepositAmount}
-              onChange={(event) => setFormDepositAmount(event.target.value)}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label>Đã cọc (₫)</Label>
-            <Input
-              type="number"
-              min={0}
-              step="1000"
-              value={formDepositPaid}
-              onChange={(event) => setFormDepositPaid(event.target.value)}
-            />
-          </div>
-        </div>
+            {formStatus === "no_show" ? (
+              <div className="grid gap-2">
+                <Label>Lý do no-show</Label>
+                <Textarea
+                  value={formNoShowReason}
+                  onChange={(event) => setFormNoShowReason(event.target.value)}
+                  placeholder="Ví dụ: Khách báo bận sát giờ, không thể đến..."
+                />
+              </div>
+            ) : null}
 
-        {formStatus === "no_show" ? (
-          <div className="grid gap-2">
-            <Label>Lý do no-show</Label>
-            <textarea
-              className="min-h-20 rounded-md border px-3 py-2 text-sm"
-              value={formNoShowReason}
-              onChange={(event) => setFormNoShowReason(event.target.value)}
-              placeholder="Ví dụ: Khách báo bận sát giờ, không thể đến..."
-            />
+            <div className="grid gap-2">
+              <Label>Ghi chú</Label>
+              <Textarea value={formNotes} onChange={(event) => setFormNotes(event.target.value)} />
+            </div>
           </div>
-        ) : null}
 
-        <div className="grid gap-2">
-          <Label>Ghi chú</Label>
-          <textarea
-            className="min-h-20 rounded-md border px-3 py-2 text-sm"
-            value={formNotes}
-            onChange={(event) => setFormNotes(event.target.value)}
-          />
+          <div className="space-y-3 rounded-lg border border-border/70 bg-muted/15 p-3 lg:max-h-[72vh] lg:overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <Label>Dịch vụ theo từng khách</Label>
+              <span className="text-xs text-muted-foreground">
+                {formGuests.length} khu vực cho {formGuestCount} khách
+              </span>
+            </div>
+            {formGuests.map((guest, guestIndex) => (
+              <div
+                key={`guest-${guestIndex}`}
+                className="space-y-2 rounded-lg border border-border/70 bg-background p-3"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold">Khách {guestIndex + 1}</h4>
+                  <Button type="button" variant="outline" size="sm" onClick={() => addGuestService(guestIndex)}>
+                    <Plus className="mr-1 h-3.5 w-3.5" />
+                    Thêm dịch vụ
+                  </Button>
+                </div>
+                {guest.services.map((serviceEntry, serviceIndex) => {
+                  const filteredServices = serviceEntry.categoryId
+                    ? services.filter((item) => String(item.categoryId) === serviceEntry.categoryId)
+                    : [];
+                  return (
+                    <div
+                      key={`guest-${guestIndex}-service-${serviceIndex}`}
+                      className="grid gap-2 rounded-md border border-border/60 bg-muted/10 p-2 sm:grid-cols-[1fr_1.2fr_1fr_auto]"
+                    >
+                      <div className="grid gap-1">
+                        <Label>Nhóm dịch vụ</Label>
+                        <Select
+                          value={serviceEntry.categoryId || NONE_OPTION_VALUE}
+                          onValueChange={(value) =>
+                            updateGuestService(
+                              guestIndex,
+                              serviceIndex,
+                              "categoryId",
+                              value === NONE_OPTION_VALUE ? "" : value,
+                            )
+                          }
+                        >
+                          <SelectTrigger className="h-9 rounded-md border px-2 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={NONE_OPTION_VALUE}>Chọn nhóm</SelectItem>
+                            {serviceCategoryOptions.map((category) => (
+                              <SelectItem key={category.id} value={String(category.id)}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid gap-1">
+                        <Label>Dịch vụ</Label>
+                        <Select
+                          value={serviceEntry.serviceId || NONE_OPTION_VALUE}
+                          onValueChange={(value) =>
+                            updateGuestService(
+                              guestIndex,
+                              serviceIndex,
+                              "serviceId",
+                              value === NONE_OPTION_VALUE ? "" : value,
+                            )
+                          }
+                        >
+                          <SelectTrigger className="h-9 rounded-md border px-2 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={NONE_OPTION_VALUE}>Chọn dịch vụ</SelectItem>
+                            {filteredServices.map((item) => (
+                              <SelectItem key={item.id} value={String(item.id)}>
+                                {item.name} - {item.price.toLocaleString("vi-VN")}đ
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid gap-1">
+                        <Label>Nhân viên</Label>
+                        <Select
+                          value={serviceEntry.memberId || NONE_OPTION_VALUE}
+                          onValueChange={(value) =>
+                            updateGuestService(
+                              guestIndex,
+                              serviceIndex,
+                              "memberId",
+                              value === NONE_OPTION_VALUE ? "" : value,
+                            )
+                          }
+                        >
+                          <SelectTrigger className="h-9 rounded-md border px-2 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={NONE_OPTION_VALUE}>Không chỉ định</SelectItem>
+                            {members.map((item) => (
+                              <SelectItem key={item.id} value={String(item.id)}>
+                                {item.user?.name || item.user?.email || item.id}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex items-end">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-rose-600 hover:text-rose-700"
+                          onClick={() => removeGuestService(guestIndex, serviceIndex)}
+                          title="Xóa dịch vụ"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="flex justify-end gap-2">

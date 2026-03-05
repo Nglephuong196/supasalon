@@ -5,7 +5,6 @@ export type PrepaidUnit = "vnd" | "credit";
 
 export type PrepaidPlan = {
   id: number;
-  organizationId: string;
   name: string;
   description?: string | null;
   unit: PrepaidUnit;
@@ -19,7 +18,6 @@ export type PrepaidPlan = {
 
 export type PrepaidCard = {
   id: number;
-  organizationId: string;
   customerId: number;
   planId?: number | null;
   cardCode: string;
@@ -37,7 +35,6 @@ export type PrepaidCard = {
 
 export type PrepaidTransaction = {
   id: number;
-  organizationId: string;
   cardId: number;
   customerId: number;
   invoiceId?: number | null;

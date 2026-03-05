@@ -3,7 +3,6 @@ import type { EmployeeMember } from "./employees.service";
 
 export type BranchItem = {
   id: number;
-  organizationId: string;
   name: string;
   code?: string | null;
   address?: string | null;
@@ -28,7 +27,6 @@ export type BranchPayload = {
 
 export type BranchMemberAssignment = {
   id: number;
-  organizationId: string;
   branchId: number;
   memberId: string;
   isPrimary: boolean;

@@ -3,7 +3,6 @@ using System.Text.Json;
 namespace Api.Models;
 
 public record CreateBookingRequest(
-    string OrganizationId,
     int CustomerId,
     int? BranchId,
     DateTime Date,

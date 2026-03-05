@@ -40,7 +40,6 @@ export type InvoicePaymentInput = {
 
 export type InvoicePayment = {
   id: number;
-  organizationId: string;
   invoiceId: number;
   cashSessionId?: number | null;
   kind: InvoicePaymentKind;
@@ -144,22 +143,30 @@ export type InvoiceDependencies = {
 };
 
 export const invoicesService = {
-  list(filters?: { branchId?: number }) {
+  async list(filters?: { branchId?: number }) {
     const params = new URLSearchParams();
     if (filters?.branchId) params.set("branchId", String(filters.branchId));
     const query = params.toString();
-    return apiClient.get<Invoice[]>(query ? `/invoices?${query}` : "/invoices");
+    const result = await apiClient.get<{ data: Invoice[] }>(query ? `/invoices?${query}` : "/invoices");
+    return result.data;
   },
   listOpenToday() {
-    return apiClient.get<Invoice[]>("/invoices?isOpenInTab=true&date=today");
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
+    return apiClient
+      .get<{ data: Invoice[] }>(
+        `/invoices?isOpenInTab=true&from=${encodeURIComponent(start)}&to=${encodeURIComponent(end)}`,
+      )
+      .then((result) => result.data);
   },
   listDependencies() {
     return Promise.all([
-      apiClient.get<Customer[]>("/customers"),
-      apiClient.get<EmployeeMember[]>("/members"),
-      apiClient.get<ServiceItem[]>("/services"),
-      apiClient.get<ProductItem[]>("/products"),
-      apiClient.get<BranchItem[]>("/branches"),
+      apiClient.get<{ data: Customer[] }>("/customers?page=1&limit=200").then((result) => result.data),
+      Promise.resolve([] as EmployeeMember[]),
+      Promise.resolve([] as ServiceItem[]),
+      Promise.resolve([] as ProductItem[]),
+      Promise.resolve([] as BranchItem[]),
     ]).then(([customers, staff, services, products, branches]) => ({
       customers,
       staff,
@@ -171,29 +178,43 @@ export const invoicesService = {
   create(payload: InvoicePayload) {
     return apiClient.post<Invoice>("/invoices", payload);
   },
-  update(id: number, payload: Partial<InvoicePayload>) {
-    return apiClient.put<Invoice>(`/invoices/${id}`, payload);
+  async update(_: number, __: Partial<InvoicePayload>): Promise<Invoice> {
+    throw new Error("Invoice update endpoint is not available in apps/api yet.");
   },
-  settle(id: number, payload: InvoiceSettlePayload) {
-    return apiClient.post<Invoice>(`/invoices/${id}/settle`, payload);
+  async settle(id: number, payload: InvoiceSettlePayload) {
+    if (!payload.payments.length) {
+      throw new Error("At least one payment is required.");
+    }
+
+    let latestInvoice: Invoice | null = null;
+    for (const payment of payload.payments) {
+      latestInvoice = await apiClient.post<Invoice>(`/invoices/${id}/payments`, {
+        method: payment.method,
+        amount: payment.amount,
+        status: payment.status,
+        referenceCode: payment.referenceCode,
+        notes: payment.notes ?? payload.notes,
+      });
+    }
+
+    return latestInvoice as Invoice;
   },
-  payments(id: number) {
-    return apiClient.get<InvoicePayment[]>(`/invoices/${id}/payments`);
+  async payments(_: number): Promise<InvoicePayment[]> {
+    throw new Error("Invoice payment list endpoint is not available in apps/api yet.");
   },
-  close(id: number) {
-    return apiClient.post<Invoice>(`/invoices/${id}/close`);
+  async close(_: number): Promise<Invoice> {
+    throw new Error("Invoice close endpoint is not available in apps/api yet.");
   },
-  cancel(id: number, reason?: string) {
-    return apiClient.post<Invoice | ApprovalPendingResponse>(`/invoices/${id}/cancel`, { reason });
+  async cancel(_: number, __?: string): Promise<Invoice | ApprovalPendingResponse> {
+    throw new Error("Invoice cancel endpoint is not available in apps/api yet.");
   },
-  refund(id: number, payload?: string | InvoiceRefundPayload) {
-    const body = typeof payload === "string" ? { reason: payload } : payload ?? {};
-    return apiClient.post<Invoice | ApprovalPendingResponse>(`/invoices/${id}/refund`, body);
+  async refund(_: number, __?: string | InvoiceRefundPayload): Promise<Invoice | ApprovalPendingResponse> {
+    throw new Error("Invoice refund endpoint is not available in apps/api yet.");
   },
-  audit(id: number) {
-    return apiClient.get<InvoiceAuditLog[]>(`/invoices/${id}/audit`);
+  async audit(_: number): Promise<InvoiceAuditLog[]> {
+    throw new Error("Invoice audit endpoint is not available in apps/api yet.");
   },
-  remove(id: number) {
-    return apiClient.delete<{ message: string }>(`/invoices/${id}`);
+  async remove(_: number): Promise<{ message: string }> {
+    throw new Error("Invoice delete endpoint is not available in apps/api yet.");
   },
 };

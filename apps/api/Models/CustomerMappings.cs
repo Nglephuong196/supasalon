@@ -32,10 +32,10 @@ public static class CustomerMappings
             customer.MembershipTierId,
             customer.CreatedAt);
 
-    public static Customer ToEntity(this CreateCustomerRequest request) =>
+    public static Customer ToEntity(this CreateCustomerRequest request, string organizationId) =>
         new()
         {
-            OrganizationId = request.OrganizationId,
+            OrganizationId = organizationId,
             Name = request.Name,
             Phone = request.Phone,
             Email = request.Email,

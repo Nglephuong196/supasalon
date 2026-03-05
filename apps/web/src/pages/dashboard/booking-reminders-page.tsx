@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { queryKeys } from "@/lib/query-client";
 import { bookingRemindersService } from "@/services/booking-reminders.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -171,7 +173,7 @@ export function BookingRemindersPage() {
 
           <div className="grid gap-3">
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={enabled} onChange={(event) => setEnabled(event.target.checked)} />
+              <Checkbox checked={enabled} onChange={(event) => setEnabled(event.target.checked)} />
               Bật nhắc lịch tự động
             </label>
 
@@ -190,27 +192,15 @@ export function BookingRemindersPage() {
               <Label>Kênh gửi</Label>
               <div className="flex flex-wrap gap-4 text-sm">
                 <label className="inline-flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={smsEnabled}
-                    onChange={(event) => setSmsEnabled(event.target.checked)}
-                  />
+                  <Checkbox checked={smsEnabled} onChange={(event) => setSmsEnabled(event.target.checked)} />
                   SMS
                 </label>
                 <label className="inline-flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={zaloEnabled}
-                    onChange={(event) => setZaloEnabled(event.target.checked)}
-                  />
+                  <Checkbox checked={zaloEnabled} onChange={(event) => setZaloEnabled(event.target.checked)} />
                   Zalo
                 </label>
                 <label className="inline-flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={emailEnabled}
-                    onChange={(event) => setEmailEnabled(event.target.checked)}
-                  />
+                  <Checkbox checked={emailEnabled} onChange={(event) => setEmailEnabled(event.target.checked)} />
                   Email
                 </label>
               </div>
@@ -218,8 +208,8 @@ export function BookingRemindersPage() {
 
             <div className="grid gap-1">
               <Label>Template</Label>
-              <textarea
-                className="min-h-24 rounded-md border px-3 py-2 text-sm"
+              <Textarea
+                className="min-h-24"
                 value={template}
                 onChange={(event) => setTemplate(event.target.value)}
                 placeholder="Dùng biến {{customerName}}, {{serviceName}}, {{bookingTime}}"
@@ -247,11 +237,7 @@ export function BookingRemindersPage() {
             </div>
             <div className="grid gap-1">
               <Label>Nội dung tùy chỉnh (tuỳ chọn)</Label>
-              <textarea
-                className="min-h-24 rounded-md border px-3 py-2 text-sm"
-                value={manualMessage}
-                onChange={(event) => setManualMessage(event.target.value)}
-              />
+              <Textarea className="min-h-24" value={manualMessage} onChange={(event) => setManualMessage(event.target.value)} />
             </div>
             <div className="flex flex-wrap gap-2">
               <Button disabled={saving} onClick={() => void sendManual()}>

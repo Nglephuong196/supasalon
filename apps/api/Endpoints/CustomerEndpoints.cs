@@ -1,5 +1,6 @@
 using Api.Interfaces;
 using Api.Models;
+using Api.Utils;
 
 namespace Api.Endpoints;
 
@@ -16,19 +17,26 @@ public static class CustomerEndpoints
     }
 
     private static async Task<IResult> GetCustomers(
-        string organizationId,
-        int page,
-        int limit,
+        int? page,
+        int? limit,
         string? search,
-        bool vipOnly,
+        bool? vipOnly,
+        HttpContext httpContext,
         ICustomerService service,
         CancellationToken ct)
     {
+        var validation = OrganizationRequestHelper.ValidateAndResolve(httpContext);
+        if (!validation.IsValid)
+        {
+            return validation.Error!;
+        }
+
+        var organizationId = validation.OrganizationId!;
         var query = new CustomerListQuery(
-            Page: page <= 0 ? 1 : page,
-            Limit: limit <= 0 ? 20 : limit,
+            Page: PaginationDefaults.Page(page),
+            Limit: PaginationDefaults.Limit(limit),
             Search: search,
-            VipOnly: vipOnly);
+            VipOnly: vipOnly ?? false);
         var data = await service.GetPagedAsync(organizationId, query, ct);
 
         return Results.Ok(data);
@@ -36,10 +44,17 @@ public static class CustomerEndpoints
 
     private static async Task<IResult> CreateCustomer(
         CreateCustomerRequest request,
+        HttpContext httpContext,
         ICustomerService service,
         CancellationToken ct)
     {
-        var customer = await service.CreateAsync(request, ct);
+        var validation = OrganizationRequestHelper.ValidateAndResolve(httpContext);
+        if (!validation.IsValid)
+        {
+            return validation.Error!;
+        }
+
+        var customer = await service.CreateAsync(validation.OrganizationId!, request, ct);
         return Results.Created($"/api/customers/{customer.Id}", customer);
     }
 }
