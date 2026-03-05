@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { organization, signUp } from "../../lib/auth-client";
+import { signUp } from "../../lib/auth-client";
 
 export default function SignupScreen() {
   const [formData, setFormData] = useState({
@@ -43,32 +43,28 @@ export default function SignupScreen() {
 
     setLoading(true);
     try {
+      const slug = formData.salonName
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "");
+
       const signUpRes = await signUp.email({
         email: formData.email,
         password: formData.password,
         name: formData.ownerName,
+        salonName: formData.salonName,
+        salonSlug: slug,
+        province: formData.province,
+        address: formData.address,
+        phone: formData.phone,
       });
 
       if (signUpRes.error) {
         throw new Error(signUpRes.error.message || "Đăng ký thất bại");
       }
 
-      const slug = formData.salonName
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, "");
-
-      const orgRes = await organization.create({
-        name: formData.salonName,
-        slug,
-      });
-
-      if (orgRes.error) {
-        throw new Error(orgRes.error.message || "Không thể tạo Salon");
-      }
-
       Alert.alert("Thành công", "Đăng ký thành công!", [
-        { text: "OK", onPress: () => router.replace("/(app)/dashboard") },
+        { text: "OK", onPress: () => router.replace("/(app)/(tabs)") },
       ]);
     } catch (err: any) {
       Alert.alert("Lỗi", err.message || "Đã có lỗi xảy ra");

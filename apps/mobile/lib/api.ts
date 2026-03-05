@@ -1,107 +1,182 @@
 import * as SecureStore from "expo-secure-store";
-import { authClient } from "./auth-client";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:8787";
+const API_BASE_URL =
+  (globalThis as { process?: { env?: { EXPO_PUBLIC_API_URL?: string } } }).process?.env
+    ?.EXPO_PUBLIC_API_URL || "http://10.0.2.2:5263";
+
+const ACCESS_TOKEN_KEY = "api.accessToken";
+const BRANCH_ID_KEY = "branchId";
+const BRANCH_HEADER_NAME = "X-Branch-Id";
+
+type ApiContext = {
+  branchId: string | null;
+};
 
 interface FetchOptions extends RequestInit {
   params?: Record<string, string>;
 }
 
-async function getOrganizationId(): Promise<string | null> {
-  try {
-    // Try to get active organization from session
-    const session = await authClient.getSession();
-    console.log("[API] Session data:", JSON.stringify(session.data));
+const runtimeContext: ApiContext = {
+  branchId: null,
+};
 
-    const orgId = session.data?.session?.activeOrganizationId;
-    if (orgId) {
-      return orgId;
-    }
-
-    // Fallback: try organization client to get list of orgs
-    const orgs = await authClient.organization?.list();
-    console.log("[API] Organizations:", JSON.stringify(orgs?.data));
-
-    if (orgs?.data && orgs.data.length > 0) {
-      return orgs.data[0].id;
-    }
-  } catch (error) {
-    console.error("[API] Error getting organization ID:", error);
-  }
-  return null;
+async function readStorage(key: string): Promise<string | null> {
+  return SecureStore.getItemAsync(key);
 }
 
-async function getSessionCookie(): Promise<string | null> {
-  try {
-    // Get session token directly from the auth client session
-    const session = await authClient.getSession();
-    const token = session.data?.session?.token;
-
-    if (token) {
-      console.log("[API] Using session token from authClient");
-      return token; // Return just the token
-    }
-
-    console.log("[API] No session token available");
-  } catch (error) {
-    console.error("[API] Error getting session cookie:", error);
+async function writeStorage(key: string, value: string | null): Promise<void> {
+  if (value) {
+    await SecureStore.setItemAsync(key, value);
+    return;
   }
-  return null;
+
+  await SecureStore.deleteItemAsync(key);
+}
+
+export async function getApiAuthToken(): Promise<string | null> {
+  return readStorage(ACCESS_TOKEN_KEY);
+}
+
+export async function setApiAuthToken(token: string): Promise<void> {
+  await writeStorage(ACCESS_TOKEN_KEY, token);
+}
+
+export async function clearApiAuthToken(): Promise<void> {
+  await writeStorage(ACCESS_TOKEN_KEY, null);
+}
+
+async function getDefaultBranchId(): Promise<string | null> {
+  return runtimeContext.branchId ?? (await readStorage(BRANCH_ID_KEY));
+}
+
+async function saveBranchId(branchId: string | null): Promise<void> {
+  await writeStorage(BRANCH_ID_KEY, branchId);
+}
+
+export async function setApiContext(partial: Partial<ApiContext>): Promise<void> {
+  if (typeof partial.branchId !== "undefined") {
+    runtimeContext.branchId = partial.branchId;
+    await saveBranchId(partial.branchId ?? null);
+  }
+}
+
+export async function clearApiContext(): Promise<void> {
+  runtimeContext.branchId = null;
+  await saveBranchId(null);
+}
+
+function normalizePath(path: string): string {
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+
+  if (path.startsWith("/api/") || path === "/api") {
+    return path;
+  }
+
+  if (path.startsWith("/public/")) {
+    return path;
+  }
+
+  if (path.startsWith("/")) {
+    return `/api${path}`;
+  }
+
+  return `/api/${path}`;
+}
+
+function requiresApiContext(path: string): boolean {
+  if (!path.startsWith("/api/")) return false;
+  if (path.startsWith("/api/auth/")) return false;
+  return true;
+}
+
+function shouldAttachAuth(path: string): boolean {
+  if (!path.startsWith("/api")) return false;
+  if (path === "/api/auth/login" || path === "/api/auth/register") return false;
+  return true;
+}
+
+async function parseApiError(response: Response): Promise<string> {
+  try {
+    const payload = (await response.json()) as Record<string, unknown>;
+    const message = payload.error ?? payload.message;
+    if (typeof message === "string") return message;
+
+    const errors = payload.errors;
+    if (Array.isArray(errors) && errors.every((item) => typeof item === "string")) {
+      return errors.join("; ");
+    }
+  } catch {
+    // Ignore parse failures and fallback to status text.
+  }
+  return response.statusText || `API error (${response.status})`;
 }
 
 async function apiFetch<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { params, ...fetchOptions } = options;
+  const requestPath = normalizePath(endpoint);
 
-  let url = `${API_BASE_URL}${endpoint}`;
+  let requestUrl = requestPath.startsWith("http") ? requestPath : `${API_BASE_URL}${requestPath}`;
   if (params) {
     const searchParams = new URLSearchParams(params);
-    url += `?${searchParams.toString()}`;
+    requestUrl += `?${searchParams.toString()}`;
   }
 
-  // Get organization ID and session cookie
-  const [orgId, sessionCookie] = await Promise.all([getOrganizationId(), getSessionCookie()]);
+  const token = await getApiAuthToken();
+  const branchId = await getDefaultBranchId();
+  const needApiContext = requiresApiContext(requestPath);
 
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(fetchOptions.headers as Record<string, string>),
-  };
-
-  if (orgId) {
-    headers["X-Organization-Id"] = orgId;
-  } else {
-    console.warn("[API] No organization ID available!");
+  const headers = new Headers(fetchOptions.headers);
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
   }
 
-  if (sessionCookie) {
-    headers["Authorization"] = `Bearer ${sessionCookie}`;
-  } else {
-    console.warn("[API] No session token available!");
+  if (branchId && needApiContext) {
+    headers.set(BRANCH_HEADER_NAME, branchId);
   }
 
-  console.log("[API] Fetching:", url, "OrgId:", orgId, "HasCookie:", !!sessionCookie);
+  if (token && shouldAttachAuth(requestPath)) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
 
-  // Use native fetch - better-auth expo client intercepts it globally
-  const response = await fetch(url, {
+  const response = await fetch(requestUrl, {
     method: fetchOptions.method || "GET",
     headers,
     body: fetchOptions.body,
-    credentials: "include",
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error("[API] Error:", response.status, errorText);
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    throw new Error(await parseApiError(response));
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return response.json();
 }
 
-// API client methods
+export const apiClient = {
+  get<T>(path: string, options?: Omit<FetchOptions, "method" | "body">) {
+    return apiFetch<T>(path, { ...options, method: "GET" });
+  },
+  post<T>(path: string, json?: unknown, options?: Omit<FetchOptions, "method" | "body">) {
+    return apiFetch<T>(path, { ...options, method: "POST", body: JSON.stringify(json ?? {}) });
+  },
+  put<T>(path: string, json?: unknown, options?: Omit<FetchOptions, "method" | "body">) {
+    return apiFetch<T>(path, { ...options, method: "PUT", body: JSON.stringify(json ?? {}) });
+  },
+  patch<T>(path: string, json?: unknown, options?: Omit<FetchOptions, "method" | "body">) {
+    return apiFetch<T>(path, { ...options, method: "PATCH", body: JSON.stringify(json ?? {}) });
+  },
+  delete<T>(path: string, options?: Omit<FetchOptions, "method" | "body">) {
+    return apiFetch<T>(path, { ...options, method: "DELETE" });
+  },
+};
+
 export const api = {
-  // Dashboard / Stats
   async getDashboardStats() {
-    // Aggregate stats from various endpoints
     const [bookings, invoices, customers] = await Promise.all([
       this.getBookings({ from: new Date().toISOString().split("T")[0] }),
       this.getInvoices(),
@@ -129,12 +204,9 @@ export const api = {
   async getTodayBookings() {
     const today = new Date().toISOString().split("T")[0];
     const bookings = await this.getBookings({ from: today, to: today });
-    return bookings.sort(
-      (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-    );
+    return bookings.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
   },
 
-  // Bookings - pass simple=true to get array instead of paginated object
   async getBookings(params?: Record<string, string>) {
     return apiFetch<any[]>("/bookings", {
       params: { simple: "true", ...params },
@@ -152,17 +224,14 @@ export const api = {
     return { total, pending, completed, cancelRate };
   },
 
-  // Invoices - already returns array
   async getInvoices(params?: Record<string, string>) {
     return apiFetch<any[]>("/invoices", { params });
   },
 
-  // Customers - already returns array
   async getCustomers(params?: Record<string, string>) {
     return apiFetch<any[]>("/customers", { params });
   },
 
-  // Members/Employees
   async getMembers() {
     return apiFetch<any[]>("/members");
   },
